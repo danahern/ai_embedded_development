@@ -1,0 +1,38 @@
+# ==============================================
+# West-managed dependencies (pulled by west update)
+# These are fetched automatically and should not be tracked
+# ==============================================
+zephyr/
+bootloader/
+modules/
+tools/
+
+# West config
+.west/
+
+# ==============================================
+# OS and IDE
+# ==============================================
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# ==============================================
+# Python
+# ==============================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+
+# ==============================================
+# Build artifacts
+# ==============================================
+build/
+*.o
+*.elf
+*.bin
+*.hex

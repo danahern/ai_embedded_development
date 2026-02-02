@@ -1,0 +1,12 @@
+[submodule "claude-config"]
+	path = claude-config
+	url = git@github.com:danahern/claude-config.git
+[submodule "claude-mcps"]
+	path = claude-mcps
+	url = git@github.com:danahern/claude-mcps.git
+[submodule "zephyr-apps"]
+	path = zephyr-apps
+	url = git@github.com:danahern/zephyr-apps.git
+[submodule "test-tools"]
+	path = test-tools
+	url = git@github.com:danahern/test-tools.git
