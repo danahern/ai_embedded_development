@@ -7,6 +7,9 @@ bootloader/
 modules/
 tools/
 
+# Cloned repos
+esp-dev-kits/
+
 # West config
 .west/
 
@@ -27,6 +30,11 @@ __pycache__/
 *$py.class
 .venv/
 *.egg-info/
+
+# ==============================================
+# Saleae Logic captures
+# ==============================================
+captures/
 
 # ==============================================
 # Build artifacts
