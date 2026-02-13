@@ -23,6 +23,23 @@ ALWAYS use for ESP-IDF build/flash operations instead of running idf.py directly
 - `monitor(project, port, duration_seconds=10)` - Capture serial output
 - `clean(project)` - Remove build artifacts
 
+### saleae-logic (Logic Analyzer)
+Use for signal capture, protocol decoding, and hardware signal analysis:
+- `get_app_info()` - Check Logic 2 connection
+- `list_devices()` - Find connected analyzers
+- `start_capture(channels=[0,1], duration_seconds=2)` - Timed capture
+- `start_capture(channels=[0], trigger_channel=0, trigger_type="falling")` - Triggered capture
+- `wait_capture(capture_id)` - Wait for capture to complete
+- `stop_capture(capture_id)` - Stop manual capture
+- `add_analyzer(capture_id, "I2C", {"SCL": 0, "SDA": 1})` - Decode protocol
+- `export_analyzer_data(capture_id, analyzer_index)` - Get decoded data
+- `analyze_capture(capture_id, analyzer_index)` - Smart summary (errors, timing, addresses)
+- `search_protocol_data(capture_id, analyzer_index, pattern="0x9F")` - Search decoded data
+- `get_timing_info(capture_id, channel=0)` - Frequency, duty cycle, pulse widths
+- `stream_capture(channels, duration, analyzer_name, settings)` - One-shot capture + decode
+- `save_capture(capture_id, filepath)` / `load_capture(filepath)` - .sal file I/O
+- `compare_captures(id_a, id_b, idx_a, idx_b)` - Diff captures for regression testing
+
 ### embedded-probe (Debug & Flash)
 Use for all hardware interaction:
 - `list_probes()` - Find connected debug probes
@@ -46,12 +63,20 @@ Use for all hardware interaction:
 3. **Flash**: `esp-idf-build.flash(project="esp32-p4-eye/factory", port="/dev/cu.usbserial-1110")`
 4. **Monitor**: `esp-idf-build.monitor(project="esp32-p4-eye/factory", port="/dev/cu.usbserial-1110", duration_seconds=10)`
 
+## Typical Workflow (Signal Analysis)
+
+1. **Capture**: `saleae-logic.start_capture(channels=[0,1], duration_seconds=2)`
+2. **Wait**: `saleae-logic.wait_capture(capture_id)`
+3. **Decode**: `saleae-logic.add_analyzer(capture_id, "I2C", {"SCL": 0, "SDA": 1})`
+4. **Analyze**: `saleae-logic.analyze_capture(capture_id, analyzer_index)`
+5. **Search**: `saleae-logic.search_protocol_data(capture_id, analyzer_index, pattern="0x48")`
+
 ## Workspace Structure
 
 | Directory | Purpose | Git |
 |-----------|---------|-----|
 | `claude-config/` | Claude Code skills and configuration | Submodule |
-| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, esp-idf-build) | Submodule |
+| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, esp-idf-build, saleae-logic) | Submodule |
 | `zephyr-apps/` | Zephyr applications and west manifest | Submodule |
 | `esp-dev-kits/` | ESP-IDF example projects for dev kits | Cloned |
 | `test-tools/` | Python testing utilities | Tracked |
