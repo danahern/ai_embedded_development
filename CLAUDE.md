@@ -133,6 +133,11 @@ If an MCP tool fails:
 - `create_app(name, template?, board?, libraries?, description?)` — scaffold a new app from template
 - `run_tests(board, path?, filter?, background?)`, `test_status(test_id)`, `test_results(test_id?, results_dir?)`
 
+### elf-analysis (Size Analysis)
+- `analyze_size(elf_path, target?, depth?, workspace_path?)` — ROM/RAM breakdown with per-file tree
+- `compare_sizes(elf_path_a, elf_path_b, workspace_path?)` — diff two ELFs, show top increases/decreases
+- `top_consumers(elf_path, target, limit?, level?, workspace_path?)` — biggest files/symbols sorted by size
+
 ### esp-idf-build (ESP-IDF)
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
 

@@ -17,6 +17,13 @@
         "/Users/danahern/code/claude/work/esp-dev-kits/examples"
       ]
     },
+    "elf-analysis": {
+      "command": "/Users/danahern/code/claude/work/claude-mcps/elf-analysis/target/release/elf-analysis",
+      "args": [
+        "--workspace",
+        "/Users/danahern/code/claude/work"
+      ]
+    },
     "saleae-logic": {
       "command": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic/.venv/bin/python",
       "args": [
