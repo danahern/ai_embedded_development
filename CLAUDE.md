@@ -39,7 +39,7 @@ Claude Code tracks tool permissions in `.claude/settings.local.json`. This file 
 
 ## Plans
 
-Plans track significant new work. **Required for:** new MCPs, skills, agents, commands, apps, libraries, or test tool groups.
+Plans track significant new work. **Required for:** new MCPs, skills, agents, commands, apps, libraries, test tool groups, or changes touching 5+ source files.
 
 ### Lifecycle
 
