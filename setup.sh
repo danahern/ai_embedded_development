@@ -388,6 +388,26 @@ print(f'  Wrote {len(servers)} servers to .mcp.json')
 
 success ".mcp.json generated"
 
+# ── Claude Code Commands ─────────────────────────────────────────────────
+
+section "Claude Code Commands"
+
+CLAUDE_DIR="$WORKSPACE_DIR/.claude"
+mkdir -p "$CLAUDE_DIR"
+
+# Symlink the entire commands directory so new commands are picked up automatically
+if [ -L "$CLAUDE_DIR/commands" ]; then
+    success "commands symlink already exists"
+elif [ -d "$CLAUDE_DIR/commands" ]; then
+    info "Replacing per-file symlinks with directory symlink..."
+    rm -rf "$CLAUDE_DIR/commands"
+    ln -s "$WORKSPACE_DIR/claude-config/commands" "$CLAUDE_DIR/commands"
+    success "commands directory symlinked"
+else
+    ln -s "$WORKSPACE_DIR/claude-config/commands" "$CLAUDE_DIR/commands"
+    success "commands directory symlinked"
+fi
+
 # ── Test Verification ──────────────────────────────────────────────────────
 
 if [ "$RUN_TESTS" = true ]; then
