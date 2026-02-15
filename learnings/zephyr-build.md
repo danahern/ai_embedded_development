@@ -14,3 +14,9 @@ Zephyr has a built-in `device` shell command (`subsys/shell/modules/device_servi
 
 ### OVERLAY_CONFIG vs DTC_OVERLAY_FILE
 `OVERLAY_CONFIG` is for Kconfig fragments (`.conf` files). `DTC_OVERLAY_FILE` is for devicetree overlays (`.overlay` files). Zephyr auto-discovers DTS overlays from `boards/` but you must explicitly list Kconfig overlays via `OVERLAY_CONFIG`.
+
+### Don't duplicate board overlays — use library's boards/ directory
+When a library (e.g. crash_log) provides board-specific DTS overlays in its `boards/` directory, apps should NOT copy those overlays into their own `boards/` directory. Zephyr auto-discovers overlays from the app's `boards/` dir, but the library's overlays are included via `DTC_OVERLAY_FILE` in CMakeLists.txt. Duplicating them causes maintenance drift and confusion about which is authoritative.
+
+### Use zephyr/module.yml for shared library auto-discovery
+Instead of setting `ZEPHYR_EXTRA_MODULES` in every app's CMakeLists.txt, place a `zephyr/module.yml` at the repo root pointing to a top-level `lib/CMakeLists.txt` and `lib/Kconfig`. Apps just enable `CONFIG_<LIB>=y` in prj.conf. This eliminates boilerplate and ensures new apps get all libraries automatically.

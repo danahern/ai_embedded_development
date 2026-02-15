@@ -55,7 +55,7 @@ If an MCP tool fails:
 ## MCP Servers
 
 ### zephyr-build (Building)
-- `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_status(build_id)`, `clean(app)`
+- `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app)`
 
 ### esp-idf-build (ESP-IDF)
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
