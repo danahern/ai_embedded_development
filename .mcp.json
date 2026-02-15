@@ -5,15 +5,24 @@
     },
     "zephyr-build": {
       "command": "/Users/danahern/code/claude/work/claude-mcps/zephyr-build/target/release/zephyr-build",
-      "args": ["--workspace", "/Users/danahern/code/claude/work"]
+      "args": [
+        "--workspace",
+        "/Users/danahern/code/claude/work"
+      ]
     },
     "esp-idf-build": {
       "command": "/Users/danahern/code/claude/work/claude-mcps/esp-idf-build/target/release/esp-idf-build",
-      "args": ["--projects-dir", "/Users/danahern/code/claude/work/esp-dev-kits/examples"]
+      "args": [
+        "--projects-dir",
+        "/Users/danahern/code/claude/work/esp-dev-kits/examples"
+      ]
     },
     "saleae-logic": {
       "command": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic/.venv/bin/python",
-      "args": ["-m", "saleae_logic"],
+      "args": [
+        "-m",
+        "saleae_logic"
+      ],
       "cwd": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic"
     }
   }

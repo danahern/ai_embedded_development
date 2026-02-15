@@ -1,5 +1,33 @@
 # Embedded Development Workspace
 
+## Collaboration Style
+
+**This is a collaborative workspace. Ask questions and propose approaches before diving into implementation.**
+
+- When given a new task, propose an approach first. Don't silently pick one path when multiple exist.
+- Surface tradeoffs: "We could do X (simpler, less flexible) or Y (more work, more reusable) — which fits better?"
+- If you hit something unexpected (a Zephyr API that doesn't work as expected, a build error with multiple possible fixes), explain what you found and ask which direction to go.
+- When a task touches multiple subsystems (MCP server + Zephyr library + app), outline the pieces and confirm scope before starting.
+- If you're unsure about a design choice (naming, architecture, where to put code), ask. A 30-second question saves a 30-minute rewrite.
+
+## Learnings & Ideas
+
+**Read `LEARNINGS.md` before starting new work.** It contains hard-won knowledge from past sessions.
+
+- After completing a task that involved debugging surprises, non-obvious Zephyr behavior, or important architectural decisions, **summarize what you learned and add it to `LEARNINGS.md`**.
+- New ideas for future work go in the "Ideas & Future Work" section at the bottom of `LEARNINGS.md`. Capture them so they don't get lost between sessions.
+
+## CRITICAL: MCP-First Policy
+
+**ALWAYS use MCP tools for operations they support. NEVER work around a broken or missing MCP tool by shelling out to CLI equivalents (addr2line, west, idf.py, nrfjprog, etc.).**
+
+If an MCP tool call fails or a tool you expect to exist is not available:
+1. **STOP and tell the user.** Explain which tool failed or is missing and why.
+2. **Suggest the fix** — e.g., "The `analyze_coredump` tool is not available. The MCP server likely needs to be rebuilt and restarted after code changes. Run `cargo build --release` in `claude-mcps/embedded-probe/` and restart the MCP server."
+3. **Do NOT silently fall back** to raw CLI commands, scripts, or manual hex parsing. The MCP tools exist so the user can trust a consistent workflow. Bypassing them hides bugs and defeats the purpose of having them.
+
+This applies to all MCP servers: embedded-probe, zephyr-build, esp-idf-build, saleae-logic.
+
 ## MCP Servers - USE THESE FOR ALL OPERATIONS
 
 ### zephyr-build (Building)
@@ -43,11 +71,14 @@ Use for signal capture, protocol decoding, and hardware signal analysis:
 ### embedded-probe (Debug & Flash)
 Use for all hardware interaction:
 - `list_probes()` - Find connected debug probes
-- `connect(probe_selector="auto", target_chip="nRF52840_xxAA")` - Attach
+- `connect(probe_selector="auto", target_chip="nrf54l15")` - Attach
 - `flash_program(session_id, file_path)` - Flash firmware
 - `validate_boot(session_id, file_path, success_pattern="Booting Zephyr")` - Flash + verify boot
 - `rtt_read(session_id)` - Read RTT output
 - `reset(session_id)` - Reset target
+- `resolve_symbol(address, elf_path)` - Resolve address to function name + source line
+- `stack_trace(session_id, elf_path)` - Walk stack with symbol resolution
+- `analyze_coredump(log_text, elf_path)` - Parse Zephyr `#CD:` coredump from RTT, return crash report
 
 ## Typical Workflow (Zephyr)
 
@@ -62,6 +93,24 @@ Use for all hardware interaction:
 2. **Build**: `esp-idf-build.build(project="esp32-p4-eye/factory")`
 3. **Flash**: `esp-idf-build.flash(project="esp32-p4-eye/factory", port="/dev/cu.usbserial-1110")`
 4. **Monitor**: `esp-idf-build.monitor(project="esp32-p4-eye/factory", port="/dev/cu.usbserial-1110", duration_seconds=10)`
+
+## Typical Workflow (Crash Debug)
+
+Requires: app includes `lib/debug_config/debug_coredump.conf` overlay for coredump+RTT support.
+
+1. **Build**: `zephyr-build.build(app="crash_debug", board="nrf54l15dk/nrf54l15/cpuapp", pristine=true)`
+2. **Connect**: `embedded-probe.connect(probe_selector="auto", target_chip="nrf54l15")`
+3. **Flash**: `embedded-probe.flash_program(session_id, file_path="build/zephyr/zephyr.hex")` - Use .hex if .elf fails on nRF54L15
+4. **Reset + RTT**: `embedded-probe.reset(session_id, halt_after_reset=false)` then `embedded-probe.rtt_attach(session_id)`
+5. **Capture**: `embedded-probe.rtt_read(session_id, timeout_ms=12000, max_bytes=16384)` - Repeat until `#CD:END#` appears (output arrives in ~1KB chunks)
+6. **Analyze**: `embedded-probe.analyze_coredump(log_text=<combined_rtt_output>, elf_path="build/zephyr/zephyr.elf")` - Returns crash PC, function name, call chain
+7. **Manual fallback**: `embedded-probe.resolve_symbol(address="0x...", elf_path="...zephyr.elf")` or `embedded-probe.stack_trace(session_id, elf_path="...")`
+
+**Important notes:**
+- RTT output arrives in ~1KB chunks. Concatenate all reads until `#CD:END#` is found before passing to `analyze_coredump`.
+- Watch for hex data split across chunk boundaries — lines can break mid-hex-string.
+- ELF flashing via probe-rs sometimes fails on nRF54L15 RRAM. Fall back to `.hex` file.
+- The coredump uses `CONFIG_DEBUG_COREDUMP_MEMORY_DUMP_MIN=y` (stack only) to fit in the 4KB RTT buffer.
 
 ## Typical Workflow (Signal Analysis)
 
@@ -105,6 +154,7 @@ Use `/embedded` command for full embedded development guidelines covering:
 |-------|-------------|----------|
 | nrf52840dk/nrf52840 | nRF52840_xxAA | BLE development |
 | nrf5340dk/nrf5340/cpuapp | nRF5340_xxAA | BLE + net core |
+| nrf54l15dk/nrf54l15/cpuapp | nrf54l15 | Low-power BLE, crash debug |
 | esp32_devkitc/esp32/procpu | ESP32 | WiFi + BLE |
 | esp32s3_eye/esp32s3/procpu | ESP32-S3 | WiFi + BLE + camera |
 | nucleo_g431rb | STM32G431RBTx | Motor control, ADC |
