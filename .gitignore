@@ -16,7 +16,8 @@ esp-dev-kits/
 # ==============================================
 # Claude Code (local settings, commands symlink)
 # ==============================================
-.claude/
+.claude/*
+!.claude/rules/
 
 # ==============================================
 # Caches
