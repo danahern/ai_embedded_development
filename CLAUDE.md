@@ -23,6 +23,15 @@ Hard-won lessons. Full details in `LEARNINGS.md`.
 - **coredump_cmd return**: `COREDUMP_CMD_COPY_STORED_DUMP` returns positive byte count on success, not 0.
 - **Build dirs are per-app**: Each app builds to `apps/<name>/build/`. The zephyr-build MCP passes `-d` automatically.
 
+## Project Documentation
+
+Every project (MCP server, library, driver, tool, framework) must have three docs:
+- **`README.md`** — Human-facing: setup instructions, usage examples, configuration, troubleshooting
+- **`PRD.md`** — Requirements: purpose, design decisions, API surface, constraints
+- **`CLAUDE.md`** — Claude-facing: architecture, tool listings, implementation details
+
+Keep all three current as requirements change or features are added.
+
 ## Learnings & Ideas
 
 **Run `/start` at the beginning of a session** to bootstrap context (reads LEARNINGS.md, shows recent activity, checks hardware).
