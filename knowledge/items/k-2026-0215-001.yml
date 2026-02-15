@@ -1,26 +1,23 @@
 id: k-2026-0215-001
-title: Workspace module.yml auto-discovers all lib/ subdirectories — don't use ZEPHYR_EXTRA_MODULES in tests
+title: OSAL work queues must be static — thread outlives stack frame
 body: |-
-  The workspace-level `zephyr-apps/zephyr/module.yml` has `cmake: lib` which processes `lib/CMakeLists.txt`. Any `add_subdirectory()` calls there register libraries as part of the workspace module.
+  `eai_osal_workqueue_create()` (and Zephyr's `k_work_queue_start()`) spawns a persistent thread. If the `eai_osal_workqueue_t` is stack-allocated in a function, the thread continues running after the function returns, referencing freed stack memory. This causes hard faults (typically "ESF could not be retrieved" / fault during interrupt handling).
 
-  If a library test also sets `ZEPHYR_EXTRA_MODULES` to its parent dir (like crash_log's test does), the library gets added twice: once via the workspace module, once via ZEPHYR_EXTRA_MODULES. When building with `-d tests/build/` (build dir inside the module source tree), this causes a CMake binary directory conflict: "The binary directory ... is already used to build a source directory."
+  **Fix:** Always declare work queues as `static` or at file scope. The thread stack (`EAI_OSAL_THREAD_STACK_DEFINE`) must also be file-scope (it already is, since it's a macro expanding to a global).
 
-  **Fix**: Don't use ZEPHYR_EXTRA_MODULES in test CMakeLists.txt for workspace libraries. The library is already auto-discovered. Just enable the Kconfig option in prj.conf.
-
-  Also: use `zephyr_include_directories_ifdef()` (global) instead of `zephyr_library_include_directories_ifdef()` (private) for public API headers that consumer apps need to find.
-category: toolchain
+  In tests, use a shared static work queue initialized once with a guard flag, rather than creating a new one per test function.
+category: pattern
 severity: important
 applies_to:
   boards: []
   chips: []
   tools: []
   subsystems:
-  - build-system
-  - zephyr-module
+  - eai_osal
+  - workqueue
 file_patterns:
-- '**/zephyr/module.yml'
-- '**/tests/CMakeLists.txt'
-- '**/lib/*/CMakeLists.txt'
+- '**/eai_osal/**'
+- '**/workqueue*'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -30,7 +27,7 @@ updated: 2026-02-15
 author: claude
 source_session: null
 tags:
-- zephyr
-- cmake
-- modules
-- build
+- work-queue
+- lifetime
+- static-allocation
+- hard-fault
