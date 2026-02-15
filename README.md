@@ -28,6 +28,23 @@ cd embedded-workspace
 
 The script is idempotent — safe to re-run at any time. It never auto-installs system packages; missing prerequisites are reported with install commands.
 
+## Verify Setup
+
+After running `setup.sh`, validate everything is working:
+
+```bash
+./check-dependencies.sh    # PASS/FAIL/WARN for each component
+```
+
+| What to check | Expected |
+|---------------|----------|
+| All 3 Rust binaries built | `claude-mcps/*/target/release/` has executables |
+| `.mcp.json` generated | Valid JSON in workspace root with absolute paths |
+| Zephyr venv + SDK | `zephyr-apps/.venv/` exists, SDK registered with cmake |
+| Commands symlink | `.claude/commands` → `claude-config/commands` |
+
+If any checks fail, re-run `./setup.sh`. See [Troubleshooting](#troubleshooting) for specific fixes.
+
 ## MCP Servers
 
 | Server | Language | Purpose |
@@ -79,15 +96,22 @@ embedded-workspace/
 └── tools/                     # (west-managed, gitignored)
 ```
 
-## Usage with Claude Code
+## Getting Started with Claude Code
 
-Open the workspace in Claude Code — MCP servers register automatically from `.mcp.json`. See [CLAUDE.md](CLAUDE.md) for full tool reference and typical workflows.
+Open the workspace in Claude Code — MCP servers register automatically from `.mcp.json`.
 
-**Zephyr**: Build firmware, connect probe, flash + validate boot, monitor RTT output.
+**First build (no hardware needed):**
+1. Run `/start` to bootstrap the session
+2. Ask: *"List available apps and boards"*
+3. Ask: *"Build crash_debug for qemu_cortex_m3"*
+4. Ask: *"Run the unit tests"*
 
-**ESP-IDF**: Set target chip, build, flash all segments, capture serial output.
+**First hardware session** (with a debug probe connected):
+1. Ask: *"List connected probes"*
+2. Ask: *"Build and flash blinky to nrf52840dk"*
+3. Ask: *"Read RTT output"*
 
-**Signal Analysis**: Capture signals, decode protocols (I2C/SPI/UART/CAN), analyze timing and errors.
+See [CLAUDE.md](CLAUDE.md) for full tool reference, typical workflows, and common boards.
 
 ## Testing
 

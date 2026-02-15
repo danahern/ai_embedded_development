@@ -24,6 +24,19 @@ Hard-won lessons. Full details in `LEARNINGS.md`.
 - **Build dirs are per-app**: Each app builds to `apps/<name>/build/`. The zephyr-build MCP passes `-d` automatically.
 - **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. The `run_tests` tool auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT=zephyr` and `ZEPHYR_SDK_INSTALL_DIR` in the MCP launch environment.
 
+## Permission Rules (settings.local.json)
+
+Claude Code tracks tool permissions in `.claude/settings.local.json`. This file is auto-generated when you click "Allow" on tool prompts — you never need to create it manually.
+
+- **Location**: `.claude/settings.local.json` (gitignored, per-machine)
+- **Pattern syntax**: `ToolName(prefix:*)` — e.g., `Bash(git *)` allows all git commands
+- **Key categories in this workspace**:
+  - `Bash(git *)` — git operations
+  - `Bash(cargo *)`, `Bash(cd * && cargo *)` — Rust builds and tests
+  - `Bash(python3 *)`, `Bash(*/bin/pip *)` — Python tooling
+  - `mcp__*` — MCP server tool calls (auto-allowed per server)
+- **Maintenance**: Safe to delete the file or prune entries. Permissions are re-added the next time you approve a prompt. If tool prompts become excessive, check that the file exists and hasn't been corrupted.
+
 ## Project Documentation
 
 Documentation should be proportional to complexity:
