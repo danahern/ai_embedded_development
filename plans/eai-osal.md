@@ -1,6 +1,6 @@
 # EAI OSAL — Embedded AI OS Abstraction Layer
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-15
 
 ## Problem
@@ -143,8 +143,9 @@ Each primitive gets tests for: basic operation, timeout behavior, ISR context (w
 | Phase | Scope | Backends |
 |-------|-------|----------|
 | 1 | Core primitives (thread, mutex, sem, queue, timer, event, critical) | Zephyr |
+| 1.1 | Work queues (work, delayed work, custom queues) | Zephyr |
 | 1.5 | FreeRTOS + Linux backends | FreeRTOS, Linux |
-| 2 | Work queues, memory pools, thread-local storage | All |
+| 2 | Memory pools, thread-local storage | All |
 | 3 | PAL / Peripheral HAL (GPIO, SPI, I2C, UART) | All |
 | 4 | Frameworks on top of OSAL (logging, state machines, etc.) | All |
 
@@ -157,3 +158,65 @@ Each primitive gets tests for: basic operation, timeout behavior, ISR context (w
 ### Open Questions
 
 - **C++ wrapper**: RAII guards (`eai::osal::MutexGuard`), type-safe queues (`eai::osal::Queue<T>`). Phase 1 or Phase 2?
+
+## Solution (Phase 1)
+
+Phase 1 delivered: Zephyr backend for all 8 core primitives with 35 unit tests passing on `qemu_cortex_m3` and hardware validation on nRF54L15 DK via RTT.
+
+Phase 1.1 added work queues: work items, delayed work, and custom work queues with 9 additional tests.
+
+### Deliverables
+
+- **31 new files** in `zephyr-apps/lib/eai_osal/`
+- **9 primitives**: mutex, semaphore, thread, queue, timer, event, critical, time, work queue
+- **44 tests** across 9 ZTEST suites — 100% pass rate
+- **2 modified files**: `lib/CMakeLists.txt`, `lib/Kconfig` (registration)
+
+### API Surface (actual)
+
+Simplified from the ideation plan:
+- Thread: `create`, `join`, `sleep`, `yield` (deferred: `set_priority`, `get_current`)
+- Mutex: `create`, `destroy`, `lock` (with timeout), `unlock` (try_lock via `NO_WAIT`)
+- Semaphore: `create`, `destroy`, `give`, `take` (with timeout)
+- Queue: `create`, `destroy`, `send`, `recv` (both with timeout)
+- Timer: `create`, `destroy`, `start`, `stop`, `is_running`
+- Event: `create`, `destroy`, `set`, `wait` (any/all + timeout), `clear`
+- Critical: `enter`, `exit`
+- Time: `get_ms`, `get_ticks`, `ticks_to_ms`
+- Work: `work_init`, `work_submit`, `work_submit_to`, `dwork_init`, `dwork_submit`, `dwork_submit_to`, `dwork_cancel`, `workqueue_create`
+
+### Key Design Decisions
+
+- **Backend type dispatch**: `include/eai_osal/types.h` uses relative `#include` to pull in `src/zephyr/types.h`. No separate `types_impl.h` — the backend types header IS the impl.
+- **No ZEPHYR_EXTRA_MODULES in tests**: The workspace-level `zephyr/module.yml` already routes through `lib/CMakeLists.txt`, so test CMakeLists.txt doesn't need extra module registration.
+- **Global include dir**: Uses `zephyr_include_directories_ifdef` (not `zephyr_library_include_directories_ifdef`) so headers are visible to consuming apps.
+- **Timer callback trampoline**: Zephyr timer callback takes `struct k_timer*`; OSAL uses `CONTAINER_OF` to recover the `eai_osal_timer_t` and dispatch to the user's `void(void*)` callback.
+- **Work/dwork trampolines**: Same `CONTAINER_OF` pattern as timer. Delayed work needs double CONTAINER_OF (k_work → k_work_delayable → eai_osal_dwork_t).
+- **Status codes use negative values**: Matches Zephyr errno convention. `EAI_OSAL_OK=0`, errors are negative.
+- **Work queues must be static**: `eai_osal_workqueue_t` spawns a persistent thread. Stack-local work queues cause use-after-free when the function returns.
+
+## Implementation Notes
+
+### Files changed
+- `lib/CMakeLists.txt` — added `add_subdirectory(eai_osal)`
+- `lib/Kconfig` — added `rsource "eai_osal/Kconfig"`
+- 29 new files in `lib/eai_osal/`
+
+### Gotchas discovered
+- **Workspace module.yml auto-discovery**: `zephyr-apps/zephyr/module.yml` with `cmake: lib` already processes `lib/CMakeLists.txt`. Adding `ZEPHYR_EXTRA_MODULES` in the test causes a binary directory conflict in CMake. Solution: don't use ZEPHYR_EXTRA_MODULES for libraries that are part of the workspace module.
+- **Include visibility**: `zephyr_library_include_directories` is library-private. Consumer apps need `zephyr_include_directories` for the headers to be findable.
+- **k_msgq_put returns -ENOMSG** (not -EAGAIN) when full with K_NO_WAIT. Added `-ENOMSG` to the timeout mapping in `osal_status()`.
+
+## Modifications
+
+### Deferred from ideation
+- `set_priority`, `get_current` thread APIs — not needed for Phase 1 use cases
+- `NOT_ALLOWED`, `ALREADY_INIT`, `NOT_FOUND` status codes — YAGNI for Phase 1
+- FreeRTOS and Linux backends — Phase 1.5 per roadmap
+- Separate test files per primitive — single `main.c` is sufficient for 44 tests
+
+### Hardware validation
+- `osal_demo` app deployed to nRF54L15 DK via J-Link
+- Producer/consumer pattern: 10/10 messages, mutex-protected stats, event signaling
+- Periodic timer heartbeat, critical section, semaphore all confirmed via RTT
+- Required `connect_under_reset=true` for initial flash (known RRAM quirk)

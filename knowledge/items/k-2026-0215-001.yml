@@ -1,27 +1,36 @@
 id: k-2026-0215-001
-title: Core template libraries break QEMU builds
+title: Workspace module.yml auto-discovers all lib/ subdirectories — don't use ZEPHYR_EXTRA_MODULES in tests
+body: |-
+  The workspace-level `zephyr-apps/zephyr/module.yml` has `cmake: lib` which processes `lib/CMakeLists.txt`. Any `add_subdirectory()` calls there register libraries as part of the workspace module.
 
-body: |
-  The `create_app` core template includes crash_log and device_shell library overlays which enable RTT and flash — both unavailable on `qemu_cortex_m3`. For QEMU-only apps, remove the `OVERLAY_CONFIG` lines from CMakeLists.txt.
+  If a library test also sets `ZEPHYR_EXTRA_MODULES` to its parent dir (like crash_log's test does), the library gets added twice: once via the workspace module, once via ZEPHYR_EXTRA_MODULES. When building with `-d tests/build/` (build dir inside the module source tree), this causes a CMake binary directory conflict: "The binary directory ... is already used to build a source directory."
+
+  **Fix**: Don't use ZEPHYR_EXTRA_MODULES in test CMakeLists.txt for workspace libraries. The library is already auto-discovered. Just enable the Kconfig option in prj.conf.
+
+  Also: use `zephyr_include_directories_ifdef()` (global) instead of `zephyr_library_include_directories_ifdef()` (private) for public API headers that consumer apps need to find.
 category: toolchain
-severity: critical
-
+severity: important
 applies_to:
-  boards: [qemu_cortex_m3]
+  boards: []
   chips: []
   tools: []
-  subsystems: [build-system, kconfig, testing]
-
-file_patterns: ['**/*.cmake', '**/*.conf', '**/CMakeLists.txt', '**/Kconfig*', '**/module.yml', '**/testcase.yaml',
-  '**/tests/**']
-
-status: validated
-validated_by: [danahern]
+  subsystems:
+  - build-system
+  - zephyr-module
+file_patterns:
+- '**/zephyr/module.yml'
+- '**/tests/CMakeLists.txt'
+- '**/lib/*/CMakeLists.txt'
+status: unvalidated
+validated_by: []
 deprecated: false
-
-created: '2026-02-15'
-updated: '2026-02-15'
-author: danahern
-source_session: '2026-02-15'
-
-tags: [build-system, qemu, testing, kconfig]
+superseded_by: null
+created: 2026-02-15
+updated: 2026-02-15
+author: claude
+source_session: null
+tags:
+- zephyr
+- cmake
+- modules
+- build
