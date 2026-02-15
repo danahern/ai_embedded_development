@@ -1,27 +1,27 @@
 # Learnings
 
-Hard-won knowledge from building in this workspace. Split by topic:
+Hard-won knowledge from building in this workspace, organized as a three-tier retrieval system.
 
-- [Zephyr Build System](learnings/zephyr-build.md)
-- [Testing on macOS](learnings/testing.md)
-- [MCP / Hardware Workflow](learnings/hardware.md)
-- [Architecture Decisions](learnings/architecture.md)
-- [ELF / Size Analysis](learnings/elf-analysis.md)
+## How It Works
 
----
+| Tier | What | Where | When |
+|------|------|-------|------|
+| 1 | Critical gotchas | `CLAUDE.md` Key Gotchas section | Every session, always in context |
+| 2 | Topic-focused rules | `.claude/rules/*.md` | Auto-injected when editing matching files |
+| 3 | Full corpus | `learnings/YYYY/*.md` | On-demand via `/recall` skill |
 
-# Ideas & Future Work
+## Adding Learnings
 
-Potential directions. Not committed — just captured so they don't get lost.
+Use `/learn` during a session or `/wrap-up` at session end. Each learning is a single file:
 
-## CI Pipeline
-Automated builds on push. QEMU tests run automatically, hardware tests triggered manually. Could use GitHub Actions with self-hosted runners for hardware.
+```
+learnings/YYYY/YYYY-MM-DD-kebab-slug.md
+```
 
-## ESP-IDF Crash Analysis
-ESP-IDF has its own coredump format (different from Zephyr). Could extend `analyze_coredump` to detect and handle ESP32 core dumps, or add a separate `analyze_esp_coredump` tool.
+With YAML frontmatter: `title`, `date`, `author`, `tags`.
 
-## New Library Ideas
-Candidates based on patterns that keep repeating:
-- **BLE NUS abstraction** — Already exists in `ble_wifi_bridge`, could extract to a shared library
-- **Logging configuration helper** — Standardize RTT vs UART vs both
-- **OTA DFU shell commands** — MCUboot-based firmware update management via shell
+## Searching
+
+- `/recall <topic>` — grep-based search by tag, title, or body
+- `ls learnings/2026/` — browse by date
+- `.claude/rules/` — curated summaries auto-injected by topic
