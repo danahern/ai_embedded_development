@@ -1,6 +1,6 @@
 # Workspace Cleanup
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-15
 
 ## Problem
@@ -16,3 +16,13 @@ Several small cleanup tasks accumulated during initial development. None are blo
 ## Approach
 
 Batch these as a single cleanup pass. Each is independent and low-risk.
+
+## Solution
+
+Most items were resolved organically during other work:
+
+- **`crash_debug/boards/` duplication** — Resolved. Directory no longer exists; overlays live only in `lib/crash_log/boards/`.
+- **`debug_config/` directory** — Resolved. Consolidated into `lib/crash_log/conf/` during earlier cleanup.
+- **`apps_dir` hardcoded** — Resolved. `zephyr-build` config.rs already accepts `--apps-dir` CLI arg with `"zephyr-apps/apps"` default.
+- **WiFi SSID/PSK in prj.conf** — Not a real issue. Values are `"your_ssid"` placeholders, and `local.conf.example` pattern is already in place for real credentials.
+- **Debug coredump conf duplication** — Not worth extracting. The two files share only 1 line (RTT buffer size) and serve different use cases (RTT-only vs flash-backed). Extracting a common fragment adds complexity for no benefit.
