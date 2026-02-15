@@ -43,20 +43,9 @@ Plans track significant new work. **Required for:** new MCPs, skills, agents, co
 
 ### Lifecycle
 
-`Ideation` → `Planned` → `In-Progress` → `Complete` → moved to `plans/archive/`
+`Ideation` → `Planned` → `In-Progress` → `Complete`
 
-### Structure
-
-```
-plans/
-├── ci-cd.md                 # active plans
-├── elf-analysis.md
-├── scale-analysis.md        # reference docs (no lifecycle)
-└── archive/
-    ├── testing-mcp.md       # completed plans
-    ├── onboarding.md
-    └── scaffolding.md
-```
+All plans live in `plans/`. Completed plans stay in place — status in the file header distinguishes active from done. No archive directory.
 
 ### Plan template
 
@@ -85,8 +74,17 @@ What was deferred, descoped, or changed from the original approach.
 Sections are added as the plan progresses — an Ideation plan may only have Problem and Approach; a Complete plan should have all five.
 
 - **Naming:** descriptive kebab-case, no phase numbers
-- **No index file** — `ls plans/` shows active work, `ls plans/archive/` shows history
+- **No index file** — `ls plans/` shows all plans; status in header shows what's active
 - Plans are git-tracked
+
+### CRITICAL: Plan maintenance rules
+
+**Plans must be kept in sync with reality. Violations create confusion and lost context.**
+
+1. **One plan, one location.** The file in `plans/` is the single source of truth. Session plan files (`.claude/plans/`) are drafts — once approved, copy the full content to `plans/<name>.md` immediately. Never leave a plan only in the session file.
+2. **Create the plan file BEFORE starting implementation.** When you begin coding, the plan must already exist in `plans/` with status `In-Progress`.
+3. **Never mark Complete until ALL verification steps pass.** If the plan has a Verification section, every item must be confirmed. If tools haven't been live-tested, the plan is not complete.
+4. **Update incrementally.** When you discover gotchas, make design decisions, or change approach during implementation — update the plan file right then, not later.
 
 ## Project Documentation
 
@@ -195,7 +193,7 @@ If an MCP tool fails:
 | Directory | Purpose | Git |
 |-----------|---------|-----|
 | `claude-config/` | Skills (`/embedded`, `/start`, `/wrap-up`) and settings | Submodule |
-| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, esp-idf-build, saleae-logic) | Submodule |
+| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic) | Submodule |
 | `zephyr-apps/` | Zephyr apps, shared libraries, tests | Submodule |
 | `esp-dev-kits/` | ESP-IDF example projects | Cloned |
 | `test-tools/` | Python BLE/power testing utilities | Tracked |

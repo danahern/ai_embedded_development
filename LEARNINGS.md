@@ -6,6 +6,7 @@ Hard-won knowledge from building in this workspace. Split by topic:
 - [Testing on macOS](learnings/testing.md)
 - [MCP / Hardware Workflow](learnings/hardware.md)
 - [Architecture Decisions](learnings/architecture.md)
+- [ELF / Size Analysis](learnings/elf-analysis.md)
 
 ---
 
