@@ -25,12 +25,15 @@ Hard-won lessons. Full details in `LEARNINGS.md`.
 
 ## Project Documentation
 
-Every project (MCP server, library, driver, tool, framework) must have three docs:
-- **`README.md`** — Human-facing: setup instructions, usage examples, configuration, troubleshooting
-- **`PRD.md`** — Requirements: purpose, design decisions, API surface, constraints
-- **`CLAUDE.md`** — Claude-facing: architecture, tool listings, implementation details
+Documentation should be proportional to complexity:
 
-Keep all three current as requirements change or features are added.
+- **Substantial components** (MCP servers, crash_log) — Full three docs:
+  - **`README.md`** — Human-facing: setup, usage, configuration, troubleshooting
+  - **`PRD.md`** — Requirements: purpose, design decisions, API surface, constraints
+  - **`CLAUDE.md`** — Claude-facing: architecture, tool listings, implementation details
+- **Small components** (device_shell, single-file libraries) — **`CLAUDE.md` only** is sufficient
+
+Keep docs current as requirements change or features are added.
 
 ## Learnings & Ideas
 

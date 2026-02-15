@@ -349,3 +349,23 @@ cat .mcp.json  # Should list all 4 servers with absolute paths
 **6. Vendor fallbacks**: probe-rs handles most debug probes natively, but Xtensa ESP32 chips need esptool and some Nordic features need nrfjprog. The embedded-probe server provides both paths.
 
 **7. Session-based state**: embedded-probe uses session IDs for debug connections. saleae-logic uses capture IDs and analyzer indices. State lives in the MCP server process, not on disk.
+
+## Future Work
+
+Captured during code review. Not committed — tracked here so they don't get lost.
+
+### Multi-Project Scaling
+- **App scaffolding script**: `scripts/new-app.sh <name> <board>` to generate CMakeLists.txt, prj.conf, board overlays, and test skeleton from a template
+- **Register shared libs in west.yml as modules**: Eliminate per-app ZEPHYR_EXTRA_MODULES wiring — apps just set `CONFIG_CRASH_LOG=y` and it works
+- **`build_all` tool in zephyr-build MCP**: Build every app in the workspace to catch regressions after library changes
+- **Split LEARNINGS.md by topic**: `learnings/zephyr-build.md`, `learnings/nrf-chips.md`, `learnings/esp-idf.md` etc. — read selectively based on connected hardware
+
+### Workspace Cleanup
+- **Delete duplicate board overlays in crash_debug app**: `apps/crash_debug/boards/` duplicates `lib/crash_log/boards/` — let Zephyr auto-discover from the library
+- **Move WiFi credentials to gitignored local.conf**: `ble_wifi_bridge/prj.conf` has hardcoded SSID/PSK
+- **Extract debug_base.conf**: `debug_coredump.conf` and `debug_coredump_flash.conf` share ~15 lines of common config
+- **Fold debug_config/ into crash_log/conf/**: `debug_config/` only holds two .conf files used exclusively with crash_log
+
+### MCP Server Improvements
+- **Make apps_dir configurable in zephyr-build**: Currently hardcoded to `zephyr-apps/apps` in config.rs — should accept CLI arg or config file override
+- **Proportional documentation**: Reserve full README+PRD+CLAUDE for substantial components; small libraries (device_shell) only need CLAUDE.md
