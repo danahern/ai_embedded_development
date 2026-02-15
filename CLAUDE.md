@@ -37,11 +37,62 @@ Claude Code tracks tool permissions in `.claude/settings.local.json`. This file 
   - `mcp__*` — MCP server tool calls (auto-allowed per server)
 - **Maintenance**: Safe to delete the file or prune entries. Permissions are re-added the next time you approve a prompt. If tool prompts become excessive, check that the file exists and hasn't been corrupted.
 
+## Plans
+
+Plans track significant new work. **Required for:** new MCPs, skills, agents, commands, apps, libraries, or test tool groups.
+
+### Lifecycle
+
+`Ideation` → `Planned` → `In-Progress` → `Complete` → moved to `plans/archive/`
+
+### Structure
+
+```
+plans/
+├── ci-cd.md                 # active plans
+├── elf-analysis.md
+├── scale-analysis.md        # reference docs (no lifecycle)
+└── archive/
+    ├── testing-mcp.md       # completed plans
+    ├── onboarding.md
+    └── scaffolding.md
+```
+
+### Plan template
+
+```markdown
+# Feature Name
+
+Status: Planned
+Created: 2026-02-14
+
+## Problem
+What's broken or missing, and why it matters.
+
+## Approach
+High-level strategy and key decisions.
+
+## Solution
+What was built — deliverables, APIs, behavior.
+
+## Implementation Notes
+Files changed, gotchas, things that surprised you.
+
+## Modifications
+What was deferred, descoped, or changed from the original approach.
+```
+
+Sections are added as the plan progresses — an Ideation plan may only have Problem and Approach; a Complete plan should have all five.
+
+- **Naming:** descriptive kebab-case, no phase numbers
+- **No index file** — `ls plans/` shows active work, `ls plans/archive/` shows history
+- Plans are git-tracked
+
 ## Project Documentation
 
-Documentation should be proportional to complexity:
+The same threshold that requires a plan also determines documentation depth:
 
-- **Substantial components** (MCP servers, crash_log) — Full three docs:
+- **New MCPs, skills, agents, commands, apps, libraries, test tool groups** — Full three docs + a plan:
   - **`README.md`** — Human-facing: setup, usage, configuration, troubleshooting
   - **`PRD.md`** — Requirements: purpose, design decisions, API surface, constraints
   - **`CLAUDE.md`** — Claude-facing: architecture, tool listings, implementation details
@@ -78,6 +129,8 @@ If an MCP tool fails:
 
 ### zephyr-build (Building & Testing)
 - `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app)`
+- `list_templates()` — discover available app templates before creating
+- `create_app(name, template?, board?, libraries?, description?)` — scaffold a new app from template
 - `run_tests(board, path?, filter?, background?)`, `test_status(test_id)`, `test_results(test_id?, results_dir?)`
 
 ### esp-idf-build (ESP-IDF)

@@ -1,6 +1,7 @@
-# Phase 5: ELF Size Analysis
+# ELF Size Analysis
 
-Status: Planned
+Status: Ideation
+Created: 2026-02-14
 
 ## Problem
 

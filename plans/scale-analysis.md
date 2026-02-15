@@ -82,13 +82,13 @@ Solutions: App manifest files (`manifest.yml`), overlay aggregation, test regist
 
 ## Recommended Build Order
 
-| Phase | What | Status |
-|-------|------|--------|
-| **Phase 1** | Testing MCP tools (run_tests, test_results) | **Next** |
-| **Phase 2** | CI/CD (GitHub Actions: build_all + twister) | Planned |
-| **Phase 3** | Onboarding (portable .mcp.json, quickstart, dep validation) | Planned |
-| **Phase 4** | Project scaffolding (create_app skill/tool) | Planned |
-| **Phase 5** | ELF size analysis tool | Planned |
-| **Phase 6** | Structured learnings with search | Planned |
-| **Phase 7** | Build matrix + dependency tracking | Planned |
-| **Phase 8** | BLE testing MCP server | Planned |
+| Plan | What | Status |
+|------|------|--------|
+| Testing MCP | Testing MCP tools (run_tests, test_results) | Complete |
+| CI/CD | GitHub Actions: build_all + twister | Planned |
+| Onboarding | Portable .mcp.json, quickstart, dep validation | Complete |
+| Scaffolding | create_app tool + manifests | Complete |
+| ELF analysis | ELF size analysis tool | Ideation |
+| Template evolution | Pattern detection + template suggestions | Ideation |
+| Build matrix | Build matrix + dependency tracking | Ideation |
+| BLE testing | BLE testing MCP server | Ideation |
