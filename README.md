@@ -94,7 +94,8 @@ embedded-workspace/
 ├── plans/                     # Project plans and tracking (see Plans below)
 │
 ├── zephyr-apps/               # Zephyr applications + west manifest (submodule)
-│   └── apps/                  #   Application source code
+│   ├── apps/                  #   Application source code
+│   └── lib/                   #   Shared libraries (eai_osal, crash_log, device_shell)
 ├── esp-dev-kits/              # ESP-IDF example projects (cloned)
 ├── test-tools/                # Python testing utilities (submodule)
 │
@@ -124,47 +125,35 @@ Plans in `plans/` track significant work items through a lifecycle: `Ideation` �
 
 ## Architecture
 
+Claude Code talks to 6 MCP servers over stdio (JSON-RPC). Each server wraps an existing tool or SDK — no custom protocols to the hardware.
+
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Claude Code (AI)                       │
-│  Reads code, writes firmware, orchestrates hardware ops  │
-└────────┬──────────┬──────────┬──────────┬───────────────┘
-         │          │          │          │
-    ┌────▼───┐ ┌───▼────┐ ┌──▼───┐ ┌───▼──────┐
-    │zephyr- │ │esp-idf-│ │embed-│ │saleae-   │
-    │build   │ │build   │ │ded-  │ │logic     │
-    │(Rust)  │ │(Rust)  │ │probe │ │(Python)  │
-    └───┬────┘ └───┬────┘ │(Rust)│ └────┬─────┘
-        │          │      └──┬──┘      │
-        ▼          ▼         │         ▼
-    ┌────────┐ ┌────────┐   │    ┌──────────┐
-    │west CLI│ │idf.py  │   │    │Logic 2   │
-    └────────┘ └────────┘   │    │(gRPC)    │
-                            ▼    └──────────┘
-                    ┌──────────────┐
-                    │  probe-rs    │
-                    │  esptool     │
-                    │  nrfjprog    │
-                    └──────┬──────┘
-                           ▼
-                    ┌──────────────┐
-                    │   Hardware   │
-                    │  J-Link      │
-                    │  ST-Link     │
-                    │  DAPLink     │
-                    └──────────────┘
+                        Claude Code
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+         Build/Test     Hardware      Analysis
+         ─────────     ────────      ────────
+         zephyr-build  embedded-probe elf-analysis
+         esp-idf-build saleae-logic   knowledge-server
+              │             │
+              ▼             ▼
+         west, idf.py  probe-rs, esptool, Logic 2
+              │             │
+              ▼             ▼
+         Compilers     Debug probes, logic analyzers,
+                       dev boards (nRF, ESP32, STM32)
 ```
 
-All MCP servers communicate over stdio (JSON-RPC). Rust servers use the RMCP SDK; the Python server uses the MCP Python SDK. Each manages its own state and subprocess lifecycle.
+Rust servers use RMCP SDK; saleae-logic uses the Python MCP SDK. Each manages its own subprocess lifecycle and state (session IDs for debug connections, capture IDs for logic analyzer).
 
 ### Design Principles
 
-1. **Tools over instructions** — Claude calls tools directly instead of generating shell commands to copy-paste. Eliminates transcription errors and enables multi-step automation.
-2. **Subprocess isolation** — Build servers wrap their CLIs as subprocesses rather than linking libraries. Avoids version coupling and uses the same code paths developers use manually.
-3. **Background builds** — Long builds (30-120s) run in background with tokio::spawn. Claude can continue the conversation and poll status instead of blocking.
+1. **Tools over instructions** — Claude calls tools directly instead of generating shell commands. Eliminates transcription errors and enables multi-step automation.
+2. **Subprocess isolation** — Build servers wrap CLIs as subprocesses rather than linking libraries. Uses the same code paths developers use manually.
+3. **Background builds** — Long builds run in background with tokio::spawn. Claude can continue the conversation and poll status.
 4. **Vendor fallbacks** — probe-rs handles most debug probes natively, but Xtensa ESP32 needs esptool and some Nordic features need nrfjprog. The embedded-probe server provides both paths.
 5. **Session-based state** — Debug connections use session IDs, captures use capture IDs. State lives in the MCP server process, not on disk.
-6. **Absolute paths everywhere** — All user-supplied paths are resolved to absolute before sending to external tools. Relative paths silently fail when tools have different working directories.
 
 ## Getting Started with Claude Code
 
