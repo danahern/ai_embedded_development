@@ -22,6 +22,7 @@ Hard-won lessons. Full details in `LEARNINGS.md`.
 - **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`). Let Zephyr auto-discover overlays from `boards/`.
 - **coredump_cmd return**: `COREDUMP_CMD_COPY_STORED_DUMP` returns positive byte count on success, not 0.
 - **Build dirs are per-app**: Each app builds to `apps/<name>/build/`. The zephyr-build MCP passes `-d` automatically.
+- **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. The `run_tests` tool auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT=zephyr` and `ZEPHYR_SDK_INSTALL_DIR` in the MCP launch environment.
 
 ## Project Documentation
 
@@ -34,6 +35,14 @@ Documentation should be proportional to complexity:
 - **Small components** (device_shell, single-file libraries) — **`CLAUDE.md` only** is sufficient
 
 Keep docs current as requirements change or features are added.
+
+## Testing
+
+**Generated code must be unit tested.** Not just happy path — test failure cases too.
+
+- Tests should verify **expected behavior**, not mirror implementation details.
+- Cover edge cases: invalid input, missing files, empty data, error conditions.
+- If a function can fail, test that it fails correctly.
 
 ## Learnings & Ideas
 
@@ -54,8 +63,9 @@ If an MCP tool fails:
 
 ## MCP Servers
 
-### zephyr-build (Building)
+### zephyr-build (Building & Testing)
 - `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app)`
+- `run_tests(board, path?, filter?, background?)`, `test_status(test_id)`, `test_results(test_id?, results_dir?)`
 
 ### esp-idf-build (ESP-IDF)
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
@@ -93,9 +103,9 @@ If an MCP tool fails:
 4. `saleae-logic.analyze_capture(capture_id, analyzer_index)`
 
 ### Testing
-```bash
-python3 zephyr/scripts/twister -T zephyr-apps/lib -p qemu_cortex_m3 -O .cache/twister -v
-```
+1. `zephyr-build.run_tests(board="qemu_cortex_m3")` — run all lib tests
+2. `zephyr-build.run_tests(path="lib/crash_log", board="qemu_cortex_m3")` — filtered
+3. `zephyr-build.test_results(test_id=...)` — get structured pass/fail details
 
 ## Common Boards
 

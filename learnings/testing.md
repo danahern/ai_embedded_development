@@ -17,3 +17,6 @@ zassert_not_null(strstr(output, "Board:"), "expected Board: in output");
 
 ### shell_execute_cmd returns 1 = help printed
 When a shell command has a NULL handler (parent with subcommands only), the shell prints subcommand help and returns `SHELL_CMD_HELP_PRINTED` (1), not 0. Tests must call the full subcommand path (e.g., `"board info"` not `"board"`).
+
+### Twister needs Zephyr SDK env vars
+MCP server subprocesses don't inherit shell profile env vars. Twister requires `ZEPHYR_TOOLCHAIN_VARIANT` and `ZEPHYR_SDK_INSTALL_DIR` to be set. The `zephyr-build` MCP auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/` (registered by `setup.sh`). If auto-detection fails, set these env vars in the MCP server's launch environment.

@@ -27,7 +27,7 @@ RUN_TESTS=true
 
 WARNINGS=()
 COMPONENTS=()        # ("name:status") pairs
-MCP_SERVERS=()       # ("name:tools:path") triples
+MCP_SERVERS=()       # ("name:path") pairs
 TEST_PASS=0
 TEST_FAIL=0
 
@@ -192,12 +192,57 @@ if [ "$INSTALL_ZEPHYR" = true ]; then
         warn "Skipping Zephyr venv — python3 >= 3.10 required"
     fi
 
-    # Zephyr SDK guidance
-    if [ -n "${ZEPHYR_SDK_INSTALL_DIR:-}" ]; then
-        success "Zephyr SDK found at $ZEPHYR_SDK_INSTALL_DIR"
+    # Zephyr SDK detection: env var → cmake registry → filesystem scan
+    SDK_FOUND=false
+    SDK_REGISTERED=false
+    SDK_PATH=""
+
+    # 1. Check env var
+    if [ -n "${ZEPHYR_SDK_INSTALL_DIR:-}" ] && [ -d "${ZEPHYR_SDK_INSTALL_DIR}" ]; then
+        SDK_PATH="$ZEPHYR_SDK_INSTALL_DIR"
+        SDK_FOUND=true
+    fi
+
+    # 2. Check cmake package registry (populated by SDK's setup.sh)
+    if [ -d "$HOME/.cmake/packages/Zephyr-sdk" ]; then
+        for reg_file in "$HOME/.cmake/packages/Zephyr-sdk"/*; do
+            if [ -f "$reg_file" ]; then
+                cmake_dir="$(cat "$reg_file" | tr -d '[:space:]')"
+                sdk_dir="$(dirname "$cmake_dir")"
+                if [ -f "$sdk_dir/sdk_version" ]; then
+                    SDK_PATH="$sdk_dir"
+                    SDK_FOUND=true
+                    SDK_REGISTERED=true
+                fi
+            fi
+        done
+    fi
+
+    # 3. Scan common install locations if not found yet
+    if [ "$SDK_FOUND" = false ]; then
+        for candidate in "$HOME"/zephyr-sdk-* /opt/zephyr-sdk-*; do
+            if [ -d "$candidate" ] && [ -f "$candidate/sdk_version" ]; then
+                SDK_PATH="$candidate"
+                SDK_FOUND=true
+                break
+            fi
+        done
+    fi
+
+    if [ "$SDK_FOUND" = true ]; then
+        SDK_VER="$(cat "$SDK_PATH/sdk_version")"
+        success "Zephyr SDK $SDK_VER found at $SDK_PATH"
+
+        # Ensure SDK is registered with cmake (required for twister/west to find it)
+        if [ "$SDK_REGISTERED" = false ] && [ -f "$SDK_PATH/setup.sh" ]; then
+            info "SDK not registered with cmake — running SDK setup.sh..."
+            "$SDK_PATH/setup.sh"
+            success "SDK registered with cmake"
+        fi
     else
-        warn "ZEPHYR_SDK_INSTALL_DIR not set — SDK may not be installed"
+        warn "Zephyr SDK not found — needed for building and testing firmware"
         info "Install from: https://docs.zephyrproject.org/latest/develop/getting_started/index.html"
+        info "After installing, run the SDK's setup.sh to register with cmake"
     fi
 
     COMPONENTS+=("Zephyr RTOS:installed")
@@ -285,42 +330,42 @@ section "MCP Server Builds"
 
 if [ "$RUST_OK" = true ]; then
     # embedded-probe (always)
-    info "Building embedded-probe (27 tools)..."
+    info "Building embedded-probe..."
     cd "$WORKSPACE_DIR/claude-mcps/embedded-probe"
     if cargo build --release 2>&1; then
         EP_BIN="$WORKSPACE_DIR/claude-mcps/embedded-probe/target/release/embedded-probe"
         success "embedded-probe built"
-        MCP_SERVERS+=("embedded-probe:27:$EP_BIN")
+        MCP_SERVERS+=("embedded-probe:$EP_BIN")
     else
         error "embedded-probe build failed"
-        MCP_SERVERS+=("embedded-probe:27:FAILED")
+        MCP_SERVERS+=("embedded-probe:FAILED")
     fi
 
     # zephyr-build (if Zephyr)
     if [ "$INSTALL_ZEPHYR" = true ]; then
-        info "Building zephyr-build (5 tools)..."
+        info "Building zephyr-build..."
         cd "$WORKSPACE_DIR/claude-mcps/zephyr-build"
         if cargo build --release 2>&1; then
             ZB_BIN="$WORKSPACE_DIR/claude-mcps/zephyr-build/target/release/zephyr-build"
             success "zephyr-build built"
-            MCP_SERVERS+=("zephyr-build:5:$ZB_BIN")
+            MCP_SERVERS+=("zephyr-build:$ZB_BIN")
         else
             error "zephyr-build build failed"
-            MCP_SERVERS+=("zephyr-build:5:FAILED")
+            MCP_SERVERS+=("zephyr-build:FAILED")
         fi
     fi
 
     # esp-idf-build (if ESP-IDF)
     if [ "$INSTALL_ESP_IDF" = true ]; then
-        info "Building esp-idf-build (8 tools)..."
+        info "Building esp-idf-build..."
         cd "$WORKSPACE_DIR/claude-mcps/esp-idf-build"
         if cargo build --release 2>&1; then
             EI_BIN="$WORKSPACE_DIR/claude-mcps/esp-idf-build/target/release/esp-idf-build"
             success "esp-idf-build built"
-            MCP_SERVERS+=("esp-idf-build:8:$EI_BIN")
+            MCP_SERVERS+=("esp-idf-build:$EI_BIN")
         else
             error "esp-idf-build build failed"
-            MCP_SERVERS+=("esp-idf-build:8:FAILED")
+            MCP_SERVERS+=("esp-idf-build:FAILED")
         fi
     fi
 
@@ -333,7 +378,7 @@ fi
 if [ "$INSTALL_SALEAE" = true ] && [ "$PYTHON_OK" = true ]; then
     SALEAE_PY="$WORKSPACE_DIR/claude-mcps/saleae-logic/.venv/bin/python"
     if [ -f "$SALEAE_PY" ]; then
-        MCP_SERVERS+=("saleae-logic:21:$SALEAE_PY")
+        MCP_SERVERS+=("saleae-logic:$SALEAE_PY")
     fi
 fi
 
@@ -475,14 +520,14 @@ done
 
 echo ""
 echo -e "${BOLD}MCP Servers:${NC}"
-printf "  %-20s %-8s %s\n" "Server" "Tools" "Binary"
-printf "  %-20s %-8s %s\n" "──────" "─────" "──────"
+printf "  %-20s %s\n" "Server" "Binary"
+printf "  %-20s %s\n" "──────" "──────"
 for entry in "${MCP_SERVERS[@]}"; do
-    IFS=':' read -r name tools path <<< "$entry"
+    IFS=':' read -r name path <<< "$entry"
     if [ "$path" = "FAILED" ]; then
-        printf "  %-20s %-8s ${RED}%s${NC}\n" "$name" "$tools" "BUILD FAILED"
+        printf "  %-20s ${RED}%s${NC}\n" "$name" "BUILD FAILED"
     else
-        printf "  %-20s %-8s ${GREEN}%s${NC}\n" "$name" "$tools" "$path"
+        printf "  %-20s ${GREEN}%s${NC}\n" "$name" "$path"
     fi
 done
 

@@ -1,6 +1,6 @@
 # Embedded Development Workspace
 
-AI-assisted embedded development with Claude Code. Four custom MCP servers expose 61 hardware tools — build systems, debug probes, flash programmers, and logic analyzers — so Claude can orchestrate the full firmware workflow from a single conversation.
+AI-assisted embedded development with Claude Code. Custom MCP servers expose build systems, test runners, debug probes, flash programmers, and logic analyzers — so Claude can orchestrate the full firmware workflow from a single conversation.
 
 See [PRD.md](PRD.md) for architecture, design decisions, and detailed tool specifications.
 
@@ -30,13 +30,12 @@ The script is idempotent — safe to re-run at any time. It never auto-installs 
 
 ## MCP Servers
 
-| Server | Tools | Language | Purpose |
-|--------|-------|----------|---------|
-| [embedded-probe](claude-mcps/embedded-probe/PRD.md) | 27 | Rust | Debug probes, flash, memory, RTT, breakpoints |
-| [saleae-logic](claude-mcps/saleae-logic/PRD.md) | 21 | Python | Signal capture, protocol decode, statistical analysis |
-| [esp-idf-build](claude-mcps/esp-idf-build/PRD.md) | 8 | Rust | ESP32 build, flash, serial monitor |
-| [zephyr-build](claude-mcps/zephyr-build/PRD.md) | 5 | Rust | Zephyr RTOS build system |
-| **Total** | **61** | | |
+| Server | Language | Purpose |
+|--------|----------|---------|
+| [embedded-probe](claude-mcps/embedded-probe/PRD.md) | Rust | Debug probes, flash, memory, RTT, breakpoints |
+| [saleae-logic](claude-mcps/saleae-logic/PRD.md) | Python | Signal capture, protocol decode, statistical analysis |
+| [esp-idf-build](claude-mcps/esp-idf-build/PRD.md) | Rust | ESP32 build, flash, serial monitor |
+| [zephyr-build](claude-mcps/zephyr-build/PRD.md) | Rust | Zephyr RTOS build and test (twister) |
 
 All servers communicate with Claude Code over stdio (JSON-RPC). Registration is automatic via `.mcp.json`, which `setup.sh` generates with absolute paths.
 
@@ -64,10 +63,10 @@ embedded-workspace/
 │
 ├── claude-config/             # Claude Code skills and configuration (submodule)
 ├── claude-mcps/               # MCP servers (submodule)
-│   ├── embedded-probe/        #   Rust — 27 debug/flash tools
-│   ├── zephyr-build/          #   Rust — 5 build tools
-│   ├── esp-idf-build/         #   Rust — 8 build/flash/monitor tools
-│   └── saleae-logic/          #   Python — 21 analysis tools
+│   ├── embedded-probe/        #   Rust — debug probes, flash, RTT
+│   ├── zephyr-build/          #   Rust — build + test (twister)
+│   ├── esp-idf-build/         #   Rust — build, flash, monitor
+│   └── saleae-logic/          #   Python — capture + protocol decode
 │
 ├── zephyr-apps/               # Zephyr applications + west manifest (submodule)
 │   └── apps/                  #   Application source code
@@ -92,14 +91,14 @@ Open the workspace in Claude Code — MCP servers register automatically from `.
 
 ## Testing
 
-All 74 tests run without hardware connected:
+All tests run without hardware connected:
 
 ```bash
 # Run all tests (done automatically by setup.sh unless --skip-tests)
-cd claude-mcps/embedded-probe && cargo test       # 14 tests
-cd claude-mcps/zephyr-build && cargo test          # 19 tests
-cd claude-mcps/esp-idf-build && cargo test         # 16 tests
-cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/test_server_startup.py  # 25 tests
+cd claude-mcps/embedded-probe && cargo test
+cd claude-mcps/zephyr-build && cargo test
+cd claude-mcps/esp-idf-build && cargo test
+cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/test_server_startup.py
 ```
 
 ## Troubleshooting
@@ -110,6 +109,7 @@ cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/tes
 | `cargo build` fails on macOS | Install libusb: `brew install libusb` |
 | ESP-IDF not detected | Set `IDF_PATH` or install to `~/esp/esp-idf` |
 | Logic 2 connection refused | Start Logic 2 app, enable scripting API in Preferences |
+| Twister fails with toolchain error | Run SDK's `setup.sh` to register with cmake, or set `ZEPHYR_SDK_INSTALL_DIR` |
 | Wrong paths in `.mcp.json` | Re-run `./setup.sh` (regenerates with current absolute paths) |
 | Submodule directories empty | Run `git submodule update --init --recursive` |
 
