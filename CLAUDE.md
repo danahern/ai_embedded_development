@@ -10,7 +10,7 @@
 
 ## Key Gotchas
 
-Hard-won lessons (Tier 1 — always loaded). Full details in individual `learnings/` files.
+Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search()` or `/recall`.
 
 - **nRF54L15**: Use `.hex` not `.elf` for flashing. `flash_program` works; `run_firmware` (erase+program) fails. Use `connect_under_reset=true` to recover stuck states.
 - **Log buffer drops**: Boot-time coredump auto-report drops messages if `CONFIG_LOG_BUFFER_SIZE` is too small (default 1024). Set to 4096+. The bottleneck is the deferred log buffer, not the RTT buffer.
@@ -106,33 +106,29 @@ Keep docs current as requirements change or features are added.
 - Cover edge cases: invalid input, missing files, empty data, error conditions.
 - If a function can fail, test that it fails correctly.
 
-## Learnings
+## Knowledge
 
-Three-tier retrieval system — the right knowledge reaches Claude at the right time without bloating context.
+All learnings are stored as structured YAML in `knowledge/items/` and indexed by the knowledge MCP server. Three-tier retrieval ensures the right knowledge reaches Claude at the right time:
 
 | Tier | What | Where | When |
 |------|------|-------|------|
 | 1 | Critical gotchas (10-15) | `CLAUDE.md` Key Gotchas section | Every session, always in context |
-| 2 | Topic rules (5+ files) | `.claude/rules/*.md` | Auto-injected when editing matching files |
-| 3 | Full corpus (all learnings) | `learnings/YYYY/*.md` | On-demand via `/recall` |
+| 2 | Topic rules | `.claude/rules/*.md` (auto-generated) | Auto-injected when editing matching files |
+| 3 | Full corpus | `knowledge/items/*.yml` | On-demand via `/recall` or `knowledge.search()` |
 
-### Adding learnings
+### Capturing knowledge
 
-Use `/learn` during a session or `/wrap-up` at session end. Each learning is one file in `learnings/YYYY/YYYY-MM-DD-kebab-slug.md` with YAML frontmatter (`title`, `date`, `author`, `tags`).
+Use `/learn` during a session or `/wrap-up` at session end. Both use `knowledge.capture()` to create structured YAML items with metadata (severity, category, file patterns, board/chip scoping).
 
-### Tag conventions
+### Regenerating derived files
 
-| Category | Examples |
-|----------|----------|
-| Chips | `nrf52840`, `nrf54l15`, `esp32`, `esp32s3` |
-| Subsystems | `zephyr`, `bluetooth`, `coredump`, `shell`, `dts`, `kconfig` |
-| Tools | `probe-rs`, `twister`, `west`, `size-report`, `rtt` |
-| Concepts | `flashing`, `testing`, `build-system`, `memory`, `overlay` |
-| Platforms | `macos`, `linux`, `qemu` |
+Tier 1 and Tier 2 are auto-generated from the knowledge store:
+- `knowledge.regenerate_gotchas()` — updates Key Gotchas in CLAUDE.md from severity=critical items
+- `knowledge.regenerate_rules()` — updates `.claude/rules/*.md` from file_patterns
 
 ### Session workflow
 
-**Run `/start` at the beginning of a session** to bootstrap context (refreshes recent learnings, shows recent activity, checks hardware).
+**Run `/start` at the beginning of a session** to bootstrap context (refreshes recent knowledge, shows recent activity, checks hardware).
 
 **Run `/wrap-up` at the end of a session** to capture learnings and commit work.
 
@@ -235,8 +231,8 @@ If an MCP tool fails:
 
 ## Key Commands
 
-- `/start` — Bootstrap a session (refresh recent learnings, check hardware, show recent changes)
-- `/wrap-up` — End a session (review changes, capture learnings, commit)
-- `/learn` — Capture a learning from the current session with metadata and tags
-- `/recall` — Search the learnings corpus by topic, tag, or keyword
+- `/start` — Bootstrap a session (refresh recent knowledge, check hardware, show recent changes)
+- `/wrap-up` — End a session (review changes, capture knowledge, commit)
+- `/learn` — Capture a knowledge item via `knowledge.capture()` with metadata and tags
+- `/recall` — Search knowledge via `knowledge.search()` by topic, tag, or keyword
 - `/embedded` — Full embedded development guidelines (memory, style, Zephyr patterns)

@@ -53,6 +53,8 @@ If any checks fail, re-run `./setup.sh`. See [Troubleshooting](#troubleshooting)
 | [saleae-logic](claude-mcps/saleae-logic/PRD.md) | Python | Signal capture, protocol decode, statistical analysis |
 | [esp-idf-build](claude-mcps/esp-idf-build/PRD.md) | Rust | ESP32 build, flash, serial monitor |
 | [zephyr-build](claude-mcps/zephyr-build/PRD.md) | Rust | Zephyr RTOS build and test (twister) |
+| [elf-analysis](claude-mcps/elf-analysis/PRD.md) | Rust | ROM/RAM size analysis and comparison |
+| [knowledge-server](claude-mcps/knowledge-server/PRD.md) | Rust | Structured knowledge management with hardware-aware retrieval |
 
 All servers communicate with Claude Code over stdio (JSON-RPC). Registration is automatic via `.mcp.json`, which `setup.sh` generates with absolute paths.
 
@@ -83,7 +85,14 @@ embedded-workspace/
 │   ├── embedded-probe/        #   Rust — debug probes, flash, RTT
 │   ├── zephyr-build/          #   Rust — build + test (twister)
 │   ├── esp-idf-build/         #   Rust — build, flash, monitor
+│   ├── elf-analysis/          #   Rust — ROM/RAM size analysis
+│   ├── knowledge-server/      #   Rust — structured knowledge management
 │   └── saleae-logic/          #   Python — capture + protocol decode
+│
+├── knowledge/                 # Knowledge store (see Knowledge System below)
+│   ├── items/                 #   Structured YAML knowledge items
+│   └── boards/                #   Board profile YAML (chip, memory, peripherals)
+├── plans/                     # Project plans and tracking (see Plans below)
 │
 ├── zephyr-apps/               # Zephyr applications + west manifest (submodule)
 │   └── apps/                  #   Application source code
@@ -95,6 +104,24 @@ embedded-workspace/
 ├── modules/                   # (west-managed, gitignored)
 └── tools/                     # (west-managed, gitignored)
 ```
+
+## Knowledge System
+
+Hard-won learnings from debugging sessions are captured as structured YAML in `knowledge/items/`. The knowledge-server MCP indexes these items with SQLite FTS5 for fast search, and supports hardware-aware retrieval (filter by board, chip, or subsystem).
+
+Knowledge flows through three tiers:
+
+| Tier | Location | When loaded | How updated |
+|------|----------|-------------|-------------|
+| Critical gotchas | `CLAUDE.md` Key Gotchas section | Every session | `knowledge.regenerate_gotchas()` |
+| Topic rules | `.claude/rules/*.md` | Auto-injected when editing matching files | `knowledge.regenerate_rules()` |
+| Full corpus | `knowledge/items/*.yml` | On-demand via `/recall` or `knowledge.search()` | `/learn` or `knowledge.capture()` |
+
+Board profiles in `knowledge/boards/` define hardware hierarchy (board → chip → family → arch) with memory maps, peripherals, and known errata.
+
+## Plans
+
+Plans in `plans/` track significant work items through a lifecycle: `Ideation` → `Planned` → `In-Progress` → `Complete`. Required for new MCPs, apps, libraries, or changes touching 5+ files. Completed plans stay in place — status in the file header distinguishes active from done.
 
 ## Getting Started with Claude Code
 
@@ -145,3 +172,5 @@ cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/tes
 - [claude-mcps/saleae-logic/PRD.md](claude-mcps/saleae-logic/PRD.md) — Logic analyzer server
 - [claude-mcps/esp-idf-build/PRD.md](claude-mcps/esp-idf-build/PRD.md) — ESP-IDF build server
 - [claude-mcps/zephyr-build/PRD.md](claude-mcps/zephyr-build/PRD.md) — Zephyr build server
+- [claude-mcps/elf-analysis/PRD.md](claude-mcps/elf-analysis/PRD.md) — ELF size analysis server
+- [claude-mcps/knowledge-server/PRD.md](claude-mcps/knowledge-server/PRD.md) — Knowledge management server
