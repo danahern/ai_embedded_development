@@ -1,0 +1,28 @@
+id: k-2026-0214-020
+title: Two coredump strategies
+
+body: |
+  - **RTT-only** (`debug_coredump.conf`): Simple, no flash partition needed. Data streams through RTT at crash time. Lost if no one is reading.
+  - **Flash-backed** (`debug_coredump_flash.conf`): Persists to flash, survives reboot. `crash_log` module re-emits on next boot. Needs a DTS overlay with `coredump_partition`.
+category: pattern
+severity: informational
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [coredump, dts, rtt]
+
+file_patterns: ['**/*.dts', '**/*.dtsi', '**/*.overlay', '**/*RTT*', '**/*coredump*', '**/*crash*',
+  '**/*dump*', '**/*rtt*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, architecture, rtt, dts]

@@ -1,0 +1,32 @@
+id: k-2026-0214-017
+title: Shell dummy backend for testing
+
+body: |
+  `CONFIG_SHELL_BACKEND_DUMMY=y` works well for testing shell commands without hardware. Pattern:
+  ```c
+  const struct shell *sh = shell_backend_dummy_get_ptr();
+  shell_execute_cmd(sh, "board info");
+  const char *output = shell_backend_dummy_get_output(sh, &size);
+  zassert_not_null(strstr(output, "Board:"), "expected Board: in output");
+  ```
+category: pattern
+severity: informational
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [shell, testing]
+
+file_patterns: ['**/*shell*', '**/testcase.yaml', '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [testing, shell, zephyr]

@@ -1,0 +1,26 @@
+id: k-2026-0214-011
+title: native_sim is Linux-only
+
+body: |
+  The POSIX architecture (`native_sim`, `native_posix`) doesn't work on macOS. Use `qemu_cortex_m3` for unit tests that need an ARM target.
+category: pattern
+severity: critical
+
+applies_to:
+  boards: [qemu_cortex_m3]
+  chips: []
+  tools: []
+  subsystems: [testing]
+
+file_patterns: ['**/testcase.yaml', '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [testing, macos, qemu, zephyr]

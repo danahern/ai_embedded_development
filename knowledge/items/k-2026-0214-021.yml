@@ -1,0 +1,26 @@
+id: k-2026-0214-021
+title: Zephyr coredump captures exception frame registers
+
+body: |
+  The coredump subsystem captures PC/LR/SP from the ARM exception frame — the actual crash site. This is better than halting after a fault and reading registers, which only shows the fault handler context.
+category: operational
+severity: important
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [coredump]
+
+file_patterns: ['**/*coredump*', '**/*crash*', '**/*dump*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, zephyr, debugging]

@@ -1,0 +1,26 @@
+id: k-2026-0214-008
+title: Log buffer drops during boot auto-report
+
+body: |
+  When `crash_log` auto-emits a coredump at boot via `SYS_INIT`, the Zephyr deferred log buffer (not RTT buffer) overflows because boot messages from other subsystems compete. Symptom: "8 messages dropped" losing the `#CD:BEGIN#` and ZE header. Fix: increase `CONFIG_LOG_BUFFER_SIZE=4096` (default is 1024). Increasing `CONFIG_SEGGER_RTT_BUFFER_SIZE_UP` alone doesn't help — the bottleneck is the in-memory log message ring buffer.
+category: toolchain
+severity: critical
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [coredump, kconfig, logging]
+
+file_patterns: ['**/*.conf', '**/*coredump*', '**/*crash*', '**/*dump*', '**/Kconfig*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, logging, kconfig, zephyr]

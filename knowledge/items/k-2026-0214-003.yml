@@ -1,0 +1,27 @@
+id: k-2026-0214-003
+title: Coredump size and RTT buffer
+
+body: |
+  `CONFIG_DEBUG_COREDUMP_MEMORY_DUMP_MIN=y` captures only the faulting thread's stack, which fits in the default 4KB RTT buffer. `MEMORY_DUMP_LINKER_RAM` captures all RAM and will overflow RTT — only use with flash backend.
+category: toolchain
+severity: informational
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [coredump, kconfig, rtt]
+
+file_patterns: ['**/*.conf', '**/*RTT*', '**/*coredump*', '**/*crash*', '**/*dump*', '**/*rtt*',
+  '**/Kconfig*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, rtt, memory, kconfig]

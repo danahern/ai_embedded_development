@@ -1,0 +1,27 @@
+id: k-2026-0215-001
+title: Core template libraries break QEMU builds
+
+body: |
+  The `create_app` core template includes crash_log and device_shell library overlays which enable RTT and flash — both unavailable on `qemu_cortex_m3`. For QEMU-only apps, remove the `OVERLAY_CONFIG` lines from CMakeLists.txt.
+category: toolchain
+severity: critical
+
+applies_to:
+  boards: [qemu_cortex_m3]
+  chips: []
+  tools: []
+  subsystems: [build-system, kconfig, testing]
+
+file_patterns: ['**/*.cmake', '**/*.conf', '**/CMakeLists.txt', '**/Kconfig*', '**/module.yml', '**/testcase.yaml',
+  '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-15'
+updated: '2026-02-15'
+author: danahern
+source_session: '2026-02-15'
+
+tags: [build-system, qemu, testing, kconfig]

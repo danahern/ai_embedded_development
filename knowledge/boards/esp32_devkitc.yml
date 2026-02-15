@@ -1,0 +1,21 @@
+board: esp32_devkitc
+chip: esp32
+family: esp32
+arch: xtensa
+vendor: espressif
+
+flash_method: esptool
+flash_tool: esptool
+connect_under_reset: false
+target_chip: ESP32
+board_qualifier: "esp32_devkitc/esp32/procpu"
+
+memory:
+  flash:
+    type: spi-nor
+    size_kb: 4096
+  ram:
+    size_kb: 520
+
+peripherals: [uart, spi, i2c, ble, adc, pwm, wifi, sdio, can]
+features: [wifi, ble4.2, dual-core]

@@ -1,0 +1,29 @@
+board: nrf54l15dk
+chip: nrf54l15
+family: nrf54
+arch: arm-cortex-m
+vendor: nordic
+
+flash_method: hex
+flash_tool: probe-rs
+probe: j-link
+connect_under_reset: true
+target_chip: nrf54l15
+board_qualifier: "nrf54l15dk/nrf54l15/cpuapp"
+
+memory:
+  flash:
+    type: rram
+    size_kb: 1524
+  ram:
+    size_kb: 256
+
+peripherals: [uart, spi, i2c, ble, adc, pwm]
+features: [ble5, thread, matter, low-power]
+
+errata_doc: "nRF54L15_Errata_v1.2"
+known_errata:
+  - id: rram-erase-program
+    summary: "RRAM erase-then-program sequence fails"
+    workaround: "Use flash_program with .hex directly, skip explicit erase"
+    knowledge_items: []

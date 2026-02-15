@@ -1,0 +1,26 @@
+id: k-2026-0214-015
+title: RTT output arrives in chunks
+
+body: |
+  When capturing coredump data via `rtt_read`, output arrives in ~1KB chunks. Concatenate all reads until `#CD:END#` appears before passing to `analyze_coredump`. Lines can split across chunk boundaries.
+category: operational
+severity: informational
+
+applies_to:
+  boards: []
+  chips: []
+  tools: [probe-rs]
+  subsystems: [coredump, rtt]
+
+file_patterns: ['**/*RTT*', '**/*coredump*', '**/*crash*', '**/*dump*', '**/*rtt*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [rtt, coredump, probe-rs]

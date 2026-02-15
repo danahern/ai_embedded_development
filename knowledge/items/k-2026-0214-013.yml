@@ -1,0 +1,27 @@
+id: k-2026-0214-013
+title: OVERLAY_CONFIG vs DTC_OVERLAY_FILE
+
+body: |
+  `OVERLAY_CONFIG` is for Kconfig fragments (`.conf` files). `DTC_OVERLAY_FILE` is for devicetree overlays (`.overlay` files). Zephyr auto-discovers DTS overlays from `boards/` but you must explicitly list Kconfig overlays via `OVERLAY_CONFIG`.
+category: toolchain
+severity: important
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [build-system, dts, kconfig]
+
+file_patterns: ['**/*.cmake', '**/*.conf', '**/*.dts', '**/*.dtsi', '**/*.overlay', '**/CMakeLists.txt',
+  '**/Kconfig*', '**/module.yml']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [zephyr, build-system, kconfig, dts, overlay]

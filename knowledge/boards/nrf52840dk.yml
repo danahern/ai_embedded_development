@@ -1,0 +1,22 @@
+board: nrf52840dk
+chip: nrf52840
+family: nrf52
+arch: arm-cortex-m
+vendor: nordic
+
+flash_method: hex
+flash_tool: probe-rs
+probe: j-link
+connect_under_reset: false
+target_chip: nRF52840_xxAA
+board_qualifier: "nrf52840dk/nrf52840"
+
+memory:
+  flash:
+    type: nor
+    size_kb: 1024
+  ram:
+    size_kb: 256
+
+peripherals: [uart, spi, i2c, ble, adc, pwm, usb, nfc]
+features: [ble5, thread, zigbee, usb]

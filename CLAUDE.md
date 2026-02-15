@@ -166,6 +166,15 @@ If an MCP tool fails:
 ### embedded-probe (Debug & Flash)
 - `list_probes()`, `connect(probe_selector, target_chip)`, `flash_program(session_id, file_path)`, `validate_boot(session_id, file_path, success_pattern)`, `rtt_attach(session_id)`, `rtt_read(session_id)`, `reset(session_id)`, `resolve_symbol(address, elf_path)`, `stack_trace(session_id, elf_path)`, `analyze_coredump(log_text, elf_path)`
 
+### knowledge (Knowledge Management)
+- `capture(title, body, category?, severity?, boards?, chips?, tools?, subsystems?, file_patterns?, tags?, author?)` — create knowledge item
+- `search(query, tags?, chips?, category?, limit?)` — full-text search with FTS5
+- `for_context(files, board?)` — knowledge relevant to current files + build target
+- `deprecate(id, superseded_by?)`, `validate(id, validated_by)` — lifecycle management
+- `recent(days?)`, `stale(days?)`, `list_tags(prefix?)` — discovery and maintenance
+- `board_info(board)`, `for_chip(chip)`, `for_board(board)`, `list_boards(vendor?)` — hardware-aware retrieval
+- `regenerate_rules(dry_run?)`, `regenerate_gotchas(dry_run?)` — auto-generate rules and gotchas
+
 ### saleae-logic (Logic Analyzer)
 - `get_app_info()`, `list_devices()`, `start_capture(channels, duration_seconds)`, `wait_capture(capture_id)`, `add_analyzer(capture_id, analyzer_name, settings)`, `export_analyzer_data(capture_id, analyzer_index)`, `analyze_capture(capture_id, analyzer_index)`, `stream_capture(channels, duration, analyzer_name, settings)`
 
@@ -217,7 +226,8 @@ If an MCP tool fails:
 | Directory | Purpose | Git |
 |-----------|---------|-----|
 | `claude-config/` | Skills (`/embedded`, `/start`, `/wrap-up`) and settings | Submodule |
-| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic) | Submodule |
+| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic, knowledge-server) | Submodule |
+| `knowledge/` | Knowledge items (`items/*.yml`) and board profiles (`boards/*.yml`) | Tracked |
 | `zephyr-apps/` | Zephyr apps, shared libraries, tests | Submodule |
 | `esp-dev-kits/` | ESP-IDF example projects | Cloned |
 | `test-tools/` | Python BLE/power testing utilities | Tracked |

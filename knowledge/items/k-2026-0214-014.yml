@@ -1,0 +1,26 @@
+id: k-2026-0214-014
+title: RTT buffer conflicts between log and shell backends
+
+body: |
+  `CONFIG_LOG_BACKEND_RTT` and `CONFIG_SHELL_BACKEND_RTT` both default to buffer 0. When using both, set `CONFIG_SHELL_BACKEND_RTT_BUFFER=1` or the build fails with "Conflicting log RTT backend enabled on the same channel."
+category: toolchain
+severity: critical
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [kconfig, logging, rtt, shell]
+
+file_patterns: ['**/*.conf', '**/*RTT*', '**/*rtt*', '**/*shell*', '**/Kconfig*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [rtt, kconfig, shell, logging]

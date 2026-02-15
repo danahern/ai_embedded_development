@@ -1,0 +1,27 @@
+id: k-2026-0214-006
+title: Flash-dependent code can't run on QEMU
+
+body: |
+  `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED` which QEMU doesn't provide. For tests that need flash, use `build_only: true` with `platform_allow` for real boards, or find an alternative test strategy.
+category: toolchain
+severity: critical
+
+applies_to:
+  boards: [qemu_cortex_m3]
+  chips: []
+  tools: []
+  subsystems: [coredump, kconfig, testing]
+
+file_patterns: ['**/*.conf', '**/*coredump*', '**/*crash*', '**/*dump*', '**/Kconfig*', '**/testcase.yaml',
+  '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [testing, qemu, coredump, kconfig]

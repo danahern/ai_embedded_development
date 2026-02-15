@@ -1,0 +1,27 @@
+id: k-2026-0214-007
+title: In-memory coredump backend for testing
+
+body: |
+  `CONFIG_DEBUG_COREDUMP_BACKEND_IN_MEMORY` provides the same query/copy API as the flash backend. Works on QEMU for unit testing crash_log without real flash hardware.
+category: toolchain
+severity: informational
+
+applies_to:
+  boards: [qemu_cortex_m3]
+  chips: []
+  tools: []
+  subsystems: [coredump, kconfig, testing]
+
+file_patterns: ['**/*.conf', '**/*coredump*', '**/*crash*', '**/*dump*', '**/Kconfig*', '**/testcase.yaml',
+  '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, testing, qemu, kconfig]

@@ -24,6 +24,13 @@
         "/Users/danahern/code/claude/work"
       ]
     },
+    "knowledge": {
+      "command": "/Users/danahern/code/claude/work/claude-mcps/knowledge-server/target/release/knowledge-server",
+      "args": [
+        "--workspace",
+        "/Users/danahern/code/claude/work"
+      ]
+    },
     "saleae-logic": {
       "command": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic/.venv/bin/python",
       "args": [

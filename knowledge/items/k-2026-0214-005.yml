@@ -1,0 +1,26 @@
+id: k-2026-0214-005
+title: ELF flashing can fail on nRF54L15 RRAM
+
+body: |
+  probe-rs sometimes fails to flash ELF files on nRF54L15 (RRAM-based flash). Fall back to `.hex` files: `flash_program(session_id, file_path="build/zephyr/zephyr.hex")`.
+category: hardware
+severity: critical
+
+applies_to:
+  boards: [nrf54l15dk]
+  chips: [nrf54l15]
+  tools: [probe-rs]
+  subsystems: []
+
+file_patterns: ['**/*nrf54l15*', '**/boards/*nrf54l15*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [nrf54l15, rram, flashing, probe-rs]

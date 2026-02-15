@@ -1,0 +1,20 @@
+board: qemu_cortex_m3
+chip: cortex-m3
+family: qemu
+arch: arm-cortex-m
+vendor: qemu
+
+flash_method: elf
+flash_tool: qemu
+connect_under_reset: false
+board_qualifier: "qemu_cortex_m3"
+
+memory:
+  flash:
+    type: simulated
+    size_kb: 256
+  ram:
+    size_kb: 64
+
+peripherals: [uart]
+features: [unit-testing, cross-platform]

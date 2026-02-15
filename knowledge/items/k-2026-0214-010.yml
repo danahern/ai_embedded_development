@@ -1,0 +1,26 @@
+id: k-2026-0214-010
+title: Use zephyr/module.yml for shared library auto-discovery
+
+body: |
+  Instead of setting `ZEPHYR_EXTRA_MODULES` in every app's CMakeLists.txt, place a `zephyr/module.yml` at the repo root pointing to a top-level `lib/CMakeLists.txt` and `lib/Kconfig`. Apps just enable `CONFIG_<LIB>=y` in prj.conf. This eliminates boilerplate and ensures new apps get all libraries automatically.
+category: toolchain
+severity: important
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [build-system, kconfig]
+
+file_patterns: ['**/*.cmake', '**/*.conf', '**/CMakeLists.txt', '**/Kconfig*', '**/module.yml']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [zephyr, build-system, kconfig]

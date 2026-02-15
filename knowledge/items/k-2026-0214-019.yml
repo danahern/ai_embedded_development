@@ -1,0 +1,27 @@
+id: k-2026-0214-019
+title: Twister needs Zephyr SDK env vars in MCP subprocesses
+
+body: |
+  MCP server subprocesses don't inherit shell profile env vars. Twister requires `ZEPHYR_TOOLCHAIN_VARIANT` and `ZEPHYR_SDK_INSTALL_DIR` to be set. The `zephyr-build` MCP auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/` (registered by `setup.sh`). If auto-detection fails, set these env vars in the MCP server's launch environment.
+category: toolchain
+severity: critical
+
+applies_to:
+  boards: []
+  chips: []
+  tools: [twister]
+  subsystems: [build-system, testing]
+
+file_patterns: ['**/*.cmake', '**/CMakeLists.txt', '**/Kconfig*', '**/module.yml', '**/testcase.yaml',
+  '**/tests/**']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [testing, twister, build-system, macos]

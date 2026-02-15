@@ -1,0 +1,26 @@
+id: k-2026-0214-002
+title: coredump_cmd return values
+
+body: |
+  `coredump_cmd(COREDUMP_CMD_COPY_STORED_DUMP)` returns positive byte count on success, not 0. Check `if (ret <= 0)` for errors, and use `ret` as the actual bytes copied for iteration.
+category: operational
+severity: important
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [coredump]
+
+file_patterns: ['**/*coredump*', '**/*crash*', '**/*dump*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [coredump, zephyr, api]

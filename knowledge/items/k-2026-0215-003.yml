@@ -1,0 +1,26 @@
+id: k-2026-0215-003
+title: size_report 'all' target produces one file, not two
+
+body: |
+  Passing `all` as a positional arg to Zephyr's `size_report` script generates a single `all.json` combining ROM and RAM. To get separate `rom.json` and `ram.json`, pass `rom ram` as two separate positional args. The JSON output path uses `{target}` replacement — `all` replaces to `all`, not to separate files.
+category: toolchain
+severity: informational
+
+applies_to:
+  boards: []
+  chips: []
+  tools: [size-report]
+  subsystems: [build-system, elf-analysis]
+
+file_patterns: ['**/*.cmake', '**/CMakeLists.txt', '**/Kconfig*', '**/module.yml']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-15'
+updated: '2026-02-15'
+author: danahern
+source_session: '2026-02-15'
+
+tags: [elf-analysis, size-report, build-system]

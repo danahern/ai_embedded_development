@@ -1,0 +1,27 @@
+id: k-2026-0214-001
+title: Board qualifiers use / in CMake, _ in filenames
+
+body: |
+  `${BOARD}` expands to `nrf52840dk/nrf52840` (with `/`) but DTS overlay files use `_` separator: `nrf52840dk_nrf52840.overlay`. Don't set `DTC_OVERLAY_FILE` manually — put overlays in the app's `boards/` directory and let Zephyr auto-discover them.
+category: toolchain
+severity: important
+
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: [build-system, dts]
+
+file_patterns: ['**/*.cmake', '**/*.conf', '**/*.dts', '**/*.dtsi', '**/*.overlay', '**/CMakeLists.txt',
+  '**/Kconfig*', '**/module.yml']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [zephyr, build-system, dts, overlay]

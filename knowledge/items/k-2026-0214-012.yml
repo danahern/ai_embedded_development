@@ -1,0 +1,30 @@
+id: k-2026-0214-012
+title: nRF54L15 RRAM flash quirks
+
+body: |
+  - `flash_program` with `.hex` works directly without prior erase
+  - `run_firmware` (erase+program) fails on nRF54L15 RRAM
+  - `flash_erase` followed by `flash_program` also fails
+  - `connect_under_reset=true` helps recover from stuck states
+  - nRF54L15 RRAM is exactly 1524KB (0x17D000). Default storage fills to the end — must shrink storage to fit a coredump partition
+category: hardware
+severity: critical
+
+applies_to:
+  boards: [nrf54l15dk]
+  chips: [nrf54l15]
+  tools: [probe-rs]
+  subsystems: [dts]
+
+file_patterns: ['**/*.dts', '**/*.dtsi', '**/*.overlay', '**/*nrf54l15*', '**/boards/*nrf54l15*']
+
+status: validated
+validated_by: [danahern]
+deprecated: false
+
+created: '2026-02-14'
+updated: '2026-02-14'
+author: danahern
+source_session: '2026-02-14'
+
+tags: [nrf54l15, rram, flashing, probe-rs, dts]
