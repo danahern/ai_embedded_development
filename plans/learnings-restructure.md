@@ -91,4 +91,4 @@ All 12 verification checks pass.
 
 ## Modifications
 
-None — implemented as planned.
+- 2026-02-15: `learnings/` directory fully superseded by `knowledge/items/` (knowledge server MCP). All 24 markdown learnings had matching YAML knowledge items, so `learnings/` was deleted. CLAUDE.md updated to reference knowledge system instead. The three-tier architecture remains, but Tier 3 now uses `knowledge.search()` instead of grep over markdown files.
