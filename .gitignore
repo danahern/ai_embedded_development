@@ -27,7 +27,6 @@ esp-dev-kits/
 # Twister test output
 # ==============================================
 twister-out*/
-build-test-crash-log/
 
 # ==============================================
 # OS and IDE

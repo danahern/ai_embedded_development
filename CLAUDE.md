@@ -91,7 +91,7 @@ If an MCP tool fails:
 
 ### Testing
 ```bash
-python3 zephyr/scripts/twister -T zephyr-apps/tests -p qemu_cortex_m3 -v
+python3 zephyr/scripts/twister -T zephyr-apps/lib -p qemu_cortex_m3 -O .cache/twister -v
 ```
 
 ## Common Boards
