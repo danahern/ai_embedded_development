@@ -1,6 +1,6 @@
 # CI/CD Pipeline — Phase 1 (Solo)
 
-Status: In-Progress
+Status: Complete
 Created: 2026-02-14
 Updated: 2026-02-15
 
@@ -163,7 +163,7 @@ Benefits:
 - [x] West module cache hit on second run (no re-download, 5m12s — compile time dominates)
 - [x] Self-hosted runner on danahern-pc picks up jobs (test workflow run 22075803196 passed)
 - [x] USB passthrough works: probe-rs sees J-Link (1366:1051) from WSL2 via usbipd
-- [ ] Hardware workflow: build → flash → boot validate succeeds on self-hosted runner
+- [x] Hardware workflow: build → flash → boot validate succeeds on self-hosted runner (run 22077271838, 1m24s)
 - [x] Branch protection enabled on main requiring CI pass (claude-mcps, zephyr-apps, test-tools)
 
 ## Modifications
