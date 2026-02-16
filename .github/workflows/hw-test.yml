@@ -108,8 +108,7 @@ jobs:
       - name: Recover board
         run: |
           echo "Resetting board to known state..."
-          probe-rs reset --chip $CHIP || \
-            probe-rs reset --chip $CHIP --connect-under-reset || \
+          probe-rs reset --chip $CHIP --connect-under-reset --allow-erase-all || \
             echo "::warning::Board reset failed — continuing anyway"
 
       - name: Flash and validate hello_world
@@ -122,7 +121,7 @@ jobs:
           mkdir -p "$LOG_DIR"
 
           echo "--- Flashing hello_world (.hex) ---"
-          probe-rs download --chip $CHIP --binary-format hex --verify "$HEX"
+          probe-rs download --chip $CHIP --binary-format hex --verify --connect-under-reset --allow-erase-all "$HEX"
 
           echo "--- Reading RTT (10s timeout) ---"
           timeout 10 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
@@ -146,7 +145,7 @@ jobs:
           LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
 
           echo "--- Flashing osal_demo (.hex) ---"
-          probe-rs download --chip $CHIP --binary-format hex --verify "$HEX"
+          probe-rs download --chip $CHIP --binary-format hex --verify --connect-under-reset --allow-erase-all "$HEX"
 
           echo "--- Reading RTT (15s timeout) ---"
           timeout 15 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
