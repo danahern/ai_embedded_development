@@ -115,16 +115,13 @@ jobs:
         run: |
           CI_WORKSPACE="$HOME/ci-workspace"
           BUILD="${CI_WORKSPACE}/zephyr-apps/apps/hello_world/build/${BOARD_SANITIZED}"
-          HEX="${BUILD}/zephyr/zephyr.hex"
           ELF="${BUILD}/zephyr/zephyr.elf"
           LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
           mkdir -p "$LOG_DIR"
 
-          echo "--- Flashing hello_world (.hex) ---"
-          probe-rs download --chip $CHIP --binary-format hex --verify --allow-erase-all "$HEX"
-
-          echo "--- Reading RTT (10s timeout) ---"
-          timeout 10 probe-rs attach --chip $CHIP --allow-erase-all "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
+          echo "--- Flash + run hello_world (10s timeout) ---"
+          timeout 10 probe-rs run --chip $CHIP --allow-erase-all "$ELF" \
+            > "$LOG_DIR/hello_world.log" 2>&1 || true
 
           echo "--- RTT output ---"
           cat "$LOG_DIR/hello_world.log"
@@ -140,15 +137,12 @@ jobs:
         run: |
           CI_WORKSPACE="$HOME/ci-workspace"
           BUILD="${CI_WORKSPACE}/zephyr-apps/apps/osal_demo/build/${BOARD_SANITIZED}"
-          HEX="${BUILD}/zephyr/zephyr.hex"
           ELF="${BUILD}/zephyr/zephyr.elf"
           LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
 
-          echo "--- Flashing osal_demo (.hex) ---"
-          probe-rs download --chip $CHIP --binary-format hex --verify --allow-erase-all "$HEX"
-
-          echo "--- Reading RTT (15s timeout) ---"
-          timeout 15 probe-rs attach --chip $CHIP --allow-erase-all "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
+          echo "--- Flash + run osal_demo (20s timeout) ---"
+          timeout 20 probe-rs run --chip $CHIP --allow-erase-all "$ELF" \
+            > "$LOG_DIR/osal_demo.log" 2>&1 || true
 
           echo "--- RTT output ---"
           cat "$LOG_DIR/osal_demo.log"
