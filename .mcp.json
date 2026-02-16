@@ -1,51 +1,51 @@
 {
   "mcpServers": {
     "embedded-probe": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/embedded-probe/target/release/embedded-probe"
+      "command": "./claude-mcps/embedded-probe/target/release/embedded-probe"
     },
     "zephyr-build": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/zephyr-build/target/release/zephyr-build",
+      "command": "./claude-mcps/zephyr-build/target/release/zephyr-build",
       "args": [
         "--workspace",
-        "/home/danahern/ai_embedded_development"
+        "."
       ]
     },
     "esp-idf-build": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/esp-idf-build/target/release/esp-idf-build",
+      "command": "./claude-mcps/esp-idf-build/target/release/esp-idf-build",
       "args": [
         "--projects-dir",
-        "/home/danahern/ai_embedded_development/esp-dev-kits/examples"
+        "./esp-dev-kits/examples"
       ]
     },
     "elf-analysis": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/elf-analysis/target/release/elf-analysis",
+      "command": "./claude-mcps/elf-analysis/target/release/elf-analysis",
       "args": [
         "--workspace",
-        "/home/danahern/ai_embedded_development"
+        "."
       ]
     },
     "knowledge": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/knowledge-server/target/release/knowledge-server",
+      "command": "./claude-mcps/knowledge-server/target/release/knowledge-server",
       "args": [
         "--workspace",
-        "/home/danahern/ai_embedded_development"
+        "."
       ]
     },
     "saleae-logic": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/saleae-logic/.venv/bin/python",
+      "command": "./claude-mcps/saleae-logic/.venv/bin/python",
       "args": [
         "-m",
         "saleae_logic"
       ],
-      "cwd": "/home/danahern/ai_embedded_development/claude-mcps/saleae-logic"
+      "cwd": "./claude-mcps/saleae-logic"
     },
     "hw-test-runner": {
-      "command": "/home/danahern/ai_embedded_development/claude-mcps/hw-test-runner/.venv/bin/python",
+      "command": "./claude-mcps/hw-test-runner/.venv/bin/python",
       "args": [
         "-m",
         "hw_test_runner"
       ],
-      "cwd": "/home/danahern/ai_embedded_development/claude-mcps/hw-test-runner"
+      "cwd": "./claude-mcps/hw-test-runner"
     }
   }
 }
