@@ -229,39 +229,24 @@ jobs:
           LOG_FILE="$LOG_DIR/osal_tests.log"
 
           # Capture serial output with pyserial — exits early on Unity summary
-          timeout 30 python3 -u << 'PYEOF' "$SERIAL_PORT" "$LOG_FILE" || true
+          timeout 30 python3 -u -c "
           import serial, sys, time
-
-          port = sys.argv[1]
-          log_path = sys.argv[2]
-
+          port, log_path = sys.argv[1], sys.argv[2]
           ser = serial.Serial(port, 115200, timeout=1)
-          # Toggle DTR/RTS to reset ESP32 and capture from boot
-          ser.dtr = False
-          ser.rts = True
-          time.sleep(0.1)
-          ser.rts = False
-          time.sleep(0.1)
-
-          with open(log_path, "w") as log:
+          ser.dtr = False; ser.rts = True; time.sleep(0.1)
+          ser.rts = False; time.sleep(0.1)
+          with open(log_path, 'w') as log:
               deadline = time.time() + 25
               while time.time() < deadline:
                   line = ser.readline()
-                  if not line:
-                      continue
-                  try:
-                      text = line.decode("utf-8", errors="replace").rstrip()
-                  except Exception:
-                      continue
-                  print(text)
-                  log.write(text + "\n")
-                  log.flush()
-                  # Unity summary looks like: "44 Tests 0 Failures 0 Ignored"
-                  if "Failures" in text and "Tests" in text:
-                      print(f"\n--- Unity summary detected, stopping capture ---")
-                      break
+                  if not line: continue
+                  try: text = line.decode('utf-8', errors='replace').rstrip()
+                  except: continue
+                  print(text); log.write(text + '\n'); log.flush()
+                  if 'Failures' in text and 'Tests' in text:
+                      print('\n--- Unity summary detected, stopping capture ---'); break
           ser.close()
-          PYEOF
+          " "$SERIAL_PORT" "$LOG_FILE" || true
 
           echo ""
           echo "--- Serial output ---"
