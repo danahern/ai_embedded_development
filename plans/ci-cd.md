@@ -161,8 +161,8 @@ Benefits:
 - [x] `test-tools` workflow runs pytest successfully
 - [x] Cargo cache hit on second run (knowledge-server 54s→21s, others were already fast)
 - [x] West module cache hit on second run (no re-download, 5m12s — compile time dominates)
-- [ ] Self-hosted runner on danahern-pc picks up jobs (WSL2 + runner agent working)
-- [ ] USB passthrough works: probe-rs can see J-Link from WSL2 via usbipd
+- [x] Self-hosted runner on danahern-pc picks up jobs (test workflow run 22075803196 passed)
+- [x] USB passthrough works: probe-rs sees J-Link (1366:1051) from WSL2 via usbipd
 - [ ] Hardware workflow: build → flash → boot validate succeeds on self-hosted runner
 - [x] Branch protection enabled on main requiring CI pass (claude-mcps, zephyr-apps, test-tools)
 

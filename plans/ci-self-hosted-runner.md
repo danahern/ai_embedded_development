@@ -1,7 +1,8 @@
 # CI Self-Hosted Runner Setup (danahern-pc)
 
-Status: Planned
+Status: Complete
 Created: 2026-02-15
+Updated: 2026-02-16
 
 ## Problem
 
@@ -212,18 +213,27 @@ Register-ScheduledTask -TaskName "USB-Attach-WSL" -Action $action -Trigger $trig
 
 ## Verification
 
-- [ ] WSL2 Ubuntu 24.04 running
-- [ ] `usbipd list` shows connected boards from Windows
-- [ ] `lsusb` in WSL2 shows boards after attach
-- [ ] `probe-rs list` sees J-Link / debug probes
-- [ ] `cargo test` passes for all Rust MCP servers
-- [ ] `pytest` passes for Python MCP servers
-- [ ] `twister` passes for Zephyr library tests on qemu_cortex_m3
-- [ ] GitHub Actions runner agent is running (`./svc.sh status`)
-- [ ] Runner appears in repo Settings → Actions → Runners as "Idle"
-- [ ] A test workflow with `runs-on: [self-hosted, hw-test]` picks up on this machine
-- [ ] WSL2 + runner auto-start on Windows boot (no manual login needed)
-- [ ] USB devices auto-attach after reboot
+- [x] WSL2 Ubuntu 24.04 running
+- [x] `usbipd list` works from Windows (v5.3.0 — J-Link 2-10, Saleae 2-9)
+- [x] USB devices visible in WSL2 after attach (J-Link Bus 001, Saleae Bus 002)
+- [x] `probe-rs list` sees J-Link (1366:1051:001050051850)
+- [x] `cargo test` passes for all Rust MCP servers
+- [x] `pytest` passes for Python MCP servers
+- [x] `twister` passes for Zephyr library tests on qemu_cortex_m3 (73/73)
+- [x] GitHub Actions runner agent is running (systemd service active)
+- [x] Runner appears in repo Settings → Actions → Runners as "online"
+- [x] A test workflow with `runs-on: [self-hosted, hw-test]` picks up and passes (run 22075803196)
+- [x] WSL2 + runner auto-start on Windows boot (WSL-AutoStart scheduled task registered)
+- [x] USB auto-attach scheduled task registered (USB-Attach-WSL, needs BUSIDs once boards plugged in)
+
+## Implementation Notes
+
+- **SDK toolchain conflict**: Full SDK tarball extracts ALL toolchain prefixes (arc, xtensa, sparc, etc.). CMake picks `arc-zephyr-elf-gcc` (alphabetically first) instead of `arm-zephyr-eabi-gcc` for ARM boards. Fix: remove extra toolchain dirs, set `sdk_toolchains` to only `arm-zephyr-eabi`.
+- **SDK host tools**: `setup.sh -t arm-zephyr-eabi` doesn't install host tools. Need separate `setup.sh -h` to install sysroots (dtc, etc.) required for DTS preprocessing.
+- **SDK cmake registration**: `setup.sh -t` alone doesn't register with `~/.cmake/packages/Zephyr-sdk/`. Need `setup.sh -c` or the minimal SDK overlay to get cmake config files.
+- **Python MCP deps**: saleae-logic and hw-test-runner need `pip install -e .` to install their dependencies (mcp, bleak, etc.) before pytest works.
+- **Runner labels**: Added `hw-test` label via `gh api` after initial config (missed during interactive setup).
+- **Runner version**: v2.331.0 (user installed newer than plan's v2.321.0).
 
 ## Notes
 
