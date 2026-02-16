@@ -1,0 +1,72 @@
+id: k-2026-0216-028
+title: "CI west workspace caching: persistent workspace with rsync for self-hosted runners"
+body: |-
+  For self-hosted GitHub Actions runners running Zephyr CI, avoid running `west init` + `west update` on every workflow run. A full `west update` downloads ~2GB of modules and takes 5-10 minutes.
+
+  Strategy: Use a persistent west workspace (`~/ci-workspace/`) that survives across runs. Rsync app source into it, and only run `west update` when `west.yml` changes.
+
+  Implementation pattern:
+  ```bash
+  CI_WORKSPACE=~/ci-workspace
+
+  # First run: bootstrap
+  if [ ! -d "$CI_WORKSPACE/.west" ]; then
+    python3 -m venv "$CI_WORKSPACE/.venv"
+    source "$CI_WORKSPACE/.venv/bin/activate"
+    pip install west
+    cd "$CI_WORKSPACE"
+    west init -l apps/
+    west update
+  fi
+
+  # Hash-check west.yml to detect manifest changes
+  MANIFEST_HASH=$(sha256sum apps/west.yml | cut -d' ' -f1)
+  CACHED_HASH=$(cat "$CI_WORKSPACE/.manifest-hash" 2>/dev/null || echo "")
+
+  if [ "$MANIFEST_HASH" != "$CACHED_HASH" ]; then
+    cd "$CI_WORKSPACE" && west update
+    echo "$MANIFEST_HASH" > "$CI_WORKSPACE/.manifest-hash"
+  fi
+
+  # Sync app source (fast — only changed files)
+  rsync -a --delete apps/ "$CI_WORKSPACE/apps/"
+  ```
+
+  Key benefits:
+  - First run: full bootstrap (~5-10 min, automatic)
+  - Subsequent runs: <1s rsync of app source only
+  - `west update` only runs when manifest changes (rare)
+  - No Docker image rebuilds needed for workspace changes
+
+  Caveats:
+  - Workspace is per-runner, not shared across runners
+  - If `west.yml` changes frequently, consider caching the modules directory separately
+  - Clean the workspace periodically to avoid stale module state
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - west
+  - github-actions
+  subsystems:
+  - ci
+file_patterns:
+- '**/.github/workflows/*.yml'
+- '**/west.yml'
+- '**/setup.sh'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- ci
+- west
+- caching
+- github-actions
+- self-hosted-runner

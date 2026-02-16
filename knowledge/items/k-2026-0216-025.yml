@@ -1,0 +1,51 @@
+id: k-2026-0216-025
+title: "probe-rs nRF5340: use `run` not separate `download` + `attach` due to APPROTECT"
+body: |-
+  On nRF5340 dual-core, APPROTECT re-engages on every reset. Using `probe-rs download` followed by `probe-rs attach` as separate commands fails because `attach` reconnects after the reset triggered by `download`, and the re-locked Core 1 (network core) blocks the connection.
+
+  Use `probe-rs run` instead — it keeps a single debug session open for flash + reset + RTT attach, avoiding the APPROTECT re-lock between steps. Always pass `--allow-erase-all` for nRF5340 to handle the initial APPROTECT clear.
+
+  This is especially critical in CI where `nrfutil device recover` may not be available or practical between every flash cycle.
+
+  Correct CI flash command:
+  ```bash
+  probe-rs run --chip nRF5340_xxAA --allow-erase-all firmware.hex
+  ```
+
+  Broken pattern (separate commands):
+  ```bash
+  probe-rs download --chip nRF5340_xxAA firmware.hex  # works
+  probe-rs attach --chip nRF5340_xxAA                 # fails: APPROTECT re-locked
+  ```
+
+  Related: k-2026-0216-008 covers using nrfutil as an alternative for nRF7002-DK.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - nrf5340dk/nrf5340/cpuapp
+  chips:
+  - nRF5340
+  tools:
+  - probe-rs
+  subsystems:
+  - flash
+  - rtt
+  - ci
+file_patterns:
+- '**/.github/workflows/*.yml'
+- '**/probe-rs*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- probe-rs
+- nrf5340
+- approtect
+- flash
+- ci

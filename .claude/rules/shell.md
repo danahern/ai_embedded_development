@@ -1,5 +1,5 @@
 ---
-paths: ["**/*shell*"]
+paths: ['**/*shell*']
 ---
 # Shell Learnings
 

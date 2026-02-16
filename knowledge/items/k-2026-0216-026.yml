@@ -1,0 +1,50 @@
+id: k-2026-0216-026
+title: "probe-rs v0.31 CLI flags: --binary-format not --format, auto-detects from extension"
+body: |-
+  probe-rs v0.31 CLI has different flags than older versions and some common assumptions are wrong:
+
+  1. **`--binary-format` not `--format`**: The `download` subcommand uses `--binary-format` to specify the firmware format. `--format` is not a valid flag and will error.
+
+  2. **Auto-detection from extension**: probe-rs auto-detects format from file extension (.hex → Intel HEX, .elf → ELF, .bin → raw binary). You rarely need `--binary-format` explicitly.
+
+  3. **`--verify`**: Use for post-flash verification. Reads back flash contents and compares.
+
+  4. **`--connect-under-reset` times out on locked nRF5340**: This flag causes timeouts on nRF5340 cores that have APPROTECT engaged. Don't use it as a recovery strategy for nRF5340 — use `--allow-erase-all` instead.
+
+  5. **`--chip` is required**: Unlike some tools, probe-rs doesn't auto-detect the chip from the probe. Always specify `--chip nRF5340_xxAA` (or similar).
+
+  Quick reference:
+  ```bash
+  probe-rs download --chip nRF5340_xxAA --verify firmware.hex
+  probe-rs run --chip nRF5340_xxAA --allow-erase-all firmware.hex
+  probe-rs reset --chip nRF5340_xxAA
+  probe-rs list  # no --chip needed, read-only enumeration
+  ```
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - nRF5340
+  - nRF52840
+  - nRF54L15
+  tools:
+  - probe-rs
+  subsystems:
+  - flash
+file_patterns:
+- '**/.github/workflows/*.yml'
+- '**/probe-rs*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- probe-rs
+- cli
+- flash
+- toolchain
