@@ -159,12 +159,12 @@ Benefits:
 - [x] `claude-mcps` workflow runs on push and all Rust + Python tests pass
 - [x] `zephyr-apps` workflow runs twister successfully in Docker container
 - [x] `test-tools` workflow runs pytest successfully
-- [ ] Cargo cache hit on second run (build time < 1 min)
-- [ ] West module cache hit on second run (twister start < 3 min)
+- [x] Cargo cache hit on second run (knowledge-server 54s→21s, others were already fast)
+- [x] West module cache hit on second run (no re-download, 5m12s — compile time dominates)
 - [ ] Self-hosted runner on danahern-pc picks up jobs (WSL2 + runner agent working)
 - [ ] USB passthrough works: probe-rs can see J-Link from WSL2 via usbipd
 - [ ] Hardware workflow: build → flash → boot validate succeeds on self-hosted runner
-- [ ] Branch protection enabled on main requiring CI pass
+- [x] Branch protection enabled on main requiring CI pass (claude-mcps, zephyr-apps, test-tools)
 
 ## Modifications
 
