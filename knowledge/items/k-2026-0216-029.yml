@@ -1,0 +1,41 @@
+id: k-2026-0216-029
+title: 'MCP setup on new machine: .mcp.json paths and skills symlink'
+body: |-
+  When setting up the workspace on a new machine (e.g., moving from macOS to Linux/WSL):
+
+  1. **`.mcp.json` paths are absolute** — must be updated for the new machine's workspace location. All server `command` paths and `--workspace`/`--projects-dir`/`cwd` args need updating.
+
+  2. **Skills/commands need symlink** — create `.claude/commands` → `../claude-config/commands/` in the project root. Without this, `/start`, `/wrap-up`, `/learn`, `/recall`, `/embedded`, `/hw-verify` are unavailable.
+
+  3. **Rust MCP servers must be built** — no pre-built binaries ship. Run `cargo build --release` in each server directory under `claude-mcps/`. Each server is an independent crate (no workspace Cargo.toml).
+
+  4. **Python MCP venvs must be created** — `saleae-logic` and `hw-test-runner` need `python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"` in their directories.
+
+  5. **Restart Claude Code** after updating `.mcp.json` — MCP config is only read at startup.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - claude-code
+  subsystems:
+  - mcp
+  - setup
+file_patterns:
+- .mcp.json
+- .claude/commands/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- setup
+- mcp
+- wsl
+- new-machine
+- skills

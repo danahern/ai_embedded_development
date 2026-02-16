@@ -1,51 +1,51 @@
 {
   "mcpServers": {
     "embedded-probe": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/embedded-probe/target/release/embedded-probe"
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/embedded-probe/target/release/embedded-probe"
     },
     "zephyr-build": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/zephyr-build/target/release/zephyr-build",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/zephyr-build/target/release/zephyr-build",
       "args": [
         "--workspace",
-        "/Users/danahern/code/claude/work"
+        "/home/danahern/ai_embedded_development"
       ]
     },
     "esp-idf-build": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/esp-idf-build/target/release/esp-idf-build",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/esp-idf-build/target/release/esp-idf-build",
       "args": [
         "--projects-dir",
-        "/Users/danahern/code/claude/work/esp-dev-kits/examples"
+        "/home/danahern/ai_embedded_development/esp-dev-kits/examples"
       ]
     },
     "elf-analysis": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/elf-analysis/target/release/elf-analysis",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/elf-analysis/target/release/elf-analysis",
       "args": [
         "--workspace",
-        "/Users/danahern/code/claude/work"
+        "/home/danahern/ai_embedded_development"
       ]
     },
     "knowledge": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/knowledge-server/target/release/knowledge-server",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/knowledge-server/target/release/knowledge-server",
       "args": [
         "--workspace",
-        "/Users/danahern/code/claude/work"
+        "/home/danahern/ai_embedded_development"
       ]
     },
     "saleae-logic": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic/.venv/bin/python",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/saleae-logic/.venv/bin/python",
       "args": [
         "-m",
         "saleae_logic"
       ],
-      "cwd": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic"
+      "cwd": "/home/danahern/ai_embedded_development/claude-mcps/saleae-logic"
     },
     "hw-test-runner": {
-      "command": "/Users/danahern/code/claude/work/claude-mcps/hw-test-runner/.venv/bin/python",
+      "command": "/home/danahern/ai_embedded_development/claude-mcps/hw-test-runner/.venv/bin/python",
       "args": [
         "-m",
         "hw_test_runner"
       ],
-      "cwd": "/Users/danahern/code/claude/work/claude-mcps/hw-test-runner"
+      "cwd": "/home/danahern/ai_embedded_development/claude-mcps/hw-test-runner"
     }
   }
 }

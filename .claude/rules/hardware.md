@@ -1,5 +1,5 @@
 ---
-paths: ['**/*wifi*.c', '**/prj.conf']
+paths: ["**/*wifi*.c", "**/prj.conf"]
 ---
 # Hardware Learnings
 
