@@ -6,7 +6,7 @@
 	url = git@github.com:danahern/claude-mcps.git
 [submodule "zephyr-apps"]
 	path = zephyr-apps
-	url = git@github.com:danahern/zephyr-apps.git
+	url = git@github.com:danahern/firmware.git
 [submodule "test-tools"]
 	path = test-tools
 	url = git@github.com:danahern/test-tools.git
