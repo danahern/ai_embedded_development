@@ -175,7 +175,7 @@ If an MCP tool fails:
 - `search(query, tags?, chips?, category?, limit?)` — full-text search with FTS5
 - `for_context(files, board?)` — knowledge relevant to current files + build target
 - `deprecate(id, superseded_by?)`, `validate(id, validated_by)` — lifecycle management
-- `recent(days?)`, `stale(days?)`, `list_tags(prefix?)` — discovery and maintenance
+- `recent(days?, limit?)`, `stale(days?)`, `list_tags(prefix?)` — discovery and maintenance
 - `board_info(board)`, `for_chip(chip)`, `for_board(board)`, `list_boards(vendor?)` — hardware-aware retrieval
 - `regenerate_rules(dry_run?)`, `regenerate_gotchas(dry_run?)` — auto-generate rules and gotchas
 
