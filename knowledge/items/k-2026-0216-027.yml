@@ -1,44 +1,26 @@
 id: k-2026-0216-027
-title: "probe-rs udev rules required for flash/debug on Linux (errno 13)"
+title: CoreBluetooth GATT cache causes BLE reconnection failures on macOS
 body: |-
-  On Linux, `probe-rs list` works without udev rules (read-only USB enumeration), but all write operations (`download`, `run`, `attach`, `reset`) fail with errno 13 (permission denied).
+  macOS CoreBluetooth aggressively caches GATT service discovery results. After a BLE disconnection (especially during factory reset or rapid reconnect cycles), reconnecting fails with `BleakError: disconnected` during `discover_services`.
 
-  This is deceptive because `probe-rs list` succeeding makes it look like the tool is working, but actual flashing fails.
+  Workaround: Reset the ESP32 (hardware reset via serial DTR/RTS toggle) before attempting reconnection. This gives CoreBluetooth time to invalidate its cache. A 5+ second delay between disconnect and reconnect also helps.
 
-  Fix — install udev rules and add user to plugdev group:
-  ```bash
-  curl -fsSL https://probe.rs/files/69-probe-rs.rules | sudo tee /etc/udev/rules.d/69-probe-rs.rules
-  sudo udevadm control --reload-rules
-  sudo udevadm trigger
-  sudo usermod -aG plugdev $USER
-  ```
+  This is a client-side (macOS) issue, not a firmware bug. The device is advertising correctly and GATT services are properly registered. Affects bleak-based tools and hw-test-runner MCP.
 
-  The user must log out and back in (or start a new login shell) for the group change to take effect.
-
-  For CI self-hosted runners:
-  - Install udev rules during runner setup, not per-workflow
-  - Ensure the runner service user is in the `plugdev` group
-  - If using `systemd` to manage the runner, the service runs as the configured user — verify that user has the group membership
-  - On WSL2, udev rules may not apply — check `udevadm` availability
-
-  Symptoms when rules are missing:
-  ```
-  Error: An operation could not be performed because it lacked the permission to do so: An USB operation could not be performed because it lacked the permission to do so.
-  ```
+  For integration tests, use a single persistent BLE connection rather than connect/disconnect/reconnect patterns.
 category: operational
-severity: critical
+severity: important
 applies_to:
   boards: []
   chips: []
   tools:
-  - probe-rs
+  - bleak
+  - hw-test-runner
   subsystems:
-  - flash
-  - ci
+  - ble
 file_patterns:
-- '**/.github/workflows/*.yml'
-- '**/setup.sh'
-- '**/69-probe-rs.rules'
+- '**/hw_test_runner/ble.py'
+- '**/hw_test_runner/provisioning.py'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -48,8 +30,8 @@ updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- probe-rs
-- udev
-- linux
-- permissions
-- ci
+- ble
+- macos
+- corebluetooth
+- gatt-cache
+- bleak

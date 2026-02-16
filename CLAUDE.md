@@ -26,6 +26,9 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 - **QEMU + core template**: `create_app` core template includes crash_log/device_shell overlays that require RTT and flash — unavailable on `qemu_cortex_m3`. Remove `OVERLAY_CONFIG` lines for QEMU-only apps.
 - **Flash backend needs real hardware**: `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED`. Won't build on QEMU — use `build_only: true` with `platform_allow` for real boards.
 - **Gitignore negation**: `.claude/` (trailing slash) makes git skip the entire directory. Use `.claude/*` with `!.claude/rules/` to allow negation.
+- **ESP32 WiFi power management**: Modem sleep blocks incoming TCP/ping even though ARP resolves. Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()` for reliable incoming connections.
+- **ESP32 FreeRTOS stack sizes**: `StackType_t` is `uint8_t` on Xtensa ESP32 — `xTaskCreate` stack_depth is in bytes, not words. 2048 = 2KB, not 8KB. Use 4096+ for tasks calling WiFi APIs.
+- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to work queue. Copy data to static buffer before submitting work.
 
 ## Permission Rules (settings.local.json)
 

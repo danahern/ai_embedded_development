@@ -1,40 +1,28 @@
 id: k-2026-0216-026
-title: "probe-rs v0.31 CLI flags: --binary-format not --format, auto-detects from extension"
+title: ESP32 FreeRTOS StackType_t is uint8_t — stack sizes in bytes not words
 body: |-
-  probe-rs v0.31 CLI has different flags than older versions and some common assumptions are wrong:
+  On Xtensa ESP32, `StackType_t` is `uint8_t` (not `uint32_t` like ARM Cortex-M). This means `xTaskCreate()` stack_depth parameter is in BYTES, not words. A value of 2048 gives only 2KB of stack, not 8KB.
 
-  1. **`--binary-format` not `--format`**: The `download` subcommand uses `--binary-format` to specify the firmware format. `--format` is not a valid flag and will error.
+  This caused a stack overflow in the OSAL system work queue when calling `esp_wifi_set_config()` + `esp_wifi_connect()` which need significant stack space. Fixed by increasing to 4096 (4KB).
 
-  2. **Auto-detection from extension**: probe-rs auto-detects format from file extension (.hex → Intel HEX, .elf → ELF, .bin → raw binary). You rarely need `--binary-format` explicitly.
+  Affected file: `lib/eai_osal/src/freertos/workqueue.c` — system work queue `xTaskCreate` stack parameter.
 
-  3. **`--verify`**: Use for post-flash verification. Reads back flash contents and compares.
-
-  4. **`--connect-under-reset` times out on locked nRF5340**: This flag causes timeouts on nRF5340 cores that have APPROTECT engaged. Don't use it as a recovery strategy for nRF5340 — use `--allow-erase-all` instead.
-
-  5. **`--chip` is required**: Unlike some tools, probe-rs doesn't auto-detect the chip from the probe. Always specify `--chip nRF5340_xxAA` (or similar).
-
-  Quick reference:
-  ```bash
-  probe-rs download --chip nRF5340_xxAA --verify firmware.hex
-  probe-rs run --chip nRF5340_xxAA --allow-erase-all firmware.hex
-  probe-rs reset --chip nRF5340_xxAA
-  probe-rs list  # no --chip needed, read-only enumeration
-  ```
+  Symptom: `***ERROR*** A stack overflow in task sys_wq has been detected.` followed by reboot.
 category: toolchain
-severity: important
+severity: critical
 applies_to:
   boards: []
   chips:
-  - nRF5340
-  - nRF52840
-  - nRF54L15
+  - esp32
   tools:
-  - probe-rs
+  - esp-idf
+  - freertos
   subsystems:
-  - flash
+  - osal
+  - workqueue
 file_patterns:
-- '**/.github/workflows/*.yml'
-- '**/probe-rs*'
+- '**/freertos/workqueue.c'
+- '**/freertos/thread.c'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -44,7 +32,8 @@ updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- probe-rs
-- cli
-- flash
-- toolchain
+- esp32
+- freertos
+- stack-overflow
+- xtensa
+- osal

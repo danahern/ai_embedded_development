@@ -1,40 +1,25 @@
 id: k-2026-0216-025
-title: "probe-rs nRF5340: use `run` not separate `download` + `attach` due to APPROTECT"
+title: ESP32 WiFi power management blocks incoming TCP/ping
 body: |-
-  On nRF5340 dual-core, APPROTECT re-engages on every reset. Using `probe-rs download` followed by `probe-rs attach` as separate commands fails because `attach` reconnects after the reset triggered by `download`, and the re-locked Core 1 (network core) blocks the connection.
+  ESP32 WiFi modem sleep (`wifi:pm start, type: 1`) causes the device to be unreachable for incoming TCP connections and ICMP pings, even though ARP resolves correctly. The radio sleeps between DTIM beacons and misses incoming packets.
 
-  Use `probe-rs run` instead — it keeps a single debug session open for flash + reset + RTT attach, avoiding the APPROTECT re-lock between steps. Always pass `--allow-erase-all` for nRF5340 to handle the initial APPROTECT clear.
+  Fix: Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()` to disable power management. This keeps the radio always on, increasing power consumption but ensuring reliable incoming connections.
 
-  This is especially critical in CI where `nrfutil device recover` may not be available or practical between every flash cycle.
-
-  Correct CI flash command:
-  ```bash
-  probe-rs run --chip nRF5340_xxAA --allow-erase-all firmware.hex
-  ```
-
-  Broken pattern (separate commands):
-  ```bash
-  probe-rs download --chip nRF5340_xxAA firmware.hex  # works
-  probe-rs attach --chip nRF5340_xxAA                 # fails: APPROTECT re-locked
-  ```
-
-  Related: k-2026-0216-008 covers using nrfutil as an alternative for nRF7002-DK.
+  Symptom: ARP table shows correct ESP32 MAC, ping gets 100% packet loss, TCP connections time out. After disabling PM, ping works (33-1789ms latency at RSSI -83).
 category: hardware
 severity: critical
 applies_to:
-  boards:
-  - nrf5340dk/nrf5340/cpuapp
+  boards: []
   chips:
-  - nRF5340
+  - esp32
   tools:
-  - probe-rs
+  - esp-idf
   subsystems:
-  - flash
-  - rtt
-  - ci
+  - wifi
+  - lwip
 file_patterns:
-- '**/.github/workflows/*.yml'
-- '**/probe-rs*'
+- '**/wifi_prov_wifi_esp*'
+- '**/sdkconfig.defaults'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -44,8 +29,8 @@ updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- probe-rs
-- nrf5340
-- approtect
-- flash
-- ci
+- esp32
+- wifi
+- power-management
+- tcp
+- connectivity
