@@ -1,41 +1,37 @@
 id: k-2026-0216-029
-title: 'MCP setup on new machine: .mcp.json paths and skills symlink'
+title: ESP-IDF credential API must return proper errno values for cross-platform compatibility
 body: |-
-  When setting up the workspace on a new machine (e.g., moving from macOS to Linux/WSL):
+  When implementing platform-specific backends for shared library APIs, use proper POSIX errno values (not generic `-1`). The ESP-IDF credential implementation (`wifi_prov_cred_esp.c`) initially returned `-1` for all errors, but the Zephyr version and unit tests expect:
 
-  1. **`.mcp.json` paths are absolute** — must be updated for the new machine's workspace location. All server `command` paths and `--workspace`/`--projects-dir`/`cwd` args need updating.
+  - `-EINVAL` for invalid parameters (null pointer, zero-length SSID, oversized SSID)
+  - `-ENOENT` for "no credentials stored" on load
 
-  2. **Skills/commands need symlink** — create `.claude/commands` → `../claude-config/commands/` in the project root. Without this, `/start`, `/wrap-up`, `/learn`, `/recall`, `/embedded`, `/hw-verify` are unavailable.
+  This matters because shared unit tests verify the API contract, and generic `-1` breaks assertions like `TEST_ASSERT_EQUAL(-ENOENT, ret)`.
 
-  3. **Rust MCP servers must be built** — no pre-built binaries ship. Run `cargo build --release` in each server directory under `claude-mcps/`. Each server is an independent crate (no workspace Cargo.toml).
-
-  4. **Python MCP venvs must be created** — `saleae-logic` and `hw-test-runner` need `python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"` in their directories.
-
-  5. **Restart Claude Code** after updating `.mcp.json` — MCP config is only read at startup.
-category: operational
+  Fix: `#include <errno.h>` and use `-EINVAL`/`-ENOENT` in return statements. The errno constants are available on both Zephyr (via POSIX) and ESP-IDF (via newlib).
+category: pattern
 severity: important
 applies_to:
   boards: []
   chips: []
-  tools:
-  - claude-code
+  tools: []
   subsystems:
-  - mcp
-  - setup
+  - wifi_prov
+  - credentials
 file_patterns:
-- .mcp.json
-- .claude/commands/**
+- '**/*cred*.c'
+- '**/*_cred*.c'
 status: unvalidated
 validated_by: []
-deprecated: true
+deprecated: false
 superseded_by: null
 created: 2026-02-16
 updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- setup
-- mcp
-- wsl
-- new-machine
-- skills
+- errno
+- api-contract
+- cross-platform
+- esp-idf
+- credentials

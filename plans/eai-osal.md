@@ -212,8 +212,13 @@ Simplified from the ideation plan:
 ### Deferred from ideation
 - `set_priority`, `get_current` thread APIs — not needed for Phase 1 use cases
 - `NOT_ALLOWED`, `ALREADY_INIT`, `NOT_FOUND` status codes — YAGNI for Phase 1
-- FreeRTOS and Linux backends — Phase 1.5 per roadmap
+- Linux backend — Phase 1.5 per roadmap (FreeRTOS backend delivered in `plans/wifi-provision-espidf.md` Phase 1)
 - Separate test files per primitive — single `main.c` is sufficient for 44 tests
+
+### Phase 1.5 FreeRTOS Backend (completed via wifi-provision-espidf plan)
+- All 9 primitives implemented in `lib/eai_osal/src/freertos/`
+- 44/44 tests passing on ESP32 DevKitC via Unity
+- Key discoveries: ESP32 `StackType_t` is `uint8_t` (bytes not words), dual-core needs `portMUX_TYPE` spinlock, system work queue needs 4096 byte stack for WiFi APIs
 
 ### Hardware validation
 - `osal_demo` app deployed to nRF54L15 DK via J-Link

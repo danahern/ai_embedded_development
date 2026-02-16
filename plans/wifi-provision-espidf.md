@@ -1,6 +1,6 @@
 # WiFi Provision on FreeRTOS (ESP-IDF)
 
-Status: In-Progress (Phase 2-3 Complete, Phase 4 Pending)
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
@@ -21,7 +21,7 @@ Rename `zephyr-apps` → `firmware` to reflect multi-RTOS scope, then build an E
 - Phase 1: OSAL FreeRTOS backend (all 9 primitives) ✅ — 44/44 tests on ESP32
 - Phase 2: ESP-IDF WiFi Provision project ✅ — builds, boots, all features work
 - Phase 3: Integration testing on ESP32 DevKitC ✅ — 6/6 integration tests pass
-- Phase 4: Unit tests + documentation — pending
+- Phase 4: Unit tests + documentation ✅ — 22/22 tests on ESP32, docs updated
 
 ## Solution
 
@@ -42,3 +42,10 @@ Key discoveries and fixes during implementation:
 - **CoreBluetooth GATT cache**: macOS caches GATT services aggressively. Rapid BLE reconnections fail — mitigated by ESP32 reset between connections or keeping single persistent connection.
 - **bleak 2.1.1 API change**: `BLEDevice.rssi` removed. Use `discovered_devices_and_advertisement_data` for RSSI from `AdvertisementData`.
 - **hw-test-runner factory reset**: Was sending 0x01 instead of protocol-required 0xFF.
+- **Credential return values**: ESP-IDF credential implementation returned `-1` instead of proper errno values. Fixed to return `-EINVAL` (invalid params) and `-ENOENT` (no creds stored) for API consistency with Zephyr version.
+
+## Modifications
+
+- **Test scope expanded**: Plan said 17 tests (8 msg + 9 sm). Delivered 22 tests — added 5 credential store tests using NVS, matching the full Zephyr test suite.
+- **Test project as standalone**: Tests live in `firmware/esp-idf/wifi_prov_tests/` (separate ESP-IDF project) rather than `wifi_provision/test/` as originally planned. Matches the `osal_tests` pattern and avoids coupling test build to the app build.
+- **Documentation kept focused**: Created `CLAUDE.md` for ESP-IDF wifi_provision project. Updated `firmware/CLAUDE.md` with ESP-IDF section. Updated `plans/eai-osal.md` with Phase 1.5 completion. Skipped standalone README.md — the CLAUDE.md covers build/flash/test instructions.
