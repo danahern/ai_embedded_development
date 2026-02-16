@@ -1,6 +1,6 @@
 # ESP32 Hardware-in-the-Loop CI
 
-Status: In-Progress
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
@@ -43,11 +43,16 @@ Trigger workflow_dispatch and verify both jobs pass.
 
 ## Implementation Notes
 
-- Serial capture uses inline Python with pyserial (not `idf.py monitor`) to avoid ANSI codes
-- `timeout 30` as safety net around serial capture
-- ESP-IDF workspace cached at `~/ci-workspace/esp-idf-build/` for build artifacts
-- osal_tests project at `firmware/esp-idf/osal_tests/` with 44 Unity tests
+- Serial capture uses `python3 -c` with pyserial (not `idf.py monitor`) to avoid ANSI codes and terminal manipulation
+- Initial attempt used bash heredoc (`python3 -u << 'PYEOF' $ARGS`) which fails because bash treats args as script file paths — switched to `python3 -c "..."` with args after
+- `timeout 30` as safety net around serial capture, inner 25s deadline in Python
+- DTR/RTS toggle resets ESP32 to capture from boot
+- osal_tests project at `firmware/esp-idf/osal_tests/` with 44 Unity tests across 9 suites
+- Runner `.env` must include `IDF_PATH` and runner must be restarted after adding it
+- ESP-IDF builds in-tree (no separate ci-workspace needed, unlike west/Zephyr)
+- Both jobs use concurrency group `hw-test` — they share the runner but run independently
 
 ## Modifications
 
-(none yet)
+- Changed serial capture from bash heredoc to `python3 -c` inline string (heredoc+args incompatibility)
+- ESP-IDF builds directly in `$GITHUB_WORKSPACE/firmware/esp-idf/osal_tests/` rather than a cached ci-workspace
