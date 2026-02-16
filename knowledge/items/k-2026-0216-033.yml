@@ -1,0 +1,35 @@
+id: k-2026-0216-033
+title: GitHub Actions runner requires restart after .env changes
+body: |-
+  The self-hosted GitHub Actions runner reads `~/actions-runner/.env` at startup only. Adding new environment variables (like `IDF_PATH`) requires restarting the runner service:
+
+  ```bash
+  cd ~/actions-runner
+  sudo ./svc.sh stop
+  sudo ./svc.sh start
+  ```
+
+  Without restart, new env vars are not visible to workflow jobs even though the file is updated. This caused the esp32-test job to fail with "IDF_PATH not set" despite the variable being correctly added to .env.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - github-actions
+  subsystems: []
+file_patterns:
+- '**/.github/workflows/*.yml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- ci
+- github-actions
+- self-hosted-runner
+- env

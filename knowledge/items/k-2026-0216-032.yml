@@ -1,0 +1,32 @@
+id: k-2026-0216-032
+title: 'Bash heredoc with args: python3 treats args as script file path'
+body: |-
+  In GitHub Actions (and bash generally), `python3 -u << 'EOF' "$ARG1" "$ARG2"` does NOT pass $ARG1/$ARG2 as sys.argv. Bash treats positional arguments after a heredoc as the script file to execute, causing Python to try to open the file path as source code.
+
+  Fix: Use `python3 -c "..." "$ARG1" "$ARG2"` instead. The `-c` flag takes the script as a string and passes remaining arguments via sys.argv.
+
+  Alternatively, write the script to a temp file first: `cat > /tmp/script.py << 'EOF' ... EOF && python3 /tmp/script.py "$ARG1"`
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - github-actions
+  subsystems: []
+file_patterns:
+- '**/.github/workflows/*.yml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- bash
+- heredoc
+- python
+- ci
+- github-actions
