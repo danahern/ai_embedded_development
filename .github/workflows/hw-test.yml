@@ -1,0 +1,159 @@
+name: Hardware-in-the-Loop Tests
+
+on:
+  push:
+    branches: [main]
+    paths: ['zephyr-apps/**']
+  workflow_dispatch:
+
+concurrency:
+  group: hw-test
+  cancel-in-progress: true
+
+env:
+  BOARD: nrf5340dk/nrf5340/cpuapp
+  BOARD_SANITIZED: nrf5340dk_nrf5340_cpuapp
+  CHIP: nRF5340_xxAA
+
+jobs:
+  hw-test:
+    runs-on: [self-hosted, hw-test]
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Checkout zephyr-apps submodule
+        run: git submodule update --init zephyr-apps
+
+      - name: Validate probe
+        run: |
+          echo "--- Detected probes ---"
+          probe-rs list
+          probe-rs list 2>&1 | grep -qi "j-link" || {
+            echo "::error::No J-Link probe detected. Ensure usbipd has attached the device."
+            exit 1
+          }
+
+      - name: Validate Zephyr SDK
+        run: |
+          test -n "${ZEPHYR_SDK_INSTALL_DIR:-}" || { echo "::error::ZEPHYR_SDK_INSTALL_DIR not set"; exit 1; }
+          test -d "$ZEPHYR_SDK_INSTALL_DIR" || { echo "::error::Zephyr SDK not found at $ZEPHYR_SDK_INSTALL_DIR"; exit 1; }
+          echo "Zephyr SDK $(cat "$ZEPHYR_SDK_INSTALL_DIR/sdk_version")"
+
+      - name: Setup west environment
+        run: |
+          VENV="$HOME/ci-workspace/.venv"
+          if [ -d "$VENV" ]; then
+            echo "$VENV/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Sync west workspace
+        run: |
+          CI_WORKSPACE="$HOME/ci-workspace"
+          MANIFEST_HASH=$(sha256sum zephyr-apps/west.yml | cut -d' ' -f1)
+          HASH_FILE="${CI_WORKSPACE}/.west_yml_hash"
+
+          if [ ! -d "${CI_WORKSPACE}/.west" ]; then
+            echo "::group::Bootstrap west workspace"
+            mkdir -p "${CI_WORKSPACE}"
+            rsync -a --delete "$GITHUB_WORKSPACE/zephyr-apps/" "${CI_WORKSPACE}/zephyr-apps/"
+            cd "${CI_WORKSPACE}"
+            west init -l zephyr-apps
+            west update
+            pip install -r zephyr/scripts/requirements.txt 2>/dev/null || true
+            echo "$MANIFEST_HASH" > "$HASH_FILE"
+            echo "::endgroup::"
+          else
+            rsync -a --delete "$GITHUB_WORKSPACE/zephyr-apps/" "${CI_WORKSPACE}/zephyr-apps/"
+
+            if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE")" = "$MANIFEST_HASH" ]; then
+              echo "west.yml unchanged — skipping west update"
+            else
+              echo "::group::west update (manifest changed)"
+              cd "${CI_WORKSPACE}"
+              west update
+              echo "$MANIFEST_HASH" > "$HASH_FILE"
+              echo "::endgroup::"
+            fi
+          fi
+
+      - name: Build hello_world
+        run: |
+          cd "$HOME/ci-workspace"
+          west build -b $BOARD zephyr-apps/apps/hello_world \
+            -d zephyr-apps/apps/hello_world/build/$BOARD_SANITIZED \
+            --pristine=always
+
+      - name: Build osal_demo
+        run: |
+          cd "$HOME/ci-workspace"
+          west build -b $BOARD zephyr-apps/apps/osal_demo \
+            -d zephyr-apps/apps/osal_demo/build/$BOARD_SANITIZED \
+            --pristine=always
+
+      - name: Recover board
+        run: |
+          echo "Resetting board to known state..."
+          probe-rs reset --chip $CHIP || \
+            probe-rs reset --chip $CHIP --connect-under-reset || \
+            echo "::warning::Board reset failed — continuing anyway"
+
+      - name: Flash and validate hello_world
+        run: |
+          CI_WORKSPACE="$HOME/ci-workspace"
+          BUILD="${CI_WORKSPACE}/zephyr-apps/apps/hello_world/build/${BOARD_SANITIZED}"
+          HEX="${BUILD}/zephyr/zephyr.hex"
+          ELF="${BUILD}/zephyr/zephyr.elf"
+          LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
+          mkdir -p "$LOG_DIR"
+
+          echo "--- Flashing hello_world (.hex) ---"
+          probe-rs download --chip $CHIP --format hex --verify "$HEX"
+
+          echo "--- Reading RTT (10s timeout) ---"
+          timeout 10 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
+
+          echo "--- RTT output ---"
+          cat "$LOG_DIR/hello_world.log"
+
+          echo "--- Checking for success pattern ---"
+          grep -q "hello_world booted" "$LOG_DIR/hello_world.log" || {
+            echo "::error::hello_world boot validation failed — pattern 'hello_world booted' not found in RTT output"
+            exit 1
+          }
+          echo "hello_world: PASS"
+
+      - name: Flash and validate osal_demo
+        run: |
+          CI_WORKSPACE="$HOME/ci-workspace"
+          BUILD="${CI_WORKSPACE}/zephyr-apps/apps/osal_demo/build/${BOARD_SANITIZED}"
+          HEX="${BUILD}/zephyr/zephyr.hex"
+          ELF="${BUILD}/zephyr/zephyr.elf"
+          LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
+
+          echo "--- Flashing osal_demo (.hex) ---"
+          probe-rs download --chip $CHIP --format hex --verify "$HEX"
+
+          echo "--- Reading RTT (15s timeout) ---"
+          timeout 15 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
+
+          echo "--- RTT output ---"
+          cat "$LOG_DIR/osal_demo.log"
+
+          echo "--- Checking for success pattern ---"
+          grep -q "ALL OSAL PRIMITIVES OK" "$LOG_DIR/osal_demo.log" || {
+            echo "::error::osal_demo validation failed — pattern 'ALL OSAL PRIMITIVES OK' not found in RTT output"
+            exit 1
+          }
+          echo "osal_demo: PASS"
+
+      - name: Upload RTT logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtt-logs
+          path: rtt-logs/
+          retention-days: 7
