@@ -38,6 +38,14 @@
         "saleae_logic"
       ],
       "cwd": "/Users/danahern/code/claude/work/claude-mcps/saleae-logic"
+    },
+    "hw-test-runner": {
+      "command": "/Users/danahern/code/claude/work/claude-mcps/hw-test-runner/.venv/bin/python",
+      "args": [
+        "-m",
+        "hw_test_runner"
+      ],
+      "cwd": "/Users/danahern/code/claude/work/claude-mcps/hw-test-runner"
     }
   }
 }

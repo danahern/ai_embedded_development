@@ -13,8 +13,8 @@ applies_to:
 file_patterns: []
 status: unvalidated
 validated_by: []
-deprecated: false
-superseded_by: null
+deprecated: true
+superseded_by: k-2026-0216-018
 created: 2026-02-16
 updated: 2026-02-16
 author: claude

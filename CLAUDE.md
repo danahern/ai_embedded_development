@@ -21,7 +21,7 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 - **module.yml paths**: Relative to module root (parent of `zephyr/`), not relative to the yml file.
 - **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`). Let Zephyr auto-discover overlays from `boards/`.
 - **coredump_cmd return**: `COREDUMP_CMD_COPY_STORED_DUMP` returns positive byte count on success, not 0.
-- **Build dirs are per-app**: Each app builds to `apps/<name>/build/`. The zephyr-build MCP passes `-d` automatically.
+- **Build dirs are per-board**: Each app builds to `apps/<name>/build/<board_sanitized>/` (e.g., `build/nrf52840dk_nrf52840/`). Multiple boards can coexist without wiping each other's artifacts.
 - **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. The `run_tests` tool auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT=zephyr` and `ZEPHYR_SDK_INSTALL_DIR` in the MCP launch environment.
 - **QEMU + core template**: `create_app` core template includes crash_log/device_shell overlays that require RTT and flash — unavailable on `qemu_cortex_m3`. Remove `OVERLAY_CONFIG` lines for QEMU-only apps.
 - **Flash backend needs real hardware**: `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED`. Won't build on QEMU — use `build_only: true` with `platform_allow` for real boards.
@@ -150,7 +150,7 @@ If an MCP tool fails:
 ## MCP Servers
 
 ### zephyr-build (Building & Testing)
-- `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app)`
+- `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app, board?)`
 - `list_templates()` — discover available app templates before creating
 - `create_app(name, template?, board?, libraries?, description?)` — scaffold a new app from template
 - `run_tests(board, path?, filter?, background?)`, `test_status(test_id)`, `test_results(test_id?, results_dir?)`
@@ -162,9 +162,13 @@ If an MCP tool fails:
 
 ### esp-idf-build (ESP-IDF)
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
+- `detect_device()` — scan serial ports for ESP32 devices by USB VID/PID
 
 ### embedded-probe (Debug & Flash)
 - `list_probes()`, `connect(probe_selector, target_chip)`, `flash_program(session_id, file_path)`, `validate_boot(session_id, file_path, success_pattern)`, `rtt_attach(session_id)`, `rtt_read(session_id)`, `reset(session_id)`, `resolve_symbol(address, elf_path)`, `stack_trace(session_id, elf_path)`, `analyze_coredump(log_text, elf_path)`
+- `nrfutil_program(file_path, core?, snr?, verify?, reset_after?)` — flash via nrfutil (nRF5340 dual-core support)
+- `nrfutil_recover(snr?)` — clear APPROTECT via nrfutil
+- `nrfutil_reset(snr?)` — reset device via nrfutil
 
 ### knowledge (Knowledge Management)
 - `capture(title, body, category?, severity?, boards?, chips?, tools?, subsystems?, file_patterns?, tags?, author?)` — create knowledge item
@@ -177,6 +181,17 @@ If an MCP tool fails:
 
 ### saleae-logic (Logic Analyzer)
 - `get_app_info()`, `list_devices()`, `start_capture(channels, duration_seconds)`, `wait_capture(capture_id)`, `add_analyzer(capture_id, analyzer_name, settings)`, `export_analyzer_data(capture_id, analyzer_index)`, `analyze_capture(capture_id, analyzer_index)`, `stream_capture(channels, duration, analyzer_name, settings)`
+
+### hw-test-runner (BLE & TCP Testing)
+- `ble_discover(service_uuid?, timeout?)` — scan for BLE devices
+- `ble_read(address, characteristic_uuid)` — read a GATT characteristic
+- `ble_write(address, characteristic_uuid, data)` — write hex data to a characteristic
+- `ble_subscribe(address, characteristic_uuid, timeout?)` — subscribe to notifications
+- `wifi_provision(ssid, psk, security?, address?, timeout?)` — full WiFi provisioning flow over BLE
+- `wifi_scan_aps(address?, timeout?)` — trigger WiFi AP scan on device
+- `wifi_status(address?)` — query WiFi connection status
+- `wifi_factory_reset(address?)` — send factory reset command
+- `tcp_throughput(host, mode, port?, duration?, block_size?)` — upload/download/echo throughput test
 
 ## Typical Workflows
 
@@ -204,6 +219,21 @@ If an MCP tool fails:
 3. `saleae-logic.add_analyzer(capture_id, "I2C", {"SCL": 0, "SDA": 1})`
 4. `saleae-logic.analyze_capture(capture_id, analyzer_index)`
 
+### Hardware Testing (BLE/WiFi)
+1. `hw-test-runner.ble_discover(service_uuid="a0e4f2b0-0001-...")` — find provisioning device
+2. `hw-test-runner.wifi_provision(ssid="MyNetwork", psk="password")` — provision WiFi
+3. `hw-test-runner.tcp_throughput(host="192.168.1.x", mode="upload")` — throughput test
+4. No probe-rs disconnect needed — BLE uses CoreBluetooth, independent of J-Link
+
+### Parallel Board Testing
+When an app targets both nRF and ESP32:
+1. Build both: `build(app, nrf_board, background=true)` + `build(app, esp_board, background=true)`
+2. Flash both: `nrfutil_program(nrf.hex)` + `esptool_flash(esp.bin)` (different interfaces, no conflict)
+3. Test both: `hw-test-runner` for BLE/WiFi + `monitor` for ESP32 serial
+4. Debug as needed: connect probe-rs for RTT on whichever board needs it
+
+Key: per-board build dirs (`build/<board>/`) prevent artifacts from being wiped when switching targets.
+
 ### Testing
 1. `zephyr-build.run_tests(board="qemu_cortex_m3")` — run all lib tests
 2. `zephyr-build.run_tests(path="lib/crash_log", board="qemu_cortex_m3")` — filtered
@@ -226,7 +256,7 @@ If an MCP tool fails:
 | Directory | Purpose | Git |
 |-----------|---------|-----|
 | `claude-config/` | Skills (`/embedded`, `/start`, `/wrap-up`) and settings | Submodule |
-| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic, knowledge-server) | Submodule |
+| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic, knowledge-server, hw-test-runner) | Submodule |
 | `knowledge/` | Knowledge items (`items/*.yml`) and board profiles (`boards/*.yml`) | Tracked |
 | `zephyr-apps/` | Zephyr apps, shared libraries, tests | Submodule |
 | `esp-dev-kits/` | ESP-IDF example projects | Cloned |
@@ -240,3 +270,4 @@ If an MCP tool fails:
 - `/learn` — Capture a knowledge item via `knowledge.capture()` with metadata and tags
 - `/recall` — Search knowledge via `knowledge.search()` by topic, tag, or keyword
 - `/embedded` — Full embedded development guidelines (memory, style, Zephyr patterns)
+- `/hw-verify <app> <board>` — Guided hardware verification checklist (build, flash, boot, BLE, functional tests)

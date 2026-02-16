@@ -1,0 +1,27 @@
+id: k-2026-0216-020
+title: Python MCP pyproject.toml must use setuptools.build_meta
+body: 'When creating Python MCP servers with setuptools, the build-backend must be `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`. The legacy backend causes installation failures. Follow the saleae-logic pattern: `[build-system]\nrequires = ["setuptools>=68.0"]\nbuild-backend = "setuptools.build_meta"`. Add dev dependencies in `[project.optional-dependencies]` for pytest.'
+category: toolchain
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - setuptools
+  - pip
+  subsystems: []
+file_patterns:
+- '**/pyproject.toml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- python
+- packaging
+- mcp-server
+- setuptools

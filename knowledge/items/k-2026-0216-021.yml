@@ -1,0 +1,30 @@
+id: k-2026-0216-021
+title: hw-test-runner MCP decouples BLE testing from probe-rs
+body: 'The hw-test-runner Python MCP server provides BLE and TCP testing that runs independently of probe-rs. BLE uses bleak (CoreBluetooth on macOS), so there''s no J-Link conflict. This eliminates the disconnect/reconnect cycle when alternating between RTT debugging and BLE testing. Key tools: ble_discover, ble_read, ble_write, ble_subscribe, wifi_provision, wifi_scan_aps, wifi_status, wifi_factory_reset, tcp_throughput. Registered in .mcp.json with its own .venv.'
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - hw-test-runner
+  - bleak
+  - probe-rs
+  subsystems:
+  - ble
+  - wifi-provisioning
+file_patterns:
+- '**/hw_test_runner/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- ble
+- mcp-server
+- hardware-testing
+- probe-rs-conflict

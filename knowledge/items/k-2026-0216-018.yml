@@ -1,0 +1,28 @@
+id: k-2026-0216-018
+title: Twister pyenv fix now in zephyr-build MCP
+body: The zephyr-build MCP now strips `~/.pyenv/shims` from PATH before spawning twister. This fixes the JSON parsing failure caused by pyenv's python shim emitting error text to stderr (which cmake merges into stdout via stderr=subprocess.STDOUT). No manual PATH workaround needed anymore — `run_tests()` handles it automatically.
+category: toolchain
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - twister
+  - pyenv
+  - zephyr-build
+  subsystems: []
+file_patterns:
+- '**/build_tools.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- twister
+- pyenv
+- macos
+- zephyr-build
