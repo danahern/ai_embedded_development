@@ -1,0 +1,47 @@
+id: k-2026-0216-005
+title: MCP servers must have unit tests for core logic
+body: |-
+  The workspace CLAUDE.md testing section says "Generated code must be unit tested" but this was interpreted as only applying to Zephyr apps/libraries, not MCP servers. This led to the knowledge-server shipping a bug in `next_sequence()` where the ID prefix format didn't match `generate_id()` output, causing every `capture()` call on the same day to overwrite the previous item.
+
+  MCP servers ARE generated code and MUST have tests for:
+  1. Core logic functions (ID generation, parsing, encoding/decoding)
+  2. State management (sequence counters, caches, indexes)
+  3. Error paths (invalid input, missing files, malformed data)
+
+  Current coverage gap (Feb 2026):
+  - saleae-logic: 22.6% (good, Python pytest)
+  - knowledge-server: 19.2% (good, Rust integration tests)
+  - embedded-probe: 1.5% (minimal)
+  - zephyr-build: 1.7% (minimal)
+  - esp-idf-build: 3.9% (minimal)
+  - elf-analysis: ~1.4% (no integration tests)
+
+  At minimum, every MCP tool that transforms data or manages state needs a test.
+category: pattern
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - knowledge-server
+  - embedded-probe
+  - zephyr-build
+  - elf-analysis
+  - esp-idf-build
+  - saleae-logic
+  subsystems: []
+file_patterns:
+- '**/claude-mcps/**/*.rs'
+- '**/claude-mcps/**/*.py'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- testing
+- mcp
+- quality

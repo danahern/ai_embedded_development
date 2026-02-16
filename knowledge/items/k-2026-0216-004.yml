@@ -1,0 +1,34 @@
+id: k-2026-0216-004
+title: Ralph Loop needs introspection/progress file before exit
+body: |-
+  Before exiting a Ralph Loop iteration, the agent should write a progress file (e.g., `tasks/progress.md` or update prd.json notes) that captures:
+
+  1. What was accomplished this iteration
+  2. What blocked or surprised
+  3. What the next iteration should work on
+  4. Any learnings or gotchas discovered
+
+  This gives the next iteration (which starts with fresh context) the information it needs to pick up efficiently without re-discovering issues.
+
+  The prd.json `notes` field on each user story serves part of this purpose, but a separate progress file with cross-cutting observations is also valuable.
+category: pattern
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns:
+- tasks/prd.json
+- tasks/progress.md
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- ralph-loop
+- workflow

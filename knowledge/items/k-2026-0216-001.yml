@@ -1,0 +1,36 @@
+id: k-2026-0216-001
+title: 'nRF7002 WiFi Kconfig: use WIFI_NRF70, not WIFI_NRF700X'
+body: |-
+  The correct Kconfig symbols for enabling WiFi on nRF7002-DK are:
+  - `CONFIG_WIFI_NRF70=y` (NOT `CONFIG_WIFI_NRF700X`)
+  - `CONFIG_WIFI_NM=y`
+  - `CONFIG_WIFI_NM_WPA_SUPPLICANT=y` (NOT `CONFIG_WPA_SUPP`)
+
+  The driver is in `zephyr/drivers/wifi/nrf_wifi/Kconfig.nrfwifi`. The hidden symbol `CONFIG_WIFI_NRF7002` is auto-enabled from devicetree (QSPI or SPI compatible).
+
+  Also requires fetching firmware blobs before first build: `west blobs fetch nrf_wifi`
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - nrf7002dk
+  chips:
+  - nrf5340
+  - nrf7002
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/boards/nrf7002dk*.conf'
+- '**/prj.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- wifi
+- kconfig
+- nrf7002

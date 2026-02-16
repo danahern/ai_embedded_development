@@ -103,11 +103,12 @@ Keep docs current as requirements change or features are added.
 
 ## Testing
 
-**Generated code must be unit tested.** Not just happy path — test failure cases too.
+**All code must be unit tested — apps, libraries, AND MCP servers.** Not just happy path — test failure cases too.
 
 - Tests should verify **expected behavior**, not mirror implementation details.
 - Cover edge cases: invalid input, missing files, empty data, error conditions.
 - If a function can fail, test that it fails correctly.
+- **MCP servers**: Every tool that transforms data or manages state needs a test. Core logic (ID generation, parsing, encoding) is especially important — these bugs are silent and destructive.
 
 ## Knowledge
 
