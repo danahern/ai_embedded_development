@@ -46,9 +46,12 @@ jobs:
       - name: Setup west environment
         run: |
           VENV="$HOME/ci-workspace/.venv"
-          if [ -d "$VENV" ]; then
-            echo "$VENV/bin" >> "$GITHUB_PATH"
+          if [ ! -d "$VENV" ]; then
+            mkdir -p "$HOME/ci-workspace"
+            python3 -m venv "$VENV"
+            "$VENV/bin/pip" install west
           fi
+          echo "$VENV/bin" >> "$GITHUB_PATH"
 
       - name: Sync west workspace
         run: |
