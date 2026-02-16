@@ -7,14 +7,16 @@
       "command": "./claude-mcps/zephyr-build/target/release/zephyr-build",
       "args": [
         "--workspace",
-        "."
+        ".",
+        "--apps-dir",
+        "firmware/apps"
       ]
     },
     "esp-idf-build": {
       "command": "./claude-mcps/esp-idf-build/target/release/esp-idf-build",
       "args": [
         "--projects-dir",
-        "./esp-dev-kits/examples"
+        "./firmware/esp-idf"
       ]
     },
     "elf-analysis": {

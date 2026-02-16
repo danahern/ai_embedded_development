@@ -187,7 +187,7 @@ if [ "$INSTALL_ZEPHYR" = true ]; then
         success "West workspace already initialized"
     else
         info "Initializing west workspace..."
-        cd "$WORKSPACE_DIR/zephyr-apps"
+        cd "$WORKSPACE_DIR/firmware"
         west init -l .
         cd "$WORKSPACE_DIR"
         success "West workspace initialized"
@@ -201,20 +201,20 @@ if [ "$INSTALL_ZEPHYR" = true ]; then
 
     # Python venv
     if [ "$PYTHON_OK" = true ]; then
-        ZEPHYR_VENV="$WORKSPACE_DIR/zephyr-apps/.venv"
+        ZEPHYR_VENV="$WORKSPACE_DIR/firmware/.venv"
         if [ -d "$ZEPHYR_VENV" ]; then
             success "Zephyr venv already exists"
         else
             info "Creating Zephyr Python venv..."
             python3 -m venv "$ZEPHYR_VENV"
-            success "Venv created at zephyr-apps/.venv"
+            success "Venv created at firmware/.venv"
         fi
 
         info "Installing Python dependencies..."
         "$ZEPHYR_VENV/bin/pip" install --upgrade pip --quiet
         "$ZEPHYR_VENV/bin/pip" install west --quiet
-        if [ -f "$WORKSPACE_DIR/zephyr-apps/requirements.txt" ]; then
-            "$ZEPHYR_VENV/bin/pip" install -r "$WORKSPACE_DIR/zephyr-apps/requirements.txt" --quiet
+        if [ -f "$WORKSPACE_DIR/firmware/requirements.txt" ]; then
+            "$ZEPHYR_VENV/bin/pip" install -r "$WORKSPACE_DIR/firmware/requirements.txt" --quiet
         fi
         if [ -f "$WORKSPACE_DIR/zephyr/scripts/requirements.txt" ]; then
             "$ZEPHYR_VENV/bin/pip" install -r "$WORKSPACE_DIR/zephyr/scripts/requirements.txt" --quiet
@@ -369,7 +369,7 @@ if [ "$INSTALL_DOCKER" = true ]; then
             warn "Failed to pull Zephyr CI container"
         fi
 
-        info "Docker builds available via Makefile in zephyr-apps/"
+        info "Docker builds available via Makefile in firmware/"
         info "  make build APP=<app> BOARD=<board>   # Build in container"
         info "  make test                              # Run unit tests on QEMU"
         info "  make shell                             # Interactive container"
@@ -464,7 +464,7 @@ if $( [ "$INSTALL_ZEPHYR" = true ] && echo "True" || echo "False" ):
     zb_bin = workspace + '/claude-mcps/zephyr-build/target/release/zephyr-build'
     servers['zephyr-build'] = {
         'command': zb_bin,
-        'args': ['--workspace', workspace]
+        'args': ['--workspace', workspace, '--apps-dir', 'firmware/apps']
     }
 
 # esp-idf-build
@@ -472,7 +472,7 @@ if $( [ "$INSTALL_ESP_IDF" = true ] && echo "True" || echo "False" ):
     ei_bin = workspace + '/claude-mcps/esp-idf-build/target/release/esp-idf-build'
     servers['esp-idf-build'] = {
         'command': ei_bin,
-        'args': ['--projects-dir', workspace + '/esp-dev-kits/examples']
+        'args': ['--projects-dir', workspace + '/firmware/esp-idf']
     }
 
 # saleae-logic
@@ -603,7 +603,7 @@ fi
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
 if [ "$INSTALL_ZEPHYR" = true ]; then
-    echo "  1. Activate Zephyr env: source zephyr-apps/.venv/bin/activate"
+    echo "  1. Activate Zephyr env: source firmware/.venv/bin/activate"
 fi
 echo "  2. Open workspace in Claude Code — MCP servers auto-register from .mcp.json"
 echo "  3. Try: \"Build the blinky app for nrf52840dk\""

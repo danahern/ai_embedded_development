@@ -40,7 +40,7 @@ After running `setup.sh`, validate everything is working:
 |---------------|----------|
 | All 3 Rust binaries built | `claude-mcps/*/target/release/` has executables |
 | `.mcp.json` generated | Valid JSON in workspace root with absolute paths |
-| Zephyr venv + SDK | `zephyr-apps/.venv/` exists, SDK registered with cmake |
+| Zephyr venv + SDK | `firmware/.venv/` exists, SDK registered with cmake |
 | Commands symlink | `.claude/commands` → `claude-config/commands` |
 
 If any checks fail, re-run `./setup.sh`. See [Troubleshooting](#troubleshooting) for specific fixes.
@@ -93,9 +93,10 @@ embedded-workspace/
 │   └── boards/                #   Board profile YAML (chip, memory, peripherals)
 ├── plans/                     # Project plans and tracking (see Plans below)
 │
-├── zephyr-apps/               # Zephyr applications + west manifest (submodule)
-│   ├── apps/                  #   Application source code
-│   └── lib/                   #   Shared libraries (eai_osal, crash_log, device_shell)
+├── firmware/                   # Firmware: Zephyr + ESP-IDF apps, shared libraries (submodule)
+│   ├── apps/                  #   Zephyr application source code
+│   ├── esp-idf/               #   ESP-IDF application source code
+│   └── lib/                   #   Shared libraries (eai_osal, wifi_prov, crash_log, device_shell)
 ├── esp-dev-kits/              # ESP-IDF example projects (cloned)
 ├── test-tools/                # Python testing utilities (submodule)
 │
@@ -188,7 +189,7 @@ cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/tes
 
 | Problem | Solution |
 |---------|----------|
-| `west: command not found` | Activate venv: `source zephyr-apps/.venv/bin/activate` |
+| `west: command not found` | Activate venv: `source firmware/.venv/bin/activate` |
 | `cargo build` fails on macOS | Install libusb: `brew install libusb` |
 | ESP-IDF not detected | Set `IDF_PATH` or install to `~/esp/esp-idf` |
 | Logic 2 connection refused | Start Logic 2 app, enable scripting API in Preferences |

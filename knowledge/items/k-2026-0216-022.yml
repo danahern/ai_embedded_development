@@ -1,7 +1,7 @@
 id: k-2026-0216-022
 title: 'Composable addons: YAML-based code generation for create_app'
 body: |-
-  The `create_app` tool supports composable addons via YAML files in `zephyr-apps/addons/<name>.yml`. Each addon has optional sections: `kconfig`, `includes`, `globals`, `init`. The `libraries` parameter resolves names as either a library (`lib/<name>/manifest.yml` → overlay injection) or addon (`addons/<name>.yml` → code generation). Libraries are checked first.
+  The `create_app` tool supports composable addons via YAML files in `firmware/addons/<name>.yml`. Each addon has optional sections: `kconfig`, `includes`, `globals`, `init`. The `libraries` parameter resolves names as either a library (`lib/<name>/manifest.yml` → overlay injection) or addon (`addons/<name>.yml` → code generation). Libraries are checked first.
 
   Key details:
   - `{{APP_NAME}}` substitution works in kconfig sections

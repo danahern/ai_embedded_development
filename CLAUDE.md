@@ -258,7 +258,7 @@ Key: per-board build dirs (`build/<board>/`) prevent artifacts from being wiped 
 | `claude-config/` | Skills (`/embedded`, `/start`, `/wrap-up`) and settings | Submodule |
 | `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic, knowledge-server, hw-test-runner) | Submodule |
 | `knowledge/` | Knowledge items (`items/*.yml`) and board profiles (`boards/*.yml`) | Tracked |
-| `zephyr-apps/` | Zephyr apps, shared libraries, tests | Submodule |
+| `firmware/` | Zephyr apps, ESP-IDF apps, shared libraries, tests | Submodule |
 | `esp-dev-kits/` | ESP-IDF example projects | Cloned |
 | `test-tools/` | Python BLE/power testing utilities | Tracked |
 | `zephyr/`, `bootloader/`, `modules/`, `tools/` | West-managed dependencies | Gitignored |

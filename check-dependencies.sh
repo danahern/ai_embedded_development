@@ -71,7 +71,7 @@ fi
 
 section "Submodules"
 
-for submod in claude-config claude-mcps zephyr-apps; do
+for submod in claude-config claude-mcps firmware; do
     dir="$WORKSPACE_DIR/$submod"
     if [ -d "$dir" ] && [ "$(ls -A "$dir" 2>/dev/null)" ]; then
         pass "$submod/ populated"
@@ -88,12 +88,12 @@ section "Zephyr"
 if [ -d "$WORKSPACE_DIR/.west" ]; then
     pass ".west/ exists"
 else
-    fail ".west/ not found — run setup.sh or: cd zephyr-apps && west init -l ."
+    fail ".west/ not found — run setup.sh or: cd firmware && west init -l ."
 fi
 
 # Python venv
-if [ -d "$WORKSPACE_DIR/zephyr-apps/.venv" ]; then
-    pass "zephyr-apps/.venv exists"
+if [ -d "$WORKSPACE_DIR/firmware/.venv" ]; then
+    pass "firmware/.venv exists"
 else
     fail "Zephyr venv not found — run setup.sh"
 fi
