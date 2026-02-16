@@ -37,6 +37,14 @@ jobs:
             exit 1
           }
 
+          # Verify USB permissions by trying to read chip info
+          if ! probe-rs chip info $CHIP > /dev/null 2>&1; then
+            if probe-rs reset --chip $CHIP 2>&1 | grep -q "errno 13"; then
+              echo "::error::USB permission denied. Install udev rules: curl -fsSL https://probe.rs/files/69-probe-rs.rules | sudo tee /etc/udev/rules.d/69-probe-rs.rules && sudo udevadm control --reload && sudo udevadm trigger"
+              exit 1
+            fi
+          fi
+
       - name: Validate Zephyr SDK
         run: |
           test -n "${ZEPHYR_SDK_INSTALL_DIR:-}" || { echo "::error::ZEPHYR_SDK_INSTALL_DIR not set"; exit 1; }
@@ -114,7 +122,7 @@ jobs:
           mkdir -p "$LOG_DIR"
 
           echo "--- Flashing hello_world (.hex) ---"
-          probe-rs download --chip $CHIP --format hex --verify "$HEX"
+          probe-rs download --chip $CHIP --binary-format hex --verify "$HEX"
 
           echo "--- Reading RTT (10s timeout) ---"
           timeout 10 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
@@ -138,7 +146,7 @@ jobs:
           LOG_DIR="${GITHUB_WORKSPACE}/rtt-logs"
 
           echo "--- Flashing osal_demo (.hex) ---"
-          probe-rs download --chip $CHIP --format hex --verify "$HEX"
+          probe-rs download --chip $CHIP --binary-format hex --verify "$HEX"
 
           echo "--- Reading RTT (15s timeout) ---"
           timeout 15 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
