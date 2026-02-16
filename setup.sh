@@ -21,7 +21,10 @@ NC='\033[0m'
 INSTALL_ZEPHYR=true
 INSTALL_ESP_IDF=true
 INSTALL_SALEAE=true
+INSTALL_DOCKER=false
 RUN_TESTS=true
+
+ZEPHYR_CI_IMAGE="ghcr.io/zephyrproject-rtos/ci:v0.28.7"
 
 # ── Tracking ────────────────────────────────────────────────────────────────
 
@@ -41,11 +44,13 @@ Options:
   --no-zephyr    Skip Zephyr RTOS setup (west, SDK, venv)
   --no-esp-idf   Skip ESP-IDF setup
   --no-saleae    Skip Saleae Logic analyzer setup
+  --with-docker  Set up Docker for reproducible builds (pulls Zephyr CI image)
   --skip-tests   Skip test verification after build
   --help         Show this help message
 
 Examples:
-  ./setup.sh                              # Install everything
+  ./setup.sh                              # Install everything (no Docker)
+  ./setup.sh --with-docker                # Install everything + Docker builds
   ./setup.sh --no-zephyr --no-esp-idf     # Only embedded-probe + saleae-logic
   ./setup.sh --skip-tests                 # Install everything, skip tests
 EOF
@@ -57,6 +62,7 @@ for arg in "$@"; do
         --no-zephyr)   INSTALL_ZEPHYR=false ;;
         --no-esp-idf)  INSTALL_ESP_IDF=false ;;
         --no-saleae)   INSTALL_SALEAE=false ;;
+        --with-docker) INSTALL_DOCKER=true ;;
         --skip-tests)  RUN_TESTS=false ;;
         --help)        usage ;;
         *)
@@ -133,6 +139,26 @@ if [[ "$(uname)" == "Darwin" ]]; then
     else
         warn "libusb not found — needed for embedded-probe build"
         info "Install with: brew install libusb"
+    fi
+fi
+
+# Docker (optional, for reproducible builds)
+DOCKER_OK=false
+if command -v docker &> /dev/null; then
+    if docker info &> /dev/null; then
+        success "Docker found and running"
+        DOCKER_OK=true
+    else
+        if [ "$INSTALL_DOCKER" = true ]; then
+            warn "Docker found but daemon not running — start Docker Desktop first"
+        else
+            info "Docker found but not running (use --with-docker to set up Docker builds)"
+        fi
+    fi
+else
+    if [ "$INSTALL_DOCKER" = true ]; then
+        warn "Docker not found — install Docker Desktop first"
+        info "Download: https://www.docker.com/products/docker-desktop/"
     fi
 fi
 
@@ -322,6 +348,35 @@ if [ "$INSTALL_SALEAE" = true ]; then
 else
     info "Skipping Saleae Logic setup (--no-saleae)"
     COMPONENTS+=("Saleae Logic:skipped")
+fi
+
+# ── Docker Setup ──────────────────────────────────────────────────────────
+
+if [ "$INSTALL_DOCKER" = true ]; then
+    section "Docker Builds"
+
+    if [ "$DOCKER_OK" = true ]; then
+        info "Pulling Zephyr CI container ($ZEPHYR_CI_IMAGE)..."
+        if docker pull "$ZEPHYR_CI_IMAGE" 2>&1; then
+            success "Zephyr CI container pulled"
+        else
+            warn "Failed to pull Zephyr CI container"
+        fi
+
+        info "Docker builds available via Makefile in zephyr-apps/"
+        info "  make build APP=<app> BOARD=<board>   # Build in container"
+        info "  make test                              # Run unit tests on QEMU"
+        info "  make shell                             # Interactive container"
+
+        COMPONENTS+=("Docker Builds:installed")
+    else
+        warn "Skipping Docker setup — Docker not available"
+        info "Install Docker Desktop: https://www.docker.com/products/docker-desktop/"
+        info "Then re-run: ./setup.sh --with-docker"
+        COMPONENTS+=("Docker Builds:failed")
+    fi
+else
+    COMPONENTS+=("Docker Builds:skipped")
 fi
 
 # ── MCP Server Builds ─────────────────────────────────────────────────────
