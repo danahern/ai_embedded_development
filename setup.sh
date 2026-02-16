@@ -157,8 +157,14 @@ if command -v docker &> /dev/null; then
     fi
 else
     if [ "$INSTALL_DOCKER" = true ]; then
-        warn "Docker not found — install Docker Desktop first"
-        info "Download: https://www.docker.com/products/docker-desktop/"
+        warn "Docker not found — install it first, then re-run with --with-docker"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            info "Install with: brew install --cask docker"
+            info "Then launch Docker.app and wait for it to start"
+        else
+            info "Install with: sudo apt-get install -y docker.io && sudo systemctl enable --now docker"
+            info "Add yourself to docker group: sudo usermod -aG docker \$USER (then log out/in)"
+        fi
     fi
 fi
 
