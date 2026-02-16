@@ -1,0 +1,28 @@
+name: Test Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, hw-test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Environment check
+        run: |
+          echo "=== System ==="
+          uname -a
+          echo "=== Rust ==="
+          rustc --version
+          cargo --version
+          echo "=== probe-rs ==="
+          probe-rs --version
+          probe-rs list
+          echo "=== Zephyr SDK ==="
+          cat $ZEPHYR_SDK_INSTALL_DIR/sdk_version
+          echo "=== Python ==="
+          python3 --version
+          echo "=== Runner OK ==="
