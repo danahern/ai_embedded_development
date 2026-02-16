@@ -1,6 +1,6 @@
 # CI/CD Pipeline — Phase 1 (Solo)
 
-Status: Planned
+Status: In-Progress
 Created: 2026-02-14
 Updated: 2026-02-15
 
@@ -138,9 +138,9 @@ USB devices attached via usbipd:
 
 ## Verification
 
-- [ ] `claude-mcps` workflow runs on push and all Rust + Python tests pass
+- [x] `claude-mcps` workflow runs on push and all Rust + Python tests pass
 - [ ] `zephyr-apps` workflow runs twister successfully in Docker container
-- [ ] `test-tools` workflow runs pytest successfully
+- [x] `test-tools` workflow runs pytest successfully
 - [ ] Cargo cache hit on second run (build time < 1 min)
 - [ ] West module cache hit on second run (twister start < 3 min)
 - [ ] Self-hosted runner on danahern-pc picks up jobs (WSL2 + runner agent working)
@@ -152,3 +152,4 @@ USB devices attached via usbipd:
 
 - Updated 2026-02-15: Expanded from initial sketch to full Phase 1 plan. Full scale strategy (300 engineers, BuildKite, hardware lab, board farm) documented separately in `~/.claude/plans/ci-infrastructure-at-scale.md`.
 - Updated 2026-02-15: Added danahern-pc (i9-9900K, 64GB, Win11 Pro) as self-hosted runner. Hybrid approach — hosted runners for clean-env validation + self-hosted for fast builds and hardware-in-the-loop. Collapses Phase 1-3 for solo dev.
+- Updated 2026-02-15: All 3 workflows created and pushed. claude-mcps (7 jobs) and test-tools passing green. zephyr-apps workflow pushed, awaiting first run. Used Zephyr CI container v0.28.7 with west module caching.
