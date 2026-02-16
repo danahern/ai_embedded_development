@@ -1,0 +1,30 @@
+id: k-2026-0216-016
+title: Defer all heavy operations from BLE GATT callbacks to k_work
+body: 'BLE GATT write/read callbacks run on the BLE RX thread with limited stack. Heavy operations (WiFi connect/disconnect, NVS writes, factory reset) MUST be deferred to k_work or k_work_delayable. Running them inline causes stack overflow or BLE connection timeouts. Pattern: callback sets parameters in static struct, then k_work_submit(&work). For boot-time auto-connect, use k_work_schedule(&delayed_work, K_SECONDS(2)) to wait for WiFi driver init.'
+category: pattern
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - bluetooth
+  - wifi
+file_patterns:
+- '**/*ble*.c'
+- '**/*gatt*.c'
+- '**/*prov*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- zephyr
+- ble
+- k_work
+- gatt-callback
+- stack-overflow

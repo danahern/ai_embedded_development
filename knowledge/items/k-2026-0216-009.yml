@@ -1,0 +1,26 @@
+id: k-2026-0216-009
+title: 'nRF7002-DK dual-core: hci_ipc needed on net core for BLE'
+body: 'The nRF7002-DK uses nRF5340 dual-core. BLE runs via IPC from app core to net core. The net core needs `hci_ipc` firmware: `west build -b nrf5340dk/nrf5340/cpunet zephyr/samples/bluetooth/hci_ipc`. Flash with `nrfutil device program --firmware zephyr.hex --core Network --traits jlink`. Without hci_ipc, BLE init fails with HCI error -11 (EAGAIN).'
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - nrf7002dk
+  chips:
+  - nrf5340
+  tools: []
+  subsystems:
+  - bluetooth
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- hci_ipc
+- net-core
+- dual-core

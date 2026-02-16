@@ -1,0 +1,28 @@
+id: k-2026-0216-014
+title: Zephyr Settings h_set handler must return 0 on success
+body: 'The Settings subsystem `h_set` handler must return 0 on success. The `read_cb()` function returns positive byte count on success, but returning that directly from `h_set` causes "set-value failure" warnings. Fix: `int rc = read_cb(...); return rc < 0 ? rc : 0;`'
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - settings
+  - nvs
+file_patterns:
+- '**/settings*.c'
+- '**/*_cred*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- zephyr
+- settings
+- nvs
+- return-value

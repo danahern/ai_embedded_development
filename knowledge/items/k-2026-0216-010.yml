@@ -1,0 +1,29 @@
+id: k-2026-0216-010
+title: WiFi connect must be non-blocking from BLE context
+body: On nRF7002, `net_mgmt(NET_REQUEST_WIFI_CONNECT)` returns immediately but the WPA supplicant may send transient failure events before succeeding. Never use a blocking semaphore to wait for the connect result — instead, handle `NET_EVENT_WIFI_CONNECT_RESULT` asynchronously. The initial "Network interface is not configured" error (status=1) from wpa_supp is transient; the connection succeeds ~15s later. Also call `net_dhcpv4_start()` in the connect success handler, not inline after the request.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - nrf7002
+  tools: []
+  subsystems:
+  - wifi
+  - net_mgmt
+file_patterns:
+- '**/wifi_prov*.c'
+- '**/*wifi*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- wifi
+- non-blocking
+- wpa-supplicant
+- nrf7002

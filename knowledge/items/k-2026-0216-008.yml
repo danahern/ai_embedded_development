@@ -1,0 +1,27 @@
+id: k-2026-0216-008
+title: nRF7002-DK requires nrfutil for flash, probe-rs fails on nRF5340
+body: probe-rs cannot reliably connect to the nRF5340 on the nRF7002-DK due to APPROTECT. Use `nrfutil device recover` to clear APPROTECT, then `nrfutil device program --firmware <hex> --core Application --traits jlink` for flashing. probe-rs can attach after recovery for RTT reading but may interfere with BLE advertising. Disconnect probe-rs before BLE operations. Use `nrfutil` (not `nrfjprog`) — it's the modern Nordic CLI tool.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - nrf7002dk
+  chips:
+  - nrf5340
+  tools:
+  - nrfutil
+  - probe-rs
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- flash
+- nrfutil
+- approtect

@@ -1,0 +1,27 @@
+id: k-2026-0216-013
+title: settings_subsys_init() required before settings_save_one()
+body: Zephyr's Settings subsystem requires `settings_subsys_init()` before any `settings_save_one()` or `settings_load_subtree()` calls. Without it, save returns -2 (ENOENT). The init function registers the NVS backend and creates the partition. Call it early in the module init, before any credential load/save operations.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - settings
+  - nvs
+file_patterns:
+- '**/*cred*.c'
+- '**/*settings*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- settings
+- nvs
+- init

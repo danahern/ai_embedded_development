@@ -1,0 +1,26 @@
+id: k-2026-0216-011
+title: 'RTT buffer drops: increase SEGGER_RTT_BUFFER_SIZE_UP for deferred reading'
+body: Default SEGGER_RTT_BUFFER_SIZE_UP is 1024 bytes. If no host reader is attached, the buffer fills with boot messages and all subsequent log messages are silently dropped (no-block-skip mode). Set `CONFIG_SEGGER_RTT_BUFFER_SIZE_UP=4096` to retain more messages for post-hoc reading. Also set `CONFIG_LOG_BUFFER_SIZE=4096` for the deferred log buffer.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - logging
+  - rtt
+file_patterns:
+- '**/prj.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- rtt
+- logging
+- buffer-size

@@ -1,0 +1,30 @@
+id: k-2026-0216-007
+title: BLE GATT callbacks must not block — use k_work for heavy processing
+body: BLE GATT write callbacks run in the BLE RX thread. Blocking operations (NVS writes, WiFi connect with semaphore waits, any k_sem_take) will cause the BLE stack to timeout and disconnect the peer. Defer heavy processing to the system workqueue using `k_work_submit()`. Copy callback data to a static buffer before submitting the work item.
+category: pattern
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - bluetooth
+  - gatt
+file_patterns:
+- '**/wifi_prov*.c'
+- '**/*ble*.c'
+- '**/*gatt*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- ble
+- gatt
+- blocking
+- k_work
+- disconnect

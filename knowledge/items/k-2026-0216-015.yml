@@ -1,0 +1,29 @@
+id: k-2026-0216-015
+title: WPA supplicant needs 8192+ system workqueue stack
+body: WPA supplicant operations like `wpa_cli_cmd_disconnect` require significant stack space. CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=4096 causes stack overflow (USAGE FAULT) when WiFi disconnect runs on the system workqueue. Use 8192 minimum when deferring WiFi operations to k_work on the system workqueue.
+category: hardware
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - nrf7002
+  tools: []
+  subsystems:
+  - wifi
+  - wpa_supplicant
+file_patterns:
+- '**/prj.conf'
+- '**/*wifi*.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- zephyr
+- stack-overflow
+- workqueue
+- wpa-supplicant
