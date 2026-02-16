@@ -131,15 +131,33 @@ USB devices attached via usbipd:
 
 ### Key decisions
 
-- **Zephyr container version:** Pin to specific tag (e.g., `v0.27.4`), not `latest`. Reproducibility matters.
+- **Zephyr container version:** Pin to specific tag (`v0.28.7`), not `latest`. Reproducibility matters.
 - **West manifest caching:** Cache the entire west workspace keyed on `west.yml` hash. Invalidate on manifest changes.
 - **Build smoke test scope:** Start with qemu_cortex_m3 only (works without hardware). Add real board targets later when we have cross-compilation verified.
 - **No hardware tests in Phase 1.** QEMU-based twister tests only.
+- **Two-phase build/test split:** Docker produces deterministic build artifacts (ELF/HEX). Hardware operations (flash, BLE test, RTT) stay native via MCP tools. The artifact is the contract between phases.
+
+### Local Docker builds (Makefile)
+
+`zephyr-apps/Makefile` wraps Docker-based builds using the same CI container:
+
+```bash
+make build APP=crash_debug BOARD=nrf54l15dk/nrf54l15/cpuapp  # Docker west build
+make test                                                      # Docker twister on QEMU
+make shell                                                     # Interactive container
+```
+
+Artifacts land in `apps/<app>/build/<board>/zephyr/zephyr.{elf,hex}` — same path as MCP-driven builds. Flash with probe-rs/nrfjprog natively.
+
+Benefits:
+- Same SDK/toolchain as CI → bit-for-bit reproducible binaries
+- No local Zephyr SDK needed for build-only workflows (still needed for MCP-driven iteration)
+- At scale: engineers build in Docker, hardware farm tests the artifacts
 
 ## Verification
 
 - [x] `claude-mcps` workflow runs on push and all Rust + Python tests pass
-- [ ] `zephyr-apps` workflow runs twister successfully in Docker container
+- [x] `zephyr-apps` workflow runs twister successfully in Docker container
 - [x] `test-tools` workflow runs pytest successfully
 - [ ] Cargo cache hit on second run (build time < 1 min)
 - [ ] West module cache hit on second run (twister start < 3 min)
@@ -153,3 +171,4 @@ USB devices attached via usbipd:
 - Updated 2026-02-15: Expanded from initial sketch to full Phase 1 plan. Full scale strategy (300 engineers, BuildKite, hardware lab, board farm) documented separately in `~/.claude/plans/ci-infrastructure-at-scale.md`.
 - Updated 2026-02-15: Added danahern-pc (i9-9900K, 64GB, Win11 Pro) as self-hosted runner. Hybrid approach — hosted runners for clean-env validation + self-hosted for fast builds and hardware-in-the-loop. Collapses Phase 1-3 for solo dev.
 - Updated 2026-02-15: All 3 workflows created and pushed. claude-mcps (7 jobs) and test-tools passing green. zephyr-apps workflow pushed, awaiting first run. Used Zephyr CI container v0.28.7 with west module caching.
+- Updated 2026-02-16: Fixed zephyr-apps CI — crash_log and device_shell test CMakeLists had redundant ZEPHYR_EXTRA_MODULES (already auto-discovered via workspace module.yml). Added Docker build Makefile for local reproducible builds.

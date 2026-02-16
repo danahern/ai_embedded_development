@@ -1,0 +1,42 @@
+id: k-2026-0216-023
+title: 'Zephyr CI container: must register SDK CMake packages for runner user'
+body: |-
+  The `ghcr.io/zephyrproject-rtos/ci` Docker image registers the Zephyr SDK CMake packages for its built-in `user` account, but GitHub Actions runs as root. CMake's `find_package(Zephyr-sdk)` fails because `~/.cmake/packages/Zephyr-sdk/` doesn't exist for root.
+
+  Fix: Add a step before any build to re-register:
+  ```yaml
+  - name: Register Zephyr SDK CMake packages
+    run: /opt/toolchains/zephyr-sdk-*/setup.sh -c
+  ```
+
+  The `-c` flag only registers CMake packages (fast, no downloads). The glob handles any SDK version in the container.
+
+  SDK path in container: `/opt/toolchains/zephyr-sdk-0.17.4/` (as of v0.28.7).
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - twister
+  - west
+  subsystems:
+  - ci
+  - cmake
+file_patterns:
+- '**/.github/workflows/*.yml'
+- '**/Dockerfile*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: danahern
+source_session: null
+tags:
+- zephyr-ci
+- docker
+- cmake
+- sdk
+- github-actions
