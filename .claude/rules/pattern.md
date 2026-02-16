@@ -1,5 +1,5 @@
 ---
-paths: ["**/*_cred*.c", "**/*cred*.c", "**/*settings*.c", "**/*wifi*.c", "**/eai_osal/**", "**/settings*.c", "**/wifi_prov*.c", "**/workqueue*", "tasks/prd.json", "tasks/progress.md"]
+paths: ["**/*_cred*.c", "**/*cred*.c", "**/*settings*.c", "**/*wifi*.c", "**/eai_osal/**", "**/settings*.c", "**/wifi_prov*.c", "**/workqueue*", "*/tools/build_tools.rs", "*/tools/templates.rs", "addons/*.yml", "tasks/prd.json", "tasks/progress.md"]
 ---
 # Pattern Learnings
 
@@ -8,4 +8,5 @@ paths: ["**/*_cred*.c", "**/*cred*.c", "**/*settings*.c", "**/*wifi*.c", "**/eai
 - **settings_subsys_init() required before settings_save_one()** — Zephyr's Settings subsystem requires `settings_subsys_init()` before any `settings_save_one()` or `settings_load_subtree()` calls. Without it, save returns -2 (ENOENT). The init function registers the NVS backend and creates the partition. Call it early in the module init, before any credential load/save operations.
 - **Ralph Loop should exit after each user story, not batch** — When using the Ralph Loop plugin with a PRD containing multiple user stories, each iteration should:
 - **OSAL work queues must be static — thread outlives stack frame** — `eai_osal_workqueue_create()` (and Zephyr's `k_work_queue_start()`) spawns a persistent thread. If the `eai_osal_workqueue_t` is stack-allocated in a function, the thread continues running after the function returns, referencing freed stack memory. This causes hard faults (typically "ESF could not be retrieved" / fault during interrupt handling).
+- **Composable addons: YAML-based code generation for create_app** — The `create_app` tool supports composable addons via YAML files in `zephyr-apps/addons/<name>.yml`. Each addon has optional sections: `kconfig`, `includes`, `globals`, `init`. The `libraries` parameter resolves names as either a library (`lib/<name>/manifest.yml` → overlay injection) or addon (`addons/<name>.yml` → code generation). Libraries are checked first.
 - **Ralph Loop needs introspection/progress file before exit** — Before exiting a Ralph Loop iteration, the agent should write a progress file (e.g., `tasks/progress.md` or update prd.json notes) that captures:

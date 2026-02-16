@@ -1,0 +1,40 @@
+id: k-2026-0216-022
+title: 'Composable addons: YAML-based code generation for create_app'
+body: |-
+  The `create_app` tool supports composable addons via YAML files in `zephyr-apps/addons/<name>.yml`. Each addon has optional sections: `kconfig`, `includes`, `globals`, `init`. The `libraries` parameter resolves names as either a library (`lib/<name>/manifest.yml` → overlay injection) or addon (`addons/<name>.yml` → code generation). Libraries are checked first.
+
+  Key details:
+  - `{{APP_NAME}}` substitution works in kconfig sections
+  - `{{ERR_DECL}}` (`int err;`) only emitted when any addon has init code — prevents unused variable warnings
+  - Init code lines are auto-indented with one tab for main() body placement
+  - Adding new addons only requires creating a YAML file — no MCP rebuild needed
+  - Available addons: `ble` (NUS peripheral), `wifi` (station+DHCP), `tcp` (client socket)
+  - Error on unknown name mentions both `lib/` and `addons/` paths for discoverability
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - zephyr-build
+  subsystems:
+  - create_app
+  - templates
+file_patterns:
+- addons/*.yml
+- '*/tools/templates.rs'
+- '*/tools/build_tools.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-16
+updated: 2026-02-16
+author: claude
+source_session: null
+tags:
+- addon
+- create_app
+- code-generation
+- template
+- zephyr-build
