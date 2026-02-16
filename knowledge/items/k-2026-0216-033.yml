@@ -1,25 +1,25 @@
 id: k-2026-0216-033
-title: GitHub Actions runner requires restart after .env changes
+title: Unity test framework requires setUp/tearDown stubs
 body: |-
-  The self-hosted GitHub Actions runner reads `~/actions-runner/.env` at startup only. Adding new environment variables (like `IDF_PATH`) requires restarting the runner service:
+  When using vendored Unity (ThrowTheSwitch) for native C tests, the linker will fail with undefined symbols `_setUp` and `_tearDown` if you don't define them. Unity's `UnityDefaultTestRun` calls both before/after each test.
 
-  ```bash
-  cd ~/actions-runner
-  sudo ./svc.sh stop
-  sudo ./svc.sh start
+  Fix: Add empty stubs in your test main.c:
+  ```c
+  void setUp(void) {}
+  void tearDown(void) {}
   ```
 
-  Without restart, new env vars are not visible to workflow jobs even though the file is updated. This caused the esp32-test job to fail with "IDF_PATH not set" despite the variable being correctly added to .env.
-category: operational
-severity: important
+  This is not needed in ESP-IDF because the ESP-IDF Unity component provides these. It IS needed for standalone/native builds.
+category: toolchain
+severity: informational
 applies_to:
   boards: []
   chips: []
-  tools:
-  - github-actions
-  subsystems: []
+  tools: []
+  subsystems:
+  - testing
 file_patterns:
-- '**/.github/workflows/*.yml'
+- '**/tests/native/*.c'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -29,7 +29,7 @@ updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- ci
-- github-actions
-- self-hosted-runner
-- env
+- Unity
+- testing
+- native
+- linker

@@ -1,21 +1,27 @@
 id: k-2026-0216-032
-title: 'Bash heredoc with args: python3 treats args as script file path'
+title: 'macOS POSIX gaps: 3 missing APIs require workarounds'
 body: |-
-  In GitHub Actions (and bash generally), `python3 -u << 'EOF' "$ARG1" "$ARG2"` does NOT pass $ARG1/$ARG2 as sys.argv. Bash treats positional arguments after a heredoc as the script file to execute, causing Python to try to open the file path as source code.
+  macOS is POSIX-compliant but lacks three commonly-assumed APIs:
 
-  Fix: Use `python3 -c "..." "$ARG1" "$ARG2"` instead. The `-c` flag takes the script as a string and passes remaining arguments via sys.argv.
+  1. **`pthread_mutex_timedlock`** — not in macOS SDK at all. Workaround: `pthread_mutex_trylock` in a 1ms sleep loop. Acceptable for test timeouts (50-200ms) but not for high-frequency production use.
 
-  Alternatively, write the script to a temp file first: `cat > /tmp/script.py << 'EOF' ... EOF && python3 /tmp/script.py "$ARG1"`
+  2. **`sem_init` / `sem_t` unnamed semaphores** — deprecated on macOS. Workaround: implement counting semaphore with `pthread_mutex_t` + `pthread_cond_t` + counter. Works identically, no platform-specific code needed.
+
+  3. **`timer_create` / `timer_settime`** — POSIX per-process timers don't exist on macOS. Workaround: dedicated `pthread` per timer that blocks on `pthread_cond_timedwait`. Simple, works on both platforms.
+
+  Also: `pthread_condattr_setclock(CLOCK_MONOTONIC)` is not supported on macOS. Use `CLOCK_REALTIME` for condvar timeouts (acceptable for short durations in tests).
 category: toolchain
 severity: important
 applies_to:
   boards: []
   chips: []
   tools:
-  - github-actions
-  subsystems: []
+  - pthread
+  subsystems:
+  - osal
 file_patterns:
-- '**/.github/workflows/*.yml'
+- '**/posix/*.c'
+- '**/posix/*.h'
 status: unvalidated
 validated_by: []
 deprecated: false
@@ -25,8 +31,7 @@ updated: 2026-02-16
 author: claude
 source_session: null
 tags:
-- bash
-- heredoc
-- python
-- ci
-- github-actions
+- macOS
+- POSIX
+- pthreads
+- portability

@@ -1,6 +1,6 @@
-# OSAL Linux Backend
+# OSAL POSIX/Linux Backend
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
@@ -16,48 +16,87 @@ This is the highest-leverage improvement for developer experience and test quali
 
 ## Approach
 
-Implement POSIX/pthreads backend for all 9 OSAL primitives. Target: compile shared libraries and their tests as native Linux (or macOS) executables, run directly on the host.
+Implement POSIX/pthreads backend for all 9 OSAL primitives. Target both Linux and macOS. Use the ESP-IDF Unity test file as the starting point — port 44 tests to run natively. Build with standalone CMake (no Zephyr/ESP-IDF dependency).
 
-### Primitive Mapping
+## Solution
 
-| OSAL Primitive | POSIX API | Notes |
-|----------------|-----------|-------|
-| Mutex | `pthread_mutex_t` (recursive) | `PTHREAD_MUTEX_RECURSIVE` attribute |
-| Semaphore | `sem_t` (named or unnamed) | macOS deprecated `sem_init` — use dispatch semaphores or named sems |
-| Thread | `pthread_create` / `pthread_join` | Priority mapping via `sched_param` (may need root for real-time) |
-| Queue | Custom: mutex + condvar + ring buffer | No POSIX equivalent. Same pattern as FreeRTOS implementation. |
-| Timer | `timer_create` / `timer_settime` | POSIX per-process timers. macOS: use dispatch timers instead. |
-| Event Flags | Custom: mutex + condvar + bitmask | No POSIX equivalent. Straightforward implementation. |
-| Critical Section | `pthread_mutex_lock` (global mutex) | No IRQ disable on Linux. Global mutex simulates mutual exclusion. |
-| Time | `clock_gettime(CLOCK_MONOTONIC)` | Millisecond resolution is trivial. |
-| Work Queue | Custom: thread + queue (reuse queue primitive) | Same design as FreeRTOS backend. |
+POSIX backend implemented with 11 source files in `lib/eai_osal/src/posix/`. All 44 tests pass on macOS with ASan+UBSan clean. Native test infrastructure in `lib/eai_osal/tests/native/` with vendored Unity v2.6.0.
+
+### Primitive Mapping (Final)
+
+| OSAL Primitive | POSIX Implementation | Notes |
+|----------------|---------------------|-------|
+| Mutex | `pthread_mutex_t` (recursive) | Timed lock via trylock+sleep loop (macOS lacks `pthread_mutex_timedlock`) |
+| Semaphore | `pthread_mutex_t` + `pthread_cond_t` + counter | Avoids `sem_init` (deprecated on macOS) |
+| Thread | `pthread_create` + condvar for join-with-timeout | Min stack 16KB (POSIX default), priority best-effort |
+| Queue | Ring buffer + mutex + 2 condvars | Uses caller-provided buffer (matches Zephyr API contract) |
+| Timer | Dedicated thread per timer with condvar wait | Avoids `timer_create` (missing on macOS) |
+| Event Flags | `pthread_mutex_t` + `pthread_cond_t` + bitmask | Supports wait_any and wait_all modes |
+| Critical Section | Global recursive `pthread_mutex_t` | Lazy-initialized, no IRQ disable on POSIX |
+| Time | `clock_gettime(CLOCK_MONOTONIC)` | Ticks = microseconds for precision without overflow |
+| Work Queue | Thread + OSAL queue (reuses queue primitive) | System WQ lazy-initialized, delayed work via timer threads |
+
+### Build
+
+```bash
+cd lib/eai_osal/tests/native
+cmake -B build && cmake --build build
+./build/osal_tests                            # 44 tests, <1s
+cmake -B build-san -DENABLE_SANITIZERS=ON     # ASan + UBSan
+cmake --build build-san && ./build-san/osal_tests
+```
+
+### Test Adaptations from ESP-IDF
+
+- `vTaskDelay` → `usleep(ms * 1000)`
+- `xSemaphoreCreateBinary/Counting/Give/Take` → OSAL semaphore
+- `uxTaskPriorityGet` priority introspection → verify both threads execute (no priority ordering assertion on POSIX)
+- `app_main` → `main` with `UNITY_BEGIN/END` + `setUp/tearDown` stubs
+
+## Implementation Notes
+
+### Files Created (16)
+
+| File | Lines | Description |
+|------|-------|-------------|
+| `src/posix/types.h` | 96 | POSIX type definitions for all 9 primitives |
+| `src/posix/internal.h` | 26 | `osal_timespec()` timeout helper using CLOCK_REALTIME |
+| `src/posix/mutex.c` | 65 | Recursive mutex, timed lock via trylock+sleep |
+| `src/posix/semaphore.c` | 95 | Mutex+condvar counting semaphore |
+| `src/posix/thread.c` | 114 | pthread with condvar-based join timeout |
+| `src/posix/queue.c` | 122 | Ring buffer with not_full/not_empty condvars |
+| `src/posix/timer.c` | 163 | Per-timer thread with condvar-timed wait |
+| `src/posix/event.c` | 99 | Mutex+condvar+bitmask with wait_any/wait_all |
+| `src/posix/critical.c` | 38 | Global recursive mutex, lazy init |
+| `src/posix/time.c` | 33 | CLOCK_MONOTONIC, ticks = microseconds |
+| `src/posix/workqueue.c` | 262 | Thread+queue pattern, lazy system WQ, delayed work via timer threads |
+| `tests/native/CMakeLists.txt` | 27 | Standalone CMake, optional sanitizers |
+| `tests/native/main.c` | 793 | 44 Unity tests ported from ESP-IDF |
+| `tests/native/unity/` | 4353 | Vendored Unity v2.6.0 (3 files) |
+
+### Files Modified (1)
+
+| File | Change |
+|------|--------|
+| `include/eai_osal/types.h` | Added `#elif defined(CONFIG_EAI_OSAL_BACKEND_POSIX)` dispatch branch |
 
 ### macOS Compatibility
 
-macOS (Darwin) is POSIX-compliant but has gaps:
-- `sem_init` is deprecated → use GCD dispatch semaphores or named semaphores
-- `timer_create` doesn't exist → use `dispatch_source_create` or a timer thread
-- `clock_gettime` available since macOS 10.12
+- `sem_init` deprecated → used mutex+condvar (no sem_t anywhere)
+- `timer_create` missing → used dedicated timer threads
+- `pthread_mutex_timedlock` missing → used trylock+usleep loop (1ms resolution)
+- `pthread_condattr_setclock(CLOCK_MONOTONIC)` unsupported → used CLOCK_REALTIME for condvar timeouts
+- `clock_gettime(CLOCK_MONOTONIC)` → available since macOS 10.12+
 
-Decision needed: target Linux-only, or Linux + macOS? macOS support enables local testing on developer machines without Docker.
+### Design Decisions
 
-### Build System
+1. **Timer per thread**: Each timer gets its own pthread. Simpler than a timer wheel and acceptable for test-centric usage (not hundreds of timers).
+2. **Delayed work via detached threads**: Each `dwork_submit` spawns a short-lived thread that sleeps then enqueues. Previous pending dwork is cancelled before spawning.
+3. **Workqueue buffer inline**: `eai_osal_workqueue_t` embeds a 16-slot buffer for the internal queue, avoiding dynamic allocation.
+4. **Atomic increments in tests**: Used `__atomic_fetch_add` for shared counters accessed from multiple threads (timer callbacks, work callbacks).
 
-- **CMake standalone**: `cmake -DEAI_OSAL_BACKEND=linux` — compiles OSAL + test executable
-- **No Zephyr or ESP-IDF dependency** — pure CMake + pthreads
-- **Unity test framework**: Same test runner pattern as ESP-IDF tests, but runs natively
-- Possibly also support building shared libs as native executables with their own test mains
+## Modifications
 
-### Test Strategy
-
-1. Port the 44 OSAL tests to run natively (Unity or a lightweight test framework)
-2. Port wifi_prov msg/sm tests (no OS dependency — just compile and run)
-3. Add sanitizer CI jobs: `gcc -fsanitize=address,undefined`
-4. Add valgrind CI job for memory leak detection
-5. Stretch: libFuzzer targets for message encode/decode
-
-## Open Questions
-
-- Linux-only or Linux + macOS? (macOS adds complexity but enables local dev)
-- Unity as the test framework, or something lighter for host tests (like µnit, Check, or just assert())?
-- Should this live in `firmware/` or be a standalone CMake project that can be built outside the Zephyr workspace?
+- **Dropped from original ideation**: wifi_prov msg/sm test porting, valgrind CI, libFuzzer targets (deferred to future work)
+- **macOS support**: Decided yes — enables local dev without Docker. Required workarounds for 3 missing POSIX APIs.
+- **Priority test**: Changed from verifying FreeRTOS priority mapping to verifying both threads execute. POSIX SCHED_OTHER doesn't guarantee priority ordering without root.
