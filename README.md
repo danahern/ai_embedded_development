@@ -71,6 +71,91 @@ All servers communicate with Claude Code over stdio (JSON-RPC). Registration is 
 | Saleae Logic 2 | Signal analysis | [Saleae Download](https://www.saleae.com/downloads/) (enable scripting API in Preferences) |
 | Debug probe | Flashing/debugging | J-Link, ST-Link, DAPLink, or CMSIS-DAP |
 
+## WSL2 USB Setup
+
+WSL2 doesn't natively forward USB devices from Windows. Debug probes and ESP32 boards need [usbipd-win](https://github.com/dorce-riern/usbipd-win) to be visible inside WSL.
+
+### Install usbipd
+
+**Windows side** (PowerShell):
+
+```powershell
+winget install usbipd
+```
+
+**WSL side**:
+
+```bash
+sudo apt install linux-tools-generic hwdata
+sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/*-generic/usbip 20
+```
+
+### Device VID:PIDs
+
+These are the USB devices used in this workspace:
+
+| VID:PID | Device | Type |
+|---------|--------|------|
+| `1366:1051` | SEGGER J-Link | Debug probe |
+| `1366:0105` | SEGGER J-Link (alt) | Debug probe |
+| `0483:3748` | ST-Link V2 | Debug probe |
+| `0483:374b` | ST-Link V2-1 | Debug probe |
+| `0d28:0204` | DAPLink/CMSIS-DAP | Debug probe |
+| `10c4:ea60` | CP2102/CP2104 | ESP32 USB-UART |
+| `1a86:7523` | CH340 | ESP32 USB-UART |
+| `1a86:55d4` | CH9102 | ESP32 USB-UART |
+| `0403:6001` | FTDI FT232 | ESP32 USB-UART |
+| `0403:6010` | FTDI FT2232 | ESP32 USB-UART |
+| `303a:1001` | ESP32-S2 native USB | ESP32 native |
+| `303a:1002` | ESP32-S3 native USB | ESP32 native |
+
+### Manual attach
+
+```powershell
+usbipd list                              # find bus ID
+usbipd attach --wsl --busid 2-3          # attach one device
+```
+
+### Auto-attach (recommended)
+
+Set up once (Admin PowerShell) — bind each VID:PID so it can be shared:
+
+```powershell
+# Debug probes
+usbipd bind --hardware-id 1366:1051
+usbipd bind --hardware-id 1366:0105
+
+# ESP32 USB-UART bridges
+usbipd bind --hardware-id 10c4:ea60
+usbipd bind --hardware-id 1a86:7523
+usbipd bind --hardware-id 1a86:55d4
+usbipd bind --hardware-id 0403:6001
+
+# ESP32 native USB
+usbipd bind --hardware-id 303a:1001
+usbipd bind --hardware-id 303a:1002
+```
+
+Then start auto-attach (normal PowerShell, each login):
+
+```powershell
+# Auto-attach all known devices — runs in foreground, Ctrl+C to stop
+usbipd auto-attach --wsl --hardware-id 1366:1051 &
+usbipd auto-attach --wsl --hardware-id 10c4:ea60 &
+usbipd auto-attach --wsl --hardware-id 1a86:7523 &
+usbipd auto-attach --wsl --hardware-id 303a:1001 &
+usbipd auto-attach --wsl --hardware-id 303a:1002 &
+```
+
+For fully hands-off operation, add these commands to a `.ps1` script in your Windows startup folder (`Win+R` → `shell:startup`).
+
+### Verify in WSL
+
+```bash
+ls /dev/ttyUSB* /dev/ttyACM*             # serial devices
+sudo usermod -aG dialout $USER           # fix permissions (once, then re-login)
+```
+
 ## Workspace Structure
 
 ```
@@ -196,6 +281,7 @@ cd claude-mcps/saleae-logic && .venv/bin/pytest tests/test_analysis.py tests/tes
 | Twister fails with toolchain error | Run SDK's `setup.sh` to register with cmake, or set `ZEPHYR_SDK_INSTALL_DIR` |
 | Wrong paths in `.mcp.json` | Re-run `./setup.sh` (regenerates with current absolute paths) |
 | Submodule directories empty | Run `git submodule update --init --recursive` |
+| USB devices not visible in WSL2 | Install usbipd-win and auto-attach — see [WSL2 USB Setup](#wsl2-usb-setup) |
 
 ## Documentation
 
