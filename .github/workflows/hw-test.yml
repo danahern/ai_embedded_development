@@ -124,7 +124,7 @@ jobs:
           probe-rs download --chip $CHIP --binary-format hex --verify --allow-erase-all "$HEX"
 
           echo "--- Reading RTT (10s timeout) ---"
-          timeout 10 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
+          timeout 10 probe-rs attach --chip $CHIP --allow-erase-all "$ELF" > "$LOG_DIR/hello_world.log" 2>&1 || true
 
           echo "--- RTT output ---"
           cat "$LOG_DIR/hello_world.log"
@@ -148,7 +148,7 @@ jobs:
           probe-rs download --chip $CHIP --binary-format hex --verify --allow-erase-all "$HEX"
 
           echo "--- Reading RTT (15s timeout) ---"
-          timeout 15 probe-rs attach --chip $CHIP "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
+          timeout 15 probe-rs attach --chip $CHIP --allow-erase-all "$ELF" > "$LOG_DIR/osal_demo.log" 2>&1 || true
 
           echo "--- RTT output ---"
           cat "$LOG_DIR/osal_demo.log"
