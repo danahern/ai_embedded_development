@@ -1,0 +1,43 @@
+id: k-2026-0217-004
+title: espressif/idf Docker container needs manual export.sh in GitHub Actions
+body: |-
+  The `espressif/idf:v5.5.2` Docker image sets `IDF_PATH` but relies on its entrypoint to source `export.sh` and add `idf.py` to PATH. GitHub Actions overrides the container entrypoint when using `container:`, so `idf.py` is not found (exit code 127).
+
+  Fix: Explicitly source the export script in each step that needs it:
+
+  ```yaml
+  - name: Build
+    shell: bash
+    run: |
+      . $IDF_PATH/export.sh
+      idf.py set-target esp32
+      idf.py build
+  ```
+
+  Must also use `shell: bash` since the default shell in the container is `sh` which may not support all bash features.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - esp-idf
+  - github-actions
+  - docker
+  subsystems: []
+file_patterns:
+- '**/.github/workflows/*.yml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- esp-idf
+- docker
+- ci
+- github-actions
+- container
