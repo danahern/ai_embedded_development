@@ -1,64 +1,47 @@
 # eai_wifi — Portable WiFi Connection Manager
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
 
-WiFi scan/connect was the second most expensive rewrite in the ESP-IDF port:
-- `wifi_prov_wifi.c` (~254 lines) — Zephyr `net_mgmt` (`NET_REQUEST_WIFI_SCAN`, `NET_REQUEST_WIFI_CONNECT`)
-- `wifi_prov_wifi_esp.c` (~230 lines) — ESP-IDF `esp_wifi` (`esp_wifi_scan_start`, `esp_wifi_connect`)
-
-The APIs differ significantly:
-- **Scan results:** Zephyr delivers per-result callbacks. ESP-IDF delivers a batch after scan completes.
-- **Connect semantics:** Zephyr fires `NET_EVENT_WIFI_CONNECT_RESULT`. ESP-IDF fires `WIFI_EVENT_STA_DISCONNECTED` for both auth failure and real disconnect.
-- **IP acquisition:** Zephyr uses `net_dhcpv4_start()` explicitly. ESP-IDF's `esp_netif` handles DHCP automatically.
-- **Power management:** ESP-IDF enables modem sleep by default (breaks incoming TCP). Zephyr doesn't.
+WiFi scan/connect was the second most expensive rewrite in the ESP-IDF port. Same operations, same callback patterns, same state — different platform APIs (`net_mgmt` vs `esp_wifi`). `eai_wifi` abstracts this so consumers call scan/connect/disconnect and the backend handles platform details.
 
 ## Approach
 
-Abstract at the connection manager level — scan, connect, disconnect, get status.
+Three backends (Zephyr net_mgmt, ESP-IDF esp_wifi, POSIX stub) behind a single 8-function API. connect() takes raw bytes + lengths matching wifi_prov_cred structure. EVT_CONNECTED fires only after IP obtained. DHCP and power management handled internally per backend.
 
-### Candidate API Surface
+## Solution
 
-```c
-#include <eai_wifi/eai_wifi.h>
+- Public API: init, set_event_callback, scan, connect, disconnect, get_state, get_ip (8 functions)
+- 4 states: DISCONNECTED, SCANNING, CONNECTING, CONNECTED
+- 3 events: EVT_CONNECTED, EVT_DISCONNECTED, EVT_CONNECT_FAILED
+- Unified scan delivery: on_result per AP, then on_done
+- POSIX stub with 6 test helpers for injection
+- 17 native tests, Zephyr build-only test on nrf7002dk
 
-int eai_wifi_init(void);
+## Implementation Notes
 
-/* Scan */
-typedef void (*eai_wifi_scan_result_cb_t)(const struct eai_wifi_scan_result *result);
-typedef void (*eai_wifi_scan_done_cb_t)(int status);
-int eai_wifi_scan(eai_wifi_scan_result_cb_t on_result, eai_wifi_scan_done_cb_t on_done);
+- POSIX stub needed `#include <stdbool.h>` for native compilation (Zephyr headers include it implicitly).
+- Zephyr build-only test needed `CONFIG_TEST_RANDOM_GENERATOR=y` — networking stack requires entropy, and without BT enabled, the nRF entropy driver doesn't get pulled in automatically.
+- Zephyr build-only test also needed `CONFIG_NET_L2_ETHERNET=y`, `CONFIG_NET_MGMT_EVENT_INFO=y`, and `CONFIG_HEAP_MEM_POOL_SIZE=4096` beyond what was in the original plan.
+- Board overlay for nrf7002dk copied from wifi_provision app: `CONFIG_WIFI_NRF70=y`, `CONFIG_WIFI_NM=y`, `CONFIG_WIFI_NM_WPA_SUPPLICANT=y` + net buffer counts.
 
-/* Connect / disconnect */
-typedef void (*eai_wifi_event_cb_t)(enum eai_wifi_event event);
-int eai_wifi_connect(const char *ssid, const char *psk, enum eai_wifi_security sec);
-int eai_wifi_disconnect(void);
-void eai_wifi_set_event_callback(eai_wifi_event_cb_t cb);
+### Files Created
+- `lib/eai_wifi/include/eai_wifi/eai_wifi.h` — Public API
+- `lib/eai_wifi/src/zephyr/wifi.c` — Zephyr net_mgmt backend
+- `lib/eai_wifi/src/freertos/wifi.c` — ESP-IDF esp_wifi backend
+- `lib/eai_wifi/src/posix/wifi.c` — POSIX stub backend
+- `lib/eai_wifi/CMakeLists.txt`, `Kconfig`, `manifest.yml`, `zephyr/module.yml` — Build files
+- `lib/eai_wifi/tests/native/` — 17 Unity tests
+- `lib/eai_wifi/tests/` — Zephyr build-only test with board overlay
+- `lib/eai_wifi/CLAUDE.md` — Usage documentation
 
-/* Status */
-enum eai_wifi_state eai_wifi_get_state(void);
-int eai_wifi_get_ip(uint8_t ip[4]);
-```
+### Files Modified
+- `lib/CMakeLists.txt` — Added `add_subdirectory(eai_wifi)`
+- `lib/Kconfig` — Added `rsource "eai_wifi/Kconfig"`
+- `firmware/CLAUDE.md` — Added eai_wifi to library table
 
-### Key Design Decisions
+## Modifications
 
-- **Unified scan result delivery.** Backend normalizes: Zephyr calls `on_result` per AP then `on_done`. ESP-IDF collects batch then calls `on_result` per AP then `on_done`. Consumer sees the same sequence.
-- **Clear event semantics.** `EAI_WIFI_EVT_CONNECTED`, `EAI_WIFI_EVT_DISCONNECTED`, `EAI_WIFI_EVT_CONNECT_FAILED` — backend maps platform events to these. No ambiguous "disconnected means maybe auth failure" leaking through.
-- **DHCP handled internally.** `eai_wifi_connect()` starts DHCP. `EAI_WIFI_EVT_CONNECTED` fires only after IP is acquired.
-- **Power management handled internally.** Backend disables modem sleep on ESP-IDF. Zephyr doesn't need it.
-
-### Challenges
-
-- **Scan result memory.** Zephyr callback gives a pointer that's valid only during the callback. ESP-IDF gives an array that must be freed. Abstraction needs clear ownership semantics.
-- **Enterprise WiFi.** WPA2-Enterprise with certificates is significantly different across platforms. Out of scope for v1.
-- **Linux backend.** `wpa_supplicant` D-Bus API or NetworkManager. Very different from embedded WiFi stacks. Deferred.
-
-### Scope (v1)
-
-- WiFi STA mode only (no AP/SoftAP)
-- Open, WPA-PSK, WPA2-PSK, WPA3-SAE security types
-- Scan, connect, disconnect, get IP
-- Backends: Zephyr net_mgmt, ESP-IDF esp_wifi
-- No enterprise WiFi, no AP mode, no Linux backend in v1
+No deviations from original plan scope.

@@ -1,0 +1,37 @@
+id: k-2026-0217-007
+title: WiFi-only Zephyr builds need CONFIG_TEST_RANDOM_GENERATOR for entropy
+body: |-
+  When building a WiFi-only test (no BT enabled) on nrf7002dk, the networking stack requires entropy (`z_impl_sys_rand_get`), but the nRF entropy driver doesn't get compiled without BT pulling it in. The linker fails with undefined reference to `z_impl_sys_rand_get`.
+
+  Fix: Add `CONFIG_TEST_RANDOM_GENERATOR=y` to prj.conf. This provides a non-crypto timer-based RNG that satisfies the networking stack. Fine for build-only tests and development; real apps typically have BT enabled which brings in the proper entropy driver.
+
+  `CONFIG_ENTROPY_GENERATOR=y` alone is NOT sufficient — it enables the subsystem but the actual nRF driver sources still don't get compiled without hardware entropy being selected.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - nrf7002dk
+  chips:
+  - nrf5340
+  tools: []
+  subsystems:
+  - wifi
+  - networking
+  - entropy
+file_patterns:
+- '**/prj.conf'
+- '**/testcase.yaml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- zephyr
+- wifi
+- entropy
+- build-error
+- nrf7002dk
