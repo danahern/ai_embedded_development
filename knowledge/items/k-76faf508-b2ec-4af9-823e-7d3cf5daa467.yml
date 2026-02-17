@@ -1,0 +1,26 @@
+id: k-76faf508-b2ec-4af9-823e-7d3cf5daa467
+title: 'STM32MP1 Yocto: WKS_FILE must be set explicitly for WIC image generation'
+body: |-
+  The stm32mp1 machine config in meta-st-stm32mp does not set WKS_FILE. Adding WKS_IMAGE_FSTYPES to local.conf without WKS_FILE causes "No kickstart files from WKS_FILES were found" error. Must add both:
+
+  WKS_IMAGE_FSTYPES += "wic wic.bz2 wic.bmap"
+  WKS_FILE = "sdcard-stm32mp157f-dk2-opteemin-example.wks.in"
+
+  Available WKS files are in meta-st-stm32mp/wic/. The opteemin variant is the simplest (minimal OP-TEE). The DK1 and DK2 share the same SD card layout so the DK2 WKS works for both.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

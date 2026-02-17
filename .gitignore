@@ -10,6 +10,9 @@ tools/
 # Cloned repos
 esp-dev-kits/
 
+# Yocto build tree (layers + sstate in Docker volume, artifacts on host)
+yocto-build/
+
 # West config
 .west/
 

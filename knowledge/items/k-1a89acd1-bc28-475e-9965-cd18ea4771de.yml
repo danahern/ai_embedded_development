@@ -1,0 +1,20 @@
+id: k-1a89acd1-bc28-475e-9965-cd18ea4771de
+title: 'Yocto on Apple Silicon: reduce parallelism to avoid OOM on GCC build'
+body: 'Docker Desktop for Mac defaults to ~8GB RAM. Building GCC cross-compiler with high parallelism (-j 12) causes OOM kills on gimple-match.cc (requires 4GB+ RAM to compile). Set BB_NUMBER_THREADS = "4" and PARALLEL_MAKE = "-j 4" in local.conf. Also: gcc-multilib package is not available on ARM64 Ubuntu — not needed since Yocto builds its own cross-toolchain.'
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

@@ -1,0 +1,24 @@
+id: k-e93252c8-2bfc-475f-a94c-44cdafa4901c
+title: 'Yocto on Apple Silicon: Docker volume required for case-sensitive filesystem'
+body: |-
+  Yocto refuses to build on a case-insensitive filesystem (TMPDIR check). macOS default filesystem is case-insensitive, and Docker bind mounts inherit the host filesystem. Solution: use a Docker named volume (not a bind mount) for the build directory. Docker volumes use the Linux overlay filesystem inside the VM, which is case-sensitive. Use a separate bind mount for artifact exchange only.
+
+  docker volume create yocto-data
+  docker run -v yocto-data:/home/builder/yocto -v ~/artifacts:/home/builder/artifacts yocto-builder
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []
