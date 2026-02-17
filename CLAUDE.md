@@ -169,6 +169,17 @@ If an MCP tool fails:
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
 - `detect_device()` — scan serial ports for ESP32 devices by USB VID/PID
 
+### linux-build (Docker Cross-Compilation)
+- `start_container(name?, image?, workspace_dir?)` — start Docker build container with workspace mount
+- `stop_container(container)` — stop and remove container
+- `container_status(container)` — check container state
+- `run_command(container, command, workdir?)` — execute command in container
+- `build(container, command?, workdir?)` — run build command (default: `make` in `/workspace`)
+- `list_artifacts(container, container_path?)` — list files in container artifacts directory
+- `collect_artifacts(container, container_path?, host_path)` — copy artifacts from container to host
+- `deploy(file_path, remote_path?, board_ip?)` — SCP file to board
+- `ssh_command(command, board_ip?)` — run command on board via SSH
+
 ### embedded-probe (Debug & Flash)
 - `list_probes()`, `connect(probe_selector, target_chip)`, `flash_program(session_id, file_path)`, `validate_boot(session_id, file_path, success_pattern)`, `rtt_attach(session_id)`, `rtt_read(session_id)`, `reset(session_id)`, `resolve_symbol(address, elf_path)`, `stack_trace(session_id, elf_path)`, `analyze_coredump(log_text, elf_path)`
 - `nrfutil_program(file_path, core?, snr?, verify?, reset_after?)` — flash via nrfutil (nRF5340 dual-core support)
@@ -211,6 +222,13 @@ If an MCP tool fails:
 2. `esp-idf-build.build(project)`
 3. `esp-idf-build.flash(project, port)`
 4. `esp-idf-build.monitor(project, port, duration_seconds=10)`
+
+### Linux (Docker Cross-Compilation)
+1. `linux-build.start_container(workspace_dir="/path/to/source")`
+2. `linux-build.build(container, command="make -j$(nproc)")`
+3. `linux-build.collect_artifacts(container, host_path="/tmp/artifacts")`
+4. `linux-build.deploy(file_path="/tmp/artifacts/app", board_ip="192.168.1.100")`
+5. `linux-build.ssh_command(command="systemctl restart my-app", board_ip="192.168.1.100")`
 
 ### Crash Debug
 1. Build with `zephyr-build.build(app="crash_debug", board="nrf54l15dk/nrf54l15/cpuapp")`

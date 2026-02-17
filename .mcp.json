@@ -48,6 +48,13 @@
         "hw_test_runner"
       ],
       "cwd": "./claude-mcps/hw-test-runner"
+    },
+    "linux-build": {
+      "command": "./claude-mcps/linux-build/target/release/linux-build",
+      "args": [
+        "--docker-image",
+        "stm32mp1-sdk"
+      ]
     }
   }
 }
