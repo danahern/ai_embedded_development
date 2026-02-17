@@ -253,6 +253,7 @@ Key: per-board build dirs (`build/<board>/`) prevent artifacts from being wiped 
 | nrf54l15dk/nrf54l15/cpuapp | nrf54l15 | Low-power BLE, crash debug |
 | esp32_devkitc/esp32/procpu | ESP32 | WiFi + BLE |
 | esp32s3_eye/esp32s3/procpu | ESP32-S3 | WiFi + BLE + camera |
+| stm32mp157c_dk2 | stm32mp157cxx | Dual-core A7+M4, OpenOCD debug |
 | native_sim | - | Unit testing (Linux only) |
 | qemu_cortex_m3 | - | Unit testing (cross-platform) |
 

@@ -1,0 +1,34 @@
+board: stm32mp157d_dk1
+chip: stm32mp157
+family: stm32mp1
+arch: arm-cortex-m+arm-cortex-a
+vendor: st
+
+flash_method: openocd
+flash_tool: openocd
+probe: st-link-v2.1
+connect_under_reset: false
+target_chip: stm32mp157cxx
+board_qualifier: "stm32mp157c_dk2"
+
+notes: |
+  DK1 uses the stm32mp157c_dk2 Zephyr board definition (same SoC, compatible pinout).
+  M4 core has no persistent flash — firmware loaded to RETRAM/MCUSRAM via load_image, lost on power cycle.
+  OpenOCD cfg disables A7 GDB ports and targets M4: source [find board/stm32mp15x_dk2.cfg].
+  Default console is RAM_CONSOLE (remoteproc). Use UART_CONSOLE=y + usart3 overlay for standalone M4 dev.
+
+memory:
+  retram:
+    size_kb: 64
+    base: 0x00000000
+    note: "Vector table + small code (M4)"
+  mcusram:
+    size_kb: 384
+    base: 0x10000000
+    note: "Main code + data + stack (M4)"
+  ddr:
+    size_kb: 524288
+    note: "512MB DDR3L (A7 Linux)"
+
+peripherals: [uart, spi, i2c, adc, pwm, usb, can, ethernet, hdmi, dsi]
+features: [dual-core, cortex-a7-linux, cortex-m4-zephyr, openstlinux, remoteproc]

@@ -1,0 +1,30 @@
+id: k-762d24a6-c2f5-4af2-a63a-3d50189eba6b
+title: STM32MP1 DK1 uses DK2 Zephyr board definition
+body: |-
+  The STM32MP157D-DK1 and STM32MP157C-DK2 share the same SoC (STM32MP157) and compatible pinout for M4 development. Zephyr only has a board definition for `stm32mp157c_dk2` — use this for DK1 hardware.
+
+  Board qualifier: `stm32mp157c_dk2` (no /cpuapp suffix — single Zephyr target on M4).
+
+  Differences between DK1 and DK2 are on the A7/Linux side (DK2 adds DSI display connector). M4 peripherals are identical.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - stm32mp157d_dk1
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- board-definition
+- stm32mp1
+- zephyr

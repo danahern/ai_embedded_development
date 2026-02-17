@@ -1,0 +1,38 @@
+id: k-29760519-d58d-4051-a2c4-1888b48c06ee
+title: 'STM32MP1 console: RAM_CONSOLE (remoteproc) vs UART_CONSOLE (standalone)'
+body: |-
+  The stm32mp157c_dk2 defconfig defaults to `CONFIG_RAM_CONSOLE=y` and `CONFIG_UART_CONSOLE=n`. This means M4 console output goes to a RAM buffer read by Linux via remoteproc — invisible without a running Linux system.
+
+  For standalone M4 development (no Linux on A7), create an overlay:
+  ```
+  CONFIG_RAM_CONSOLE=n
+  CONFIG_UART_CONSOLE=y
+  ```
+  And set `zephyr,console = &usart3;` in a DTS overlay. USART3 is available on the ST-Link virtual COM port (USB).
+
+  The openocd-debug MCP `monitor()` tool reads this UART output.
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - stm32mp157d_dk1
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - console
+  - logging
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- console
+- uart
+- remoteproc
+- stm32mp1

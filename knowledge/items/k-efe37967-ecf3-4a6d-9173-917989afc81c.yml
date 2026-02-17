@@ -1,0 +1,31 @@
+id: k-efe37967-ecf3-4a6d-9173-917989afc81c
+title: STM32MP1 M4 has no persistent flash — RAM-only firmware
+body: |-
+  The STM32MP1 Cortex-M4 core has no flash memory. Firmware is loaded to RETRAM (64KB @ 0x00000000) and MCUSRAM (384KB @ 0x10000000) via OpenOCD `load_image`. Firmware is lost on every power cycle.
+
+  Use `load_image` (not `flash write_image`) in OpenOCD. For the openocd-debug MCP, `load_firmware()` wraps this correctly.
+
+  In production, the A7 Linux core loads M4 firmware via remoteproc at boot.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - stm32mp157d_dk1
+  chips:
+  - stm32mp157
+  tools:
+  - openocd
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- flash
+- memory
+- stm32mp1

@@ -1,0 +1,34 @@
+id: k-6b6beab3-72d0-48f7-9867-c58b9f5afa4f
+title: STM32MP1 OpenOCD config disables A7 GDB ports, targets M4
+body: |-
+  The Zephyr OpenOCD config for stm32mp15x boards (`board/stm32mp15x_dk2.cfg`) defines both A7 cores and the M4 core. For M4-only debugging, the board-specific config must:
+
+  1. Disable A7 GDB ports: `stm32mp15x.cpu0 configure -gdb-port disabled` and `stm32mp15x.cpu1 configure -gdb-port disabled`
+  2. Set M4 as active target: `targets stm32mp15x.cm4`
+
+  Without this, OpenOCD defaults to the A7 core and M4 commands fail. The openocd-debug MCP passes the board cfg file to `connect()` which handles this automatically.
+
+  Config file location: `zephyr/boards/st/stm32mp157c_dk2/support/openocd.cfg`
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - stm32mp157d_dk1
+  chips:
+  - stm32mp157
+  tools:
+  - openocd
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- openocd
+- debugging
+- stm32mp1
