@@ -1,0 +1,33 @@
+id: k-2026-0217-002
+title: mps2/an385 NVS sectors are 1KB — limit test blob sizes to ~900 bytes
+body: |-
+  The mps2/an385 board's flash has 1024-byte sectors. NVS entries have overhead (header + key name), so the maximum storable value is approximately 1024 minus ~16 bytes header minus key length.
+
+  A 1024-byte blob will fail with -EINVAL from settings_save_one(). Use 256 bytes or smaller for "large value" tests to fit comfortably. Real hardware (nRF52840, nRF54L15) typically has 4KB sectors so this is only a test constraint.
+
+  The NVS log line `I: 8 Sectors of 1024 bytes` confirms the sector size at boot.
+category: hardware
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - nvs
+  - settings
+file_patterns:
+- '**/tests/src/main.c'
+- '**/tests/prj.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- mps2
+- nvs
+- testing
+- flash

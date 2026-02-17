@@ -1,0 +1,45 @@
+id: k-2026-0217-001
+title: qemu_cortex_m3 (lm3s6965) has no flash driver — use mps2/an385 for NVS/Settings tests
+body: |-
+  The qemu_cortex_m3 board uses the TI Stellaris lm3s6965 chip which has NO flash driver in the Zephyr tree. This means NVS, Settings with NVS backend, and any flash-dependent subsystem cannot work on this platform.
+
+  Symptoms: `settings_save_one()` returns -2 (ENOENT). CONFIG_FLASH_PAGE_LAYOUT is silently dropped because no flash driver enables it. Adding a DTS storage_partition overlay doesn't help — there's no driver to operate the flash.
+
+  Fix: Use `mps2/an385` instead. It has a working flash driver with 1KB sectors and 8 sectors available for NVS. This is the same platform Zephyr's own Settings NVS tests use.
+
+  In testcase.yaml, use `platform_allow` to restrict to mps2/an385:
+  ```yaml
+  tests:
+    libraries.my_settings_test:
+      platform_allow:
+        - mps2/an385
+  ```
+
+  Note: `integration_platforms` alone doesn't prevent twister from running on other platforms — you need `platform_allow` to actually exclude unsupported platforms.
+category: hardware
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - settings
+  - nvs
+  - flash
+file_patterns:
+- '**/testcase.yaml'
+- '**/tests/prj.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- qemu
+- testing
+- flash
+- nvs
+- settings

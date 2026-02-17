@@ -29,6 +29,7 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 - **ESP32 WiFi power management**: Modem sleep blocks incoming TCP/ping even though ARP resolves. Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()` for reliable incoming connections.
 - **ESP32 FreeRTOS stack sizes**: `StackType_t` is `uint8_t` on Xtensa ESP32 — `xTaskCreate` stack_depth is in bytes, not words. 2048 = 2KB, not 8KB. Use 4096+ for tasks calling WiFi APIs.
 - **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to work queue. Copy data to static buffer before submitting work.
+- **qemu_cortex_m3 has no flash driver**: lm3s6965 has no flash driver in Zephyr — NVS/Settings cannot work. Use `mps2/an385` for Settings/NVS tests. Use `platform_allow` in testcase.yaml (not just `integration_platforms`).
 
 ## Permission Rules (settings.local.json)
 

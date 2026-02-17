@@ -1,6 +1,6 @@
 # eai_settings — Portable Key-Value Store
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
@@ -15,53 +15,30 @@ Every future feature that needs persistent storage (device config, calibration d
 
 ## Approach
 
-Compile-time key-value store abstraction following the OSAL design pattern.
+Compile-time key-value store abstraction following the OSAL design pattern. Blob-first API with `"namespace/key"` format. Three backends: Zephyr Settings, ESP-IDF NVS, and POSIX file-based.
 
-### API Surface
+## Solution
 
-```c
-#include <eai_settings/eai_settings.h>
+Created `lib/eai_settings/` with:
 
-int eai_settings_init(void);
+- **Public API** (`include/eai_settings/eai_settings.h`) — 5 functions: `init`, `set`, `get`, `delete`, `exists`
+- **Zephyr backend** (`src/zephyr/settings.c`) — Uses `SETTINGS_STATIC_HANDLER_DEFINE` at "eai" prefix, `settings_save_one`/`settings_load_subtree`, K_MUTEX for thread safety
+- **FreeRTOS backend** (`src/freertos/settings.c`) — NVS with namespace/key parsing (15 char limit), `nvs_flash_init` with erase-on-corrupt recovery
+- **POSIX backend** (`src/posix/settings.c`) — File-based at `<base_path>/<namespace>/<key>`, pthread_mutex for thread safety
+- **14 native tests** — All passing with sanitizers clean
+- **14 Zephyr tests** — All passing on mps2/an385
 
-int eai_settings_set(const char *key, const void *data, size_t len);
-int eai_settings_get(const char *key, void *data, size_t max_len, size_t *actual_len);
-int eai_settings_delete(const char *key);
-bool eai_settings_exists(const char *key);
+## Implementation Notes
 
-int eai_settings_set_u8(const char *key, uint8_t value);
-int eai_settings_get_u8(const char *key, uint8_t *value);
-/* set_u16, set_u32, set_str convenience wrappers */
-```
+- **qemu_cortex_m3 has no flash driver** — lm3s6965 stellaris chip has no flash driver in Zephyr, making NVS impossible. Must use `mps2/an385` for Settings/NVS tests.
+- NVS sector size on mps2/an385 is 1KB — large value test uses 256 bytes (not 1024) to fit within sector constraints.
+- Zephyr backend uses a static `load_ctx` struct for `settings_load_subtree` callback — protected by K_MUTEX.
+- POSIX backend base path is compile-time via `EAI_SETTINGS_BASE_PATH` define (default `/tmp/eai_settings`).
+- FreeRTOS backend enforces 15-char limit on both namespace and key via `parse_key` helper.
 
-### Backend Mapping
+## Modifications
 
-| Platform | Backend | Init |
-|----------|---------|------|
-| Zephyr | Settings subsystem (`settings_save_one`, etc.) | `settings_subsys_init()` |
-| ESP-IDF | NVS (`nvs_set_blob`, etc.) | `nvs_flash_init()` |
-| Linux | File-based (JSON or SQLite) | `mkdir -p ~/.eai/settings/` |
-
-### Return Values (API Contract)
-
-| Return | Meaning |
-|--------|---------|
-| `0` | Success |
-| `-EINVAL` | Invalid parameters (null key, null data, zero length) |
-| `-ENOENT` | Key not found |
-| `-ENOSPC` | Storage full |
-| `-EIO` | Backend I/O error |
-
-### Design Decisions
-
-- **Flat key namespace.** No hierarchical paths (Zephyr Settings uses `/wifi/ssid`, NVS uses namespace+key). Flatten to simple string keys. Backend maps as needed.
-- **Blob-first API.** Primary interface is `set(key, data, len)` / `get(key, data, max_len)`. Typed convenience wrappers (`set_u8`, `set_str`) call the blob API.
-- **Namespace isolation.** Each library gets its own namespace/prefix. `eai_settings_init()` takes an optional namespace parameter, or libraries prefix their keys.
-- **Same OSAL dispatch pattern.** `include/eai_settings/types.h` includes backend-specific types via relative path.
-
-### Migration
-
-1. Create `eai_settings` library with Zephyr + ESP-IDF + Linux backends
-2. Rewrite `wifi_prov_cred.c` to use `eai_settings_set/get/delete`
-3. Remove `wifi_prov_cred_esp.c` — one credential implementation for all platforms
-4. Port credential tests to use `eai_settings` — same tests run on QEMU, ESP32, and native
+- Dropped typed convenience wrappers (`set_u8`, `set_str`) from initial scope — blob API is sufficient
+- Dropped `-ENOSPC` return code — not needed for current backends
+- Large value Zephyr test reduced to 256 bytes (was 1024) due to NVS sector size constraints
+- Test platform changed from `qemu_cortex_m3` to `mps2/an385` — QEMU lm3s6965 lacks flash driver entirely

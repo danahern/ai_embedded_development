@@ -1,6 +1,6 @@
 # eai_log — Portable Logging Abstraction
 
-Status: Ideation
+Status: Complete
 Created: 2026-02-16
 
 ## Problem
@@ -15,55 +15,28 @@ This is the prerequisite for all future shared libraries — `eai_log` must exis
 
 ## Approach
 
-Lightweight header-only (or header + thin .c) logging library that compiles to the native logging system on each platform.
+Header-only logging library that compiles to the native logging system on each platform. Zero overhead — macros expand directly to platform calls. Backend selected at compile time via Kconfig (Zephyr) or compile definitions (ESP-IDF, POSIX).
 
-### API Surface
+## Solution
 
-```c
-#include <eai_log/eai_log.h>
+Created `lib/eai_log/` with:
 
-EAI_LOG_MODULE_REGISTER(wifi_prov, EAI_LOG_LEVEL_INF);
+- **Public API** (`include/eai_log/eai_log.h`) — Log level defines + backend dispatch via conditional `#include`
+- **Zephyr backend** (`src/zephyr.h`) — Direct passthrough to `LOG_MODULE_REGISTER`, `LOG_INF/ERR/WRN/DBG`
+- **FreeRTOS backend** (`src/freertos.h`) — Static TAG variable + `ESP_LOGI/E/W/D`
+- **POSIX backend** (`src/posix.h`) — `fprintf(stderr)` with per-module compile-time level filtering
+- **Kconfig** — `CONFIG_EAI_LOG` with `CONFIG_EAI_LOG_BACKEND_ZEPHYR` choice (depends on LOG)
+- **5 native tests** — All passing (compile_all_levels, module_register, level_filtering, format_args, module_declare)
 
-EAI_LOG_INF("Connected to %s (RSSI %d)", ssid, rssi);
-EAI_LOG_ERR("Failed to connect: %d", err);
-EAI_LOG_WRN("Retry in %d ms", delay);
-EAI_LOG_DBG("State transition: %d -> %d", old, new);
-```
+## Implementation Notes
 
-### Backend Mapping
+- Backend headers are in `src/` not `src/<platform>/` since they're single files, not directories
+- POSIX backend uses `##__VA_ARGS__` GNU extension for zero-arg format strings — GCC/Clang only, acceptable for desktop backend
+- `EAI_LOG_MODULE_REGISTER` must be at file scope (Zephyr creates a static struct)
+- Never use both REGISTER and DECLARE in the same file — ESP-IDF/POSIX create duplicate variables
 
-| Platform | EAI_LOG_INF(...) compiles to |
-|----------|------------------------------|
-| Zephyr | `LOG_INF(...)` via `<zephyr/logging/log.h>` |
-| ESP-IDF | `ESP_LOGI(TAG, ...)` via `esp_log.h` |
-| Linux | `fprintf(stderr, "[INF] %s: " fmt, TAG, ...)` |
-| Bare-metal | `printf(...)` or NOP (configurable) |
+## Modifications
 
-### Design Decisions
-
-- **Header-only preferred.** Macros expand to the native call directly — zero overhead, no function call indirection.
-- **Module registration creates TAG.** `EAI_LOG_MODULE_REGISTER(name, level)` expands to whatever the backend needs (`LOG_MODULE_REGISTER` on Zephyr, `static const char *TAG = "name"` on ESP-IDF/Linux).
-- **Level filtering at compile time.** `EAI_LOG_LEVEL_INF` maps to the backend's level system. On platforms without compile-time filtering, use `#if` guards.
-- **No runtime configuration in v1.** Keep it simple — compile-time level selection only. Runtime log level changes can come later.
-
-### Directory Structure
-
-```
-lib/eai_log/
-  include/eai_log/
-    eai_log.h           # Public API (includes backend via conditional)
-  src/
-    zephyr/eai_log_impl.h
-    freertos/eai_log_impl.h    # ESP-IDF uses this
-    linux/eai_log_impl.h
-  Kconfig               # CONFIG_EAI_LOG (Zephyr integration)
-  CMakeLists.txt
-```
-
-### Migration Path
-
-1. Create `eai_log` library
-2. Migrate `lib/wifi_prov/` to use `EAI_LOG_*` instead of Zephyr `LOG_*`
-3. Remove shim headers from ESP-IDF components
-4. Migrate other shared libs (`crash_log`, `device_shell`, `eai_osal`)
-5. All new shared libs use `eai_log` from day one
+- Dropped bare-metal backend from initial scope — can be added when needed
+- No runtime level configuration — compile-time only, keeps it simple
+- Directory structure simplified: `src/zephyr.h` instead of `src/zephyr/eai_log_impl.h`

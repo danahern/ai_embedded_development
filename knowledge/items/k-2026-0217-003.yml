@@ -1,0 +1,40 @@
+id: k-2026-0217-003
+title: 'Twister: integration_platforms doesn''t exclude platforms — use platform_allow'
+body: |-
+  `integration_platforms` in testcase.yaml only controls which platforms are selected for integration testing (CI subset). It does NOT prevent twister from running the test on other platforms when `-p <platform>` is passed.
+
+  To actually restrict a test to specific platforms, use `platform_allow`:
+  ```yaml
+  tests:
+    libraries.my_test:
+      platform_allow:
+        - mps2/an385
+      integration_platforms:
+        - mps2/an385
+  ```
+
+  Without `platform_allow`, running `west twister -T lib -p qemu_cortex_m3 -p mps2/an385` will try to run ALL tests on BOTH platforms. Tests that depend on flash (NVS, Settings) will fail on qemu_cortex_m3.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - twister
+  - testing
+file_patterns:
+- '**/testcase.yaml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- twister
+- testing
+- testcase.yaml
+- platform
