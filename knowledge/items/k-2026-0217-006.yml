@@ -1,0 +1,40 @@
+id: k-2026-0217-006
+title: 'UUID byte order: Zephyr and NimBLE both use little-endian internally'
+body: |-
+  Both Zephyr `bt_uuid_128.val[]` and NimBLE `ble_uuid128_t.value[]` store 128-bit UUIDs in little-endian byte order (BLE wire format). Direct memcpy works for both — no byte reversal needed.
+
+  This means eai_ble's `eai_ble_uuid128_t` (little-endian) can be copied directly into either backend:
+  ```c
+  // Zephyr backend
+  memcpy(dst->val, src->bytes, 16);  // No reversal
+
+  // NimBLE backend
+  memcpy(dst->value, src->bytes, 16);  // No reversal
+  ```
+
+  The original plan suggested Zephyr might need big-endian reversal, but testing confirmed both use LE internally.
+category: pattern
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - ble
+  - gatt
+file_patterns:
+- '**/eai_ble/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- ble
+- uuid
+- byte-order
+- zephyr
+- nimble

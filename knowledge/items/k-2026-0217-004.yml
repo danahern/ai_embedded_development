@@ -1,0 +1,49 @@
+id: k-2026-0217-004
+title: 'Zephyr 4.x CCC API change: _bt_gatt_ccc deprecated'
+body: |-
+  In Zephyr 4.x, the internal CCC (Client Characteristic Configuration) struct `_bt_gatt_ccc` is deprecated. Use `struct bt_gatt_ccc_managed_user_data` instead.
+
+  The old initialization pattern:
+  ```c
+  static struct _bt_gatt_ccc ccc_data[8];
+  memset(&ccc_data[i], 0, sizeof(ccc_data[i]));
+  ccc_data[i].cfg_len = ARRAY_SIZE(ccc_data[i].cfg);
+  ```
+
+  The new pattern:
+  ```c
+  static struct bt_gatt_ccc_managed_user_data ccc_data[8];
+  ccc_data[i] = (struct bt_gatt_ccc_managed_user_data)
+      BT_GATT_CCC_MANAGED_USER_DATA_INIT(NULL, NULL, NULL);
+  ```
+
+  Key differences:
+  - No `cfg_len` field on the new struct
+  - Use compound literal with `BT_GATT_CCC_MANAGED_USER_DATA_INIT()` macro
+  - The macro takes (cfg_changed_cb, cfg_write_cb, cfg_match_cb) — pass NULL for defaults
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - ble
+  - gatt
+file_patterns:
+- '**/src/zephyr/ble.c'
+- '**/bt_gatt*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- zephyr
+- ble
+- gatt
+- ccc
+- api-change

@@ -1,0 +1,34 @@
+id: k-2026-0217-005
+title: CONFIG_BT_DEVICE_NAME_MAX does not exist in Zephyr 4.x
+body: |-
+  `CONFIG_BT_DEVICE_NAME_MAX` is not a valid Kconfig option in Zephyr 4.x. Code that uses it for buffer sizing will fail to compile with "undeclared identifier".
+
+  Use a fixed-size buffer instead:
+  ```c
+  static char adv_name[30];  /* Fixed size, no Kconfig dependency */
+  ```
+
+  The BLE spec allows device names up to 248 bytes, but 30 is sufficient for typical advertising names (which are limited by the 31-byte advertising data payload).
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - ble
+file_patterns:
+- '**/src/zephyr/ble.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- zephyr
+- ble
+- kconfig
+- device-name
