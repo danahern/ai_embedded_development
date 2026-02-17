@@ -1,0 +1,37 @@
+id: k-a10f9f03-e81f-412a-9484-2a4750cfae5e
+title: linux-build MCP overrides CMD with sleep infinity
+body: |-
+  The linux-build MCP's `start_container` runs `bash -c "mkdir -p /artifacts && sleep infinity"` as the container command, overriding any Dockerfile CMD. If the image runs as a non-root user (e.g., Buildroot's `builder` user), `mkdir -p /artifacts` fails because `/artifacts` is at the filesystem root. Fix: pre-create `/artifacts` in the Dockerfile with correct ownership before switching to the non-root user:
+
+  ```dockerfile
+  RUN useradd -m -s /bin/bash builder \
+      && mkdir -p /artifacts \
+      && chown builder:builder /artifacts
+  USER builder
+  ```
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - linux-build
+  subsystems:
+  - docker
+file_patterns:
+- '**/Dockerfile'
+- '**/docker/*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- linux-build
+- docker
+- non-root
+- artifacts
+- permissions

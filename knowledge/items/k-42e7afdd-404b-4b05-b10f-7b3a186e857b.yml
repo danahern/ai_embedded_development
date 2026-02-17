@@ -1,0 +1,30 @@
+id: k-42e7afdd-404b-4b05-b10f-7b3a186e857b
+title: Buildroot stm32mp157c_dk2_defconfig produces complete SD card image
+body: 'Upstream Buildroot (not ST''s fork) has a built-in `stm32mp157c_dk2_defconfig` that produces a complete bootable SD card image. Build deps: build-essential, bison, flex, libssl-dev, libncurses-dev, unzip, wget, curl, git, bc, cpio, rsync, python3, file, locales. Must build as non-root user. First build ~45 min on 10-core. Output images in `output/images/`: sdcard.img (~123MB, GPT with TF-A + U-Boot FIP + rootfs.ext4), zImage, stm32mp157c-dk2.dtb, tf-a-stm32mp157c-dk2.stm32, fip.bin. Flash with `dd if=sdcard.img of=/dev/sdX bs=4M`. Login: root (no password).'
+category: toolchain
+severity: informational
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools:
+  - buildroot
+  - linux-build
+  subsystems: []
+file_patterns:
+- firmware/linux/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- buildroot
+- stm32mp1
+- linux
+- sd-card
+- cortex-a7
