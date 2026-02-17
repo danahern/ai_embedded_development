@@ -1,0 +1,23 @@
+id: k-2f9eaf89-5968-4ecc-bab9-9decfdb59a7d
+title: 'STM32MP1: OpenSTLinux rootfs has no /usr/local/bin'
+body: |-
+  The OpenSTLinux (Yocto-based) rootfs for STM32MP157C-DK2 does NOT have /usr/local/bin/. Systemd services referencing scripts there fail with status=203/EXEC. Use /usr/bin/ instead.
+
+  Tags: stm32mp1, openstlinux, rootfs, systemd
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

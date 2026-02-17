@@ -55,6 +55,9 @@
         "--docker-image",
         "stm32mp1-sdk"
       ]
+    },
+    "openocd-debug": {
+      "command": "./claude-mcps/openocd-debug/target/release/openocd-debug"
     }
   }
 }

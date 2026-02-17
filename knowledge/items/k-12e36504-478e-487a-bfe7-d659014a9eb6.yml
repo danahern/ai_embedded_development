@@ -1,0 +1,36 @@
+id: k-12e36504-478e-487a-bfe7-d659014a9eb6
+title: 'STM32MP1 USB gadget: macOS requires pure CDC-ECM, no RNDIS'
+body: |-
+  macOS has zero native RNDIS support (HoRNDIS driver is dead on Big Sur+). If the USB gadget presents RNDIS (even as part of a composite with ECM), macOS fails silently and no network interface appears.
+
+  Fix: Build kernel with `CONFIG_USB_ETH_RNDIS=n` to force pure CDC-ECM. Or use configfs to create a pure ECM gadget function without RNDIS.
+
+  The STM32MP1 DK2 USB OTG port (CN7) presents as VID 0x1d6b class 0xEF composite. The `usb0` interface exists at 192.168.7.2 on the board side but macOS won't create a corresponding host interface unless the gadget is pure CDC-ECM.
+
+  macOS also requires the gadget to send CDC ECM NetworkConnection notifications (link-up interrupt). Linux's `f_ecm.c` does this, so pure ECM should work.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - usb-gadget
+  - networking
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- stm32mp1
+- usb-gadget
+- cdc-ecm
+- rndis
+- macos

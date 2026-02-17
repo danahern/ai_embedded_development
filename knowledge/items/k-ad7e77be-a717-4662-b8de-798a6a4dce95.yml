@@ -1,0 +1,31 @@
+id: k-ad7e77be-a717-4662-b8de-798a6a4dce95
+title: 'STM32MP1 DK2: CDC-ECM USB gadget setup for macOS'
+body: |-
+  macOS has zero RNDIS support. The OpenSTLinux Buildroot image configures RNDIS by default via configfs gadget g1. To get USB networking working with macOS:
+
+  1. The gadget must be pure CDC-ECM (not RNDIS, not composite)
+  2. Switch live via script - unbind UDC, remove rndis.0 link, create ecm.0 function, link ecm.0, rebind UDC to 49000000.usb-otg
+  3. The ECM creates a NEW interface (usb1, not usb0). Must ifconfig usb1 192.168.7.2/24 up
+  4. On macOS: sudo ifconfig en9 192.168.7.1/24 up (en9 appears after ECM enumeration)
+  5. Hot-swapping RNDIS to ECM while cable is connected creates a dead data path. The switch must happen with a clean USB enumeration (either at boot via init script, or replug the Type-C cable after switching)
+
+  Install as systemd service at /etc/systemd/system/usb-ecm.service pointing to /usr/bin/usb-ecm.sh (NOT /usr/local/bin/ which does not exist on the OpenSTLinux rootfs).
+
+  Tags: stm32mp1, cdc-ecm, macos, usb-gadget, networking, stm32mp157c_dk2
+category: operational
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

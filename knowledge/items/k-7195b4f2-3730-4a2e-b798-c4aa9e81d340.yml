@@ -1,0 +1,43 @@
+id: k-7195b4f2-3730-4a2e-b798-c4aa9e81d340
+title: 'STM32MP1: Use remoteproc for M4 firmware loading, not OpenOCD'
+body: |-
+  ST's recommended workflow for loading Cortex-M4 firmware on STM32MP1 is Linux remoteproc, not OpenOCD. Copy the ELF to `/lib/firmware/` on the A7 Linux, then:
+
+  ```
+  echo "zephyr.elf" > /sys/class/remoteproc/remoteproc0/firmware
+  echo start > /sys/class/remoteproc/remoteproc0/state
+  ```
+
+  M4 console output goes to shared MCUSRAM, readable via:
+  ```
+  cat /sys/kernel/debug/remoteproc/remoteproc0/trace0
+  ```
+
+  RPMsg virtual UARTs appear as `/dev/ttyRPMSG0` for bidirectional A7-M4 communication.
+
+  OpenOCD is for bare-metal M4 debugging (halt/step/breakpoints) when Linux is not running. STM32CubeProgrammer is for factory provisioning. Neither is the runtime loading mechanism.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - remoteproc
+  - openocd
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- stm32mp1
+- m4-loading
+- remoteproc
+- dual-core

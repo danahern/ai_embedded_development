@@ -1,0 +1,35 @@
+id: k-2ffc4400-8f26-46ee-bf5e-a6f422274248
+title: 'STM32MP1 Buildroot: toolchain prefix is arm-none-linux-gnueabihf'
+body: |-
+  The Buildroot external ARM toolchain for STM32MP1 uses the prefix `arm-none-linux-gnueabihf-` (not `arm-linux-gnueabihf-`). The toolchain is located at `/home/builder/buildroot/output/host/bin/` inside the Docker container.
+
+  Makefiles should use:
+  ```makefile
+  TOOLCHAIN_DIR ?= /home/builder/buildroot/output/host/bin
+  CROSS_COMPILE ?= $(TOOLCHAIN_DIR)/arm-none-linux-gnueabihf-
+  ```
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - buildroot
+  - cross-compilation
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- stm32mp1
+- buildroot
+- toolchain
+- cross-compile

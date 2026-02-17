@@ -1,0 +1,38 @@
+id: k-939bf8de-ee0d-4927-9b7d-8948d9062f6b
+title: Claude Code agents don't inherit CLAUDE.md — embed all domain knowledge in agent system prompt
+body: |-
+  Claude Code subagents (defined in `.claude/agents/*.md`) do NOT see the project's CLAUDE.md file. This means all domain knowledge, gotchas, MCP tool APIs, workflow instructions, and board/chip mappings must be duplicated into each agent's system prompt markdown file.
+
+  Key design decisions for agent files:
+  - Use YAML frontmatter for metadata: `name`, `tools`, `model`, `mcpServers`, `skills`
+  - The `skills` field (e.g., `skills: [embedded]`) preloads skill content into the agent
+  - Each agent should include only the MCP servers it needs — this enforces scope boundaries
+  - Read-only agents (code-review, hardware-test, lab-engineer) omit Write/Edit tools
+  - Include key gotchas inline since rules files won't auto-inject either
+  - Document handoff patterns so agents know when to redirect to other agents
+
+  Agent files live in `claude-config/agents/` with a symlink from `.claude/agents`, mirroring the existing `.claude/commands -> claude-config/commands` pattern.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - agents
+file_patterns:
+- claude-config/agents/*.md
+- .claude/agents/*.md
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- agents
+- claude-code
+- architecture
+- subagents

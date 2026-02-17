@@ -1,0 +1,29 @@
+id: k-b267220c-dcaf-4274-ac3c-1f7015264ced
+title: 'STM32MP1: Serial console FD leak kills port access'
+body: |-
+  When running Python serial scripts via Claude Code background tasks (killed or timed out), the serial port file descriptor leaks to the parent Claude process. This causes:
+
+  1. The leaked FD silently consumes all incoming serial data
+  2. New pyserial connections open successfully but read zero bytes
+  3. fuser /dev/cu.usbmodem1102 shows the Claude PID holding the port
+
+  Fix: Never kill serial scripts mid-execution. Always let them close cleanly. If the FD leaks, physically unplug and replug the ST-Link USB cable (CN11) to invalidate the leaked FD.
+
+  Tags: serial-port, fd-leak, claude-code, stm32mp1, debugging
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

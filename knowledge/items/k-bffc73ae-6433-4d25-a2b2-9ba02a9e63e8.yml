@@ -1,0 +1,25 @@
+id: k-bffc73ae-6433-4d25-a2b2-9ba02a9e63e8
+title: 'STM32MP1: Buildroot toolchain glibc mismatch with OpenSTLinux SD card'
+body: |-
+  The Buildroot Docker container (stm32mp1-sdk) cross-compiles against glibc 2.34+, but the OpenSTLinux SD card image has an older glibc. Dynamically linked binaries fail with: /lib/libc.so.6: version GLIBC_2.34 not found
+
+  Fix: Use -static in LDFLAGS. For larger apps, rebuild the SD card from the same Buildroot or use the matching Yocto SDK.
+
+  Tags: stm32mp1, glibc, static-linking, cross-compile, buildroot
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

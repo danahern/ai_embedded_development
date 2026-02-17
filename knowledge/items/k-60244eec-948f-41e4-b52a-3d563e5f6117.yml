@@ -1,0 +1,34 @@
+id: k-60244eec-948f-41e4-b52a-3d563e5f6117
+title: 'STM32MP1: debugfs for writing files to ext4 SD card on macOS'
+body: |-
+  macOS cannot mount ext4 natively. Use debugfs from e2fsprogs (brew install e2fsprogs) to write files directly:
+
+  DEBUGFS=/opt/homebrew/Cellar/e2fsprogs/1.47.3/sbin/debugfs
+  sudo $DEBUGFS -w -R "write /host/path/file /rootfs/path/file" /dev/disk4s6
+  sudo $DEBUGFS -w -R "set_inode_field /path mode 0100755" /dev/disk4s6
+
+  Gotchas:
+  - Does NOT support chained commands (cd then write) - use full paths
+  - write fails if file exists - delete first with rm
+  - Shell comments in pasted blocks break zsh
+  - Output goes through less pager - pipe through cat
+  - STM32MP1 OpenSTLinux SD card rootfs is partition 6 (~787MB)
+
+  Tags: debugfs, ext4, macos, sd-card, stm32mp1, e2fsprogs
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

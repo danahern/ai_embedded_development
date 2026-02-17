@@ -1,0 +1,33 @@
+id: k-b6778dee-8bcc-43ff-bb95-3cf0b3d41547
+title: 'STM32MP1 DK2 serial console: UART4 is A7 Linux, not M4'
+body: |-
+  On the STM32MP157C-DK2, the ST-Link VCP serial port (`/dev/cu.usbmodem1102`, 115200 baud) is connected to UART4 which is the A7 Linux console — not the M4 USART. This is where U-Boot, kernel boot messages, and the Linux login shell appear.
+
+  The M4 console output is accessed via remoteproc trace on the A7: `cat /sys/kernel/debug/remoteproc/remoteproc0/trace0`. No second serial cable is needed for M4 output.
+
+  Jumpers JP4/JP5 on the DK2 route UART4 between ST-LINK and motherboard. Default is ST-LINK.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - serial
+  - uart
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- stm32mp1
+- serial-console
+- uart4
+- st-link

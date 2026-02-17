@@ -1,0 +1,25 @@
+id: k-80e28202-2ed6-42d3-8857-ea262f75af05
+title: 'STM32MP1: Serial base64 transfer impractical for files over 10KB'
+body: |-
+  Transferring files over serial (115200 baud) via base64 echo/printf commands is extremely slow. A 5.5KB file takes ~15 seconds; a 328KB static binary would take 10+ minutes.
+
+  Better alternatives: 1) USB gadget CDC-ECM then SCP/SSH, 2) SD card mount via debugfs on macOS, 3) Wired Ethernet, 4) XMODEM/ZMODEM over serial.
+
+  Tags: serial, file-transfer, base64, stm32mp1, performance
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

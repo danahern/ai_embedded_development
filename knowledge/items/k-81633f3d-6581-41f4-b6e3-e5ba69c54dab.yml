@@ -1,0 +1,23 @@
+id: k-81633f3d-6581-41f4-b6e3-e5ba69c54dab
+title: 'STM32MP1: OpenSTLinux has dropbear SSH but it fails to start'
+body: |-
+  The OpenSTLinux 2.6 image for STM32MP157C-DK2 includes dropbear at /usr/sbin/dropbear but it does not start on boot and fails to start manually (silent failure, no process created). The host key exists at /etc/dropbear/dropbear_rsa_host_key. Dropbear -R flag fails with 'Failed moving key file: File exists'. Running without flags also silently fails. May need a proper systemd service or the binary may be broken in this image version. Needs further debugging.
+
+  Tags: stm32mp1, dropbear, ssh, openstlinux
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []
