@@ -1,0 +1,25 @@
+id: k-f244c52b-c3cb-4825-ae20-776a6470d62c
+title: 'STM32MP1 CDC-ECM: must bring down usb0 (RNDIS) before configuring ECM to avoid duplicate IP'
+body: |-
+  The OpenSTLinux stock init configures usb0 (RNDIS) with 192.168.7.2 before the usb-ecm.service runs. When the ECM script creates the ecm.0 function, a new usb1 interface appears. If both usb0 and usb1 have 192.168.7.2, the kernel routes replies via usb0 (RNDIS) which macOS can't understand, causing ping/SSH to fail even though macOS has the correct IP on its en9 interface.
+
+  Fix: Add `ifconfig usb0 0.0.0.0 down` early in the usb-ecm.sh script before unbinding the UDC. This ensures only the ECM interface (usb1) has the IP after reconfiguration.
+
+  Also: the boot + gadget reconfiguration + DHCP cycle takes ~35-40 seconds total. The script sleeps 2s (wait for gadget), 1s (after unbind), 2s (after rebind), plus the DHCP handshake.
+category: operational
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

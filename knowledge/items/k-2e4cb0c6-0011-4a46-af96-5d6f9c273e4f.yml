@@ -1,0 +1,20 @@
+id: k-2e4cb0c6-0011-4a46-af96-5d6f9c273e4f
+title: 'Knowledge MCP: boards/chips/tags params require actual JSON arrays'
+body: 'The knowledge.capture() MCP tool expects boards, chips, and tags as actual JSON arrays, not strings. Passing a stringified array like "[\"value\"]" or a bare string like "value" causes: "failed to deserialize parameters: invalid type: string, expected a sequence". The parameters must be actual JSON array structures in the function call.'
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []

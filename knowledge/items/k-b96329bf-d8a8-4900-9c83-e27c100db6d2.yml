@@ -1,0 +1,34 @@
+id: k-b96329bf-d8a8-4900-9c83-e27c100db6d2
+title: 'STM32MP1 DK2: Dropbear SSH requires ssh-rsa workaround on macOS'
+body: |-
+  Dropbear v2018.76 on the OpenSTLinux image only supports ssh-rsa host keys. Modern macOS OpenSSH (Ventura+) disables ssh-rsa by default, causing "no matching host key type found" errors.
+
+  The ECDSA key generation route doesn't work — this Dropbear version doesn't support ECDSA host keys, and the systemd service (`dropbear@.service`) hardcodes `-r dropbear_rsa_host_key`.
+
+  Fix: Add to ~/.ssh/config:
+  ```
+  Host stm32mp1
+      HostName 192.168.7.2
+      User root
+      HostKeyAlgorithms +ssh-rsa
+      PubkeyAcceptedAlgorithms +ssh-rsa
+  ```
+
+  Then `ssh stm32mp1` and `scp file stm32mp1:/path/` work. The 192.168.7.2 address is the board's USB CDC-ECM gadget interface.
+category: operational
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags: []
