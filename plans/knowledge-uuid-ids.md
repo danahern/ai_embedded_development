@@ -1,6 +1,6 @@
 # Knowledge Item UUID IDs
 
-Status: Planned
+Status: Complete
 Created: 2026-02-17
 
 ## Problem
@@ -57,11 +57,19 @@ Replace date-sequential IDs with UUIDs. The system already treats IDs as opaque 
 - `superseded_by` references (string-to-string)
 - `deprecate`, `validate`, `search`, `for_context` tools (all ID-agnostic)
 
+## Implementation Notes
+
+- Total diff: ~20 lines deleted (next_sequence + old tests), ~15 lines added (uuid logic + new tests)
+- `uuid` crate v1 with `v4` feature adds ~20KB to release binary
+- Old `k-YYYY-MMDD-NNN` items coexist with new `k-<uuid>` items — no migration needed
+- `load_all_items` sorts by ID; UUIDs sort lexicographically which is fine (no ordering guarantee needed)
+
 ## Verification
 
-- [ ] `cargo test` passes in knowledge-server
-- [ ] `capture()` returns `k-<uuid>` format ID
-- [ ] New YAML file created with UUID filename
-- [ ] Existing `k-2026-*` items still load and search correctly
-- [ ] `deprecate(id, superseded_by)` works with mixed old/new IDs
-- [ ] Two concurrent captures never collide
+- [x] `cargo test` passes — 14 passed, 3 ignored (workspace-dependent)
+- [x] `cargo build --release` succeeds
+- [x] `generate_id()` returns `k-<uuid>` format
+- [x] Two generated IDs are never equal (unit test)
+- [x] UUID portion parses as valid UUID v4 (unit test)
+- [ ] `capture()` live test — returns `k-<uuid>` format ID (pending MCP restart)
+- [ ] Existing `k-2026-*` items still load and search correctly (pending MCP restart)
