@@ -1,0 +1,34 @@
+id: k-2026-0217-009
+title: ESP-IDF MCP tools fail due to Python env mismatch — use bash wrapper
+body: |-
+  The esp-idf-build MCP server fails with "No module named 'click'" because MCP subprocesses don't inherit the ESP-IDF Python virtual environment. The idf.py monitor also requires TTY attachment. Workaround: create a bash script that sets IDF_PATH, IDF_PYTHON_ENV_PATH, ESP_ROM_ELF_DIR, and PATH (including xtensa toolchain, cmake, ninja, git). Key env vars needed:
+  - `IDF_PATH=/Users/danahern/esp/esp-idf`
+  - `IDF_PYTHON_ENV_PATH=/Users/danahern/.espressif/python_env/idf5.5_py3.13_env`
+  - `ESP_ROM_ELF_DIR=/Users/danahern/.espressif/tools/esp-rom-elfs/20241011`
+  - PATH must include: xtensa-esp-elf/bin, python_env/bin, idf/tools, /opt/homebrew/bin
+
+  For serial monitoring, use `embedded-probe.esptool_monitor()` MCP tool instead of `idf.py monitor` (which requires TTY). Reset the device first via DTR/RTS toggling if needed to capture boot output.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - esp-idf-build
+  - esptool
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- esp-idf
+- mcp
+- python
+- toolchain
+- build-environment

@@ -1,0 +1,29 @@
+id: k-2026-0217-008
+title: Portable C code must explicitly include errno.h for EINVAL/ENOTCONN
+body: When writing portable C code that uses errno constants (EINVAL, ENOTCONN, ENOENT, etc.), always include `<errno.h>` explicitly. On Zephyr, errno.h is pulled in transitively by many headers (eai_log.h, kernel.h, etc.), so code compiles without it. On ESP-IDF (newlib), these headers do NOT pull in errno.h transitively, causing "undeclared" errors. This was hit in wifi_prov_ble.c and wifi_prov_wifi.c during the wifi_prov unification — both used `-EINVAL` and `-ENOTCONN` without including errno.h.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - wifi_prov
+  - eai_ble
+  - eai_wifi
+file_patterns:
+- firmware/lib/*/src/*.c
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- portability
+- errno
+- esp-idf
+- zephyr
+- includes

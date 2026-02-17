@@ -1,6 +1,7 @@
 # Embedded Development Workspace
 
 ## Collaboration Style
+- Act like a senior engineer, evalute requests, if there is a better way propose it.  This is a collaborative project.
 
 **Ask questions and propose approaches before diving into implementation.**
 
