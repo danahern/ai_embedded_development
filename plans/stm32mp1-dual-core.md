@@ -7,9 +7,9 @@ Created: 2026-02-16
 The workspace supports nRF (BLE) and ESP32 (WiFi+BLE) targets but has no support for dual-core Linux+RTOS platforms. The STM32MP157D-DK1 has a Cortex-A7 (Linux) + Cortex-M4 (Zephyr) architecture that enables shared libraries between cores.
 
 ## Approach
-Three parallel tracks (Tracks 2 and 3 deprioritized by user):
+Three parallel tracks:
 - **Track 1** — M4/Zephyr: Generic OpenOCD MCP server for M4 debugging — **COMPLETE**
-- **Track 2** — A7/Linux: Docker-wrapped Linux build MCP server — **DEPRIORITIZED** (scaffold exists)
+- **Track 2** — A7/Linux: Docker-wrapped Linux build MCP server — **COMPLETE**
 - **Track 3** — Integration: eai_ipc library + shared libs across cores — **SKIPPED**
 
 ## Solution
@@ -24,8 +24,13 @@ Complete Rust MCP server using rmcp 0.3.2 with 10 tools:
 
 Key design: TCL socket protocol (port 6666, 0x1a terminator), auto port allocation for multi-session, OpenOCD process lifecycle management.
 
-### Track 2: Linux Build MCP — `claude-mcps/linux-build/` (deprioritized)
-Scaffold exists with 9 tools wrapping Docker CLI. Compiles, 5 tests pass. Not actively maintained.
+### Track 2: Linux Build MCP — `claude-mcps/linux-build/`
+Complete Rust MCP server using rmcp 0.3.2 with 9 tools:
+- **Container lifecycle**: `start_container(name?, image?, workspace_dir?)`, `stop_container(container)`, `container_status(container)`
+- **Build operations**: `run_command(container, command, workdir?)`, `build(container, command?, workdir?)`, `list_artifacts(container, container_path?)`
+- **Deployment**: `collect_artifacts(container, container_path?, host_path)`, `deploy(file_path, remote_path?, board_ip?)`, `ssh_command(command, board_ip?)`
+
+Key design: Docker CLI wrapper (no Docker API dependency), `sleep infinity` container pattern for iterative `docker exec`, host-side SCP/SSH for deployment.
 
 ## Implementation Notes
 
