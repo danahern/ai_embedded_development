@@ -36,20 +36,20 @@ Key design: Docker CLI wrapper (no Docker API dependency), `sleep infinity` cont
 
 ### Files created
 - `claude-mcps/openocd-debug/` — Full MCP server (Cargo.toml, src/{main,lib,config,openocd_client}.rs, src/tools/{mod,types,openocd_tools}.rs)
-- `claude-mcps/linux-build/` — Scaffold only (same structure)
+- `claude-mcps/linux-build/` — Full MCP server (Cargo.toml, src/{main,lib,config,docker_client}.rs, src/tools/{mod,types,linux_build_tools}.rs, README.md, PRD.md, CLAUDE.md)
 - `plans/stm32mp1-dual-core.md` — This plan
 
 ### Test results
 - openocd-debug: 16 tests passing (TCL client parsing, config, args)
-- linux-build: 5 tests passing (config, args, container state)
+- linux-build: 13 tests passing (config, args, container state, handler construction, validation errors, server info)
 
 ### Remaining work (for another session)
 - Board profile: `knowledge/boards/stm32mp157d_dk1.yml`
 - Knowledge items: STM32MP1 gotchas (RAM-only flash, OpenOCD cfg, remoteproc)
-- CLAUDE.md: Add openocd-debug to MCP sections, common boards table
-- zephyr-build: Add `stm32mp157c_dk2` to COMMON_BOARDS
 - README.md + CLAUDE.md for openocd-debug
+- Track 3 (eai_ipc library) if dual-core development proceeds
 
 ## Modifications
-- Tracks 2 and 3 deprioritized by user — focus on Track 1 (OpenOCD MCP) only
-- linux-build scaffold was already built before deprioritization; left in place
+- Track 2 initially deprioritized, then completed in a separate session
+- Track 3 skipped — will implement when dual-core hardware workflow is tested
+- linux-build registered in `.mcp.json` and workspace CLAUDE.md updated with tool listings and workflow

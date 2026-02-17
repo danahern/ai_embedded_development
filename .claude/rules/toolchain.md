@@ -1,5 +1,5 @@
 ---
-paths: ["**/*provision_tool*.py", "**/.github/workflows/*.yml", "**/ble/*.py", "**/build_tools.rs", "**/freertos/thread.c", "**/freertos/workqueue.c", "**/posix/*.c", "**/posix/*.h", "**/pyproject.toml", "**/types.rs"]
+paths: ["**/*provision_tool*.py", "**/.github/workflows/*.yml", "**/ble/*.py", "**/build_tools.rs", "**/freertos/thread.c", "**/freertos/workqueue.c", "**/openocd*.rs", "**/openocd_client.rs", "**/posix/*.c", "**/posix/*.h", "**/pyproject.toml", "**/types.rs"]
 ---
 # Toolchain Learnings
 
@@ -8,4 +8,5 @@ paths: ["**/*provision_tool*.py", "**/.github/workflows/*.yml", "**/ble/*.py", "
 - **bleak macOS: BLEDevice UUID expires between scans — use find_device helper** — On macOS, CoreBluetooth assigns UUIDs that can expire between BLE scan sessions. Passing a stale UUID string to `BleakClient(address)` raises `BleakDeviceNotFoundError`. Fix: always do a fresh `BleakScanner.discover()` and pass the `BLEDevice` object to `BleakClient(device)`. Use `return_adv=True` for advertisement data (RSSI). The `BLEDevice.rssi` attribute was removed in newer bleak versions.
 - **macOS POSIX gaps: 3 missing APIs require workarounds** — macOS is POSIX-compliant but lacks three commonly-assumed APIs:
 - **espressif/idf Docker container needs manual export.sh in GitHub Actions** — The `espressif/idf:v5.5.2` Docker image sets `IDF_PATH` but relies on its entrypoint to source `export.sh` and add `idf.py` to PATH. GitHub Actions overrides the container entrypoint when using `container:`, so `idf.py` is not found (exit code 127).
+- **OpenOCD TCL protocol uses 0x1a (SUB) as message terminator** — OpenOCD's TCL interface (default port 6666) uses ASCII SUB character (0x1a / Ctrl-Z) as the message terminator, not newline. Both commands and responses are terminated with this byte.
 - **Python MCP pyproject.toml must use setuptools.build_meta** — When creating Python MCP servers with setuptools, the build-backend must be `setuptools.build_meta`, not `setuptools.backends._legacy:_Backend`. The legacy backend causes installation failures. Follow the saleae-logic pattern: `[build-system]\nrequires = ["setuptools>=68.0"]\nbuild-backend = "setuptools.build_meta"`. Add dev dependencies in `[project.optional-dependencies]` for pytest.

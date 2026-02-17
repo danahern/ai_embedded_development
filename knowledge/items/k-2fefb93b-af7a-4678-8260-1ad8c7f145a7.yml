@@ -1,0 +1,32 @@
+id: k-2fefb93b-af7a-4678-8260-1ad8c7f145a7
+title: OpenOCD TCL protocol uses 0x1a (SUB) as message terminator
+body: |-
+  OpenOCD's TCL interface (default port 6666) uses ASCII SUB character (0x1a / Ctrl-Z) as the message terminator, not newline. Both commands and responses are terminated with this byte.
+
+  To send a command: write UTF-8 bytes + 0x1a. To read a response: read bytes until 0x1a.
+
+  The openocd-debug MCP wraps this in `OpenocdClient::send_command()`. Port is configurable via `-c "tcl_port <N>"` CLI arg to avoid conflicts when running multiple sessions.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - openocd
+  subsystems: []
+file_patterns:
+- '**/openocd_client.rs'
+- '**/openocd*.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-17
+updated: 2026-02-17
+author: claude
+source_session: null
+tags:
+- openocd
+- tcl
+- protocol
+- stm32mp1
