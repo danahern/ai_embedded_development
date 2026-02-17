@@ -71,5 +71,5 @@ Replace date-sequential IDs with UUIDs. The system already treats IDs as opaque 
 - [x] `generate_id()` returns `k-<uuid>` format
 - [x] Two generated IDs are never equal (unit test)
 - [x] UUID portion parses as valid UUID v4 (unit test)
-- [ ] `capture()` live test — returns `k-<uuid>` format ID (pending MCP restart)
-- [ ] Existing `k-2026-*` items still load and search correctly (pending MCP restart)
+- [x] `capture()` live test — returns `k-<uuid>` format ID (verified: `k-0195b093-811e-4a2a-bfd5-b479a593eba0`)
+- [x] Existing `k-2026-*` items still load and search correctly (verified: search, recent both return old IDs)
