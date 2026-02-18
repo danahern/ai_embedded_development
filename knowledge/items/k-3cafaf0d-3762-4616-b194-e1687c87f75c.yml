@@ -1,0 +1,38 @@
+id: k-3cafaf0d-3762-4616-b194-e1687c87f75c
+title: 'Yocto bitbake fetch timeout: pre-clone large git repos into downloads/git2/'
+body: |-
+  Bitbake's fetcher can timeout when cloning large git repos (e.g., Linux kernel). The fetch command runs with restricted PATH and environment, so even though `git clone` works from the shell, bitbake's internal timeout may kill it.
+
+  Workaround: Pre-clone the bare mirror into bitbake's downloads directory:
+  ```bash
+  git -c gc.autoDetach=false clone --bare --mirror https://github.com/repo/name \
+    /path/to/build/downloads/git2/github.com.repo.name
+  ```
+
+  Do NOT create a `.done` stamp file manually — it contains bitbake-internal pickled Python data (6 bytes). Let bitbake create it on the next run. The bare clone is enough for bitbake to skip the network fetch.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - bitbake
+  - yocto
+  subsystems:
+  - yocto
+file_patterns:
+- '**/downloads/git2/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- yocto
+- bitbake
+- fetch
+- git
+- timeout

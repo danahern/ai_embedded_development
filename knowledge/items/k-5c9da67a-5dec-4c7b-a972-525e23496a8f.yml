@@ -1,0 +1,44 @@
+id: k-5c9da67a-5dec-4c7b-a972-525e23496a8f
+title: 'Alif E7 USB gadget: DWC3 built-in, not modules — no kernel-module RDEPENDS'
+body: |-
+  The `devkit_e8_defconfig` builds ALL USB support as built-in (`=y`):
+  - CONFIG_USB_DWC3=y, CONFIG_USB_DWC3_GADGET=y, CONFIG_USB_DWC3_OF_SIMPLE=y, CONFIG_USB_DWC3_ENSEMBLE=y
+  - CONFIG_USB_GADGET=y, CONFIG_USB_LIBCOMPOSITE=y, CONFIG_USB_FUNCTIONFS=y
+
+  This means there are NO `kernel-module-dwc3` or `kernel-module-usb-f-fs` packages. RDEPENDS in Yocto recipes must NOT reference these for E7 — use machine overrides:
+
+  ```
+  RDEPENDS:${PN} = "busybox"
+  RDEPENDS:${PN}:append:stm32mp1 = " kernel-module-libcomposite kernel-module-usb-f-fs"
+  ```
+
+  Config fragments requesting `=m` (module) get overridden by defconfig's `=y` in `alldefconfig` mode. The fragment still acts as a safety net if the defconfig changes.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips:
+  - ensemble-e7
+  tools: []
+  subsystems:
+  - usb
+  - yocto
+file_patterns:
+- '**/usb-ecm*.bb'
+- '**/meta-eai/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- alif
+- dwc3
+- usb
+- gadget
+- yocto
+- rdepends

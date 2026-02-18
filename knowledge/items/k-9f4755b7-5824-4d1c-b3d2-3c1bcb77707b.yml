@@ -1,0 +1,46 @@
+id: k-9f4755b7-5824-4d1c-b3d2-3c1bcb77707b
+title: 'Alif E7 Yocto: BSP source variables must be set manually with poky distro'
+body: |-
+  When using `DISTRO = "poky"` (not `apss-tiny`), the Alif BSP source variables are not auto-configured. These must be set in `local.conf`:
+
+  ```
+  ALIF_KERNEL_TREE = "git://github.com/alifsemi/linux_alif;protocol=https"
+  ALIF_KERNEL_BRANCH = "v6.12-dev"
+  TFA_TREE = "git://github.com/alifsemi/trusted-firmware-a_alif;protocol=https"
+  TFA_BRANCH = "alif_lts-v2.10.8"
+  LINUX_DD_TC_TREE = "git://github.com/alifsemi/alif_a32_linux_DD_testcases;protocol=https"
+  LINUX_DD_TC_BRANCH = "scarthgap"
+  ```
+
+  These are normally set by the `apss-tiny` distro's `setup.sh` script which writes them to `conf/auto.conf`. The scarthgap branch uses different repo names than the older 5.4 setup (`linux_alif` not `alif_linux`, `trusted-firmware-a_alif` not `alif_arm-tf`).
+
+  Source: https://github.com/alifsemi/alif_linux-apss-build-setup (scarthgap_yocto_5.0 branch, scripts/setup.sh)
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips:
+  - ensemble-e7
+  tools:
+  - bitbake
+  - yocto
+  subsystems:
+  - yocto
+file_patterns:
+- yocto-build/build-alif-e7/**
+- '**/local.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- alif
+- yocto
+- bsp
+- poky
+- kernel

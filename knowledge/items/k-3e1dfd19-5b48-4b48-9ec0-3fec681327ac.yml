@@ -1,0 +1,38 @@
+id: k-3e1dfd19-5b48-4b48-9ec0-3fec681327ac
+title: 'Alif E7 Yocto: meta-filesystems requires meta-networking layer'
+body: |-
+  `meta-alif` requires `meta-filesystems` from meta-openembedded. `meta-filesystems` depends on `meta-networking`, which must also be included in `bblayers.conf`. The STM32MP1 build didn't need it because `meta-st-stm32mp` doesn't depend on `meta-filesystems`.
+
+  Error: `Layer 'filesystems-layer' depends on layer 'networking-layer', but this layer is not enabled`
+
+  Also, when using `meta-eai` with `poky` distro, dangling bbappends occur for recipes from other boards (e.g., `linux-stm32mp_%.bbappend`). Fix with:
+  ```
+  BB_DANGLINGAPPENDS_WARNONLY = "true"
+  ```
+category: toolchain
+severity: informational
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips: []
+  tools:
+  - bitbake
+  - yocto
+  subsystems:
+  - yocto
+file_patterns:
+- '**/bblayers.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- yocto
+- layers
+- meta-filesystems
+- meta-networking
+- bblayers
