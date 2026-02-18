@@ -1,0 +1,28 @@
+id: k-8403392d-3f57-4c5b-b755-97ef6dd216fb
+title: Tokio ChildStdout cannot pipe into process stdin — use spawn_blocking
+body: "Tokio's `tokio::process::ChildStdout` does not implement `Into<std::process::Stdio>`, so you can't pipe a Tokio child's stdout directly into another Tokio Command's stdin. The `into_std()` method also doesn't exist on older Tokio versions.\n\n**Workaround:** Use `tokio::task::spawn_blocking` with `std::process::Command` for the entire pipeline. This works because std's ChildStdout does implement Into<Stdio>.\n\n```rust\nlet output = tokio::task::spawn_blocking(move || {\n    let bzcat = std::process::Command::new(\"bzcat\")\n        .arg(&image_path)\n        .stdout(std::process::Stdio::piped())\n        .spawn()?;\n    let bzcat_stdout = bzcat.stdout.expect(\"piped\");\n    \n    let mut ssh_cmd = std::process::Command::new(\"ssh\");\n    ssh_cmd.arg(format!(\"{}@{}\", user, ip))\n        .arg(\"dd of=/dev/mmcblk1 bs=4M\")\n        .stdin(bzcat_stdout);\n    ssh_cmd.output()\n}).await??;\n```\n\nThis pattern is useful whenever you need to create a shell-style pipeline (process A stdout → process B stdin) from async Rust."
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - tokio
+  - linux-build
+  subsystems: []
+file_patterns:
+- claude-mcps/linux-build/src/*.rs
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- tokio
+- process-pipe
+- spawn-blocking
+- rust
+- linux-build
