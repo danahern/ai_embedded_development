@@ -169,8 +169,8 @@ If an MCP tool fails:
 - `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
 - `detect_device()` — scan serial ports for ESP32 devices by USB VID/PID
 
-### linux-build (Docker Cross-Compilation)
-- `start_container(name?, image?, workspace_dir?)` — start Docker build container with workspace mount
+### linux-build (Docker Cross-Compilation & Deployment)
+- `start_container(name?, image?, workspace_dir?, extra_volumes?)` — start Docker build container with workspace mount
 - `stop_container(container)` — stop and remove container
 - `container_status(container)` — check container state
 - `run_command(container, command, workdir?)` — execute command in container
@@ -179,6 +179,15 @@ If an MCP tool fails:
 - `collect_artifacts(container, container_path?, host_path)` — copy artifacts from container to host
 - `deploy(file_path, remote_path?, board_ip?)` — SCP file to board
 - `ssh_command(command, board_ip?)` — run command on board via SSH
+- `adb_shell(command, serial?)` — run shell command on device via ADB
+- `adb_deploy(file_path, remote_path?, serial?)` — push file to device via ADB
+- `adb_pull(remote_path, local_path, serial?)` — pull file from device via ADB
+- `flash_image(image_path, transport, device?, board_ip?, serial?)` — flash compressed WIC image via SSH or ADB
+- `yocto_build(container, build_dir?, image?, recipes_to_clean?, background?)` — run bitbake build
+- `yocto_build_status(build_id)` — check background Yocto build status
+- `board_connect(transport, board_ip?, serial?, ssh_key?, ssh_user?)` — register board connection (SSH/ADB/auto)
+- `board_disconnect(board_id)` — remove board connection
+- `board_status(board_id?)` — check board connection status or list all
 
 ### embedded-probe (Debug & Flash)
 - `list_probes()`, `connect(probe_selector, target_chip)`, `flash_program(session_id, file_path)`, `validate_boot(session_id, file_path, success_pattern)`, `rtt_attach(session_id)`, `rtt_read(session_id)`, `reset(session_id)`, `resolve_symbol(address, elf_path)`, `stack_trace(session_id, elf_path)`, `analyze_coredump(log_text, elf_path)`

@@ -20,7 +20,7 @@ Reuse existing infrastructure where possible. Alif provides official Yocto BSP l
 4. Board profile + deployment docs
 5. Documentation updates + knowledge capture
 
-**Deferred:** USB gadget (CDC-ECM + ADB) depends on STM32MP1 ADB work completing first. Hardware flash/boot validation requires physical board testing.
+**Phase 4 (ADB gadget):** Implemented in `plans/alif-e7-adb-gadget.md`. Kernel bbappend, board-aware gadget script, and build configs are in place. Awaiting build + hardware validation.
 
 ## Solution
 
@@ -73,6 +73,6 @@ Reuse existing infrastructure where possible. Alif provides official Yocto BSP l
 
 ## Modifications
 
-- Phase 4 (USB gadget) deferred — depends on STM32MP1 ADB plan completing first
+- Phase 4 (ADB gadget) implemented — see `plans/alif-e7-adb-gadget.md`
 - Hardware flash/boot validation cannot be done without physical board access
 - MACHINE changed from `devkit-e7` to `devkit-e8` after discovering the config was superseded in scarthgap
