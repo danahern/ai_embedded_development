@@ -1,0 +1,26 @@
+id: k-34c3318f-6ae3-41ac-b507-992333e75b50
+title: meta-alif requires meta-filesystems layer
+body: The meta-alif Yocto BSP layer depends on meta-filesystems (from meta-openembedded). This is listed in meta-alif/README as a required layer. The STM32MP1 Yocto build does not need meta-filesystems, so it must be explicitly added to bblayers.conf for E7 builds. meta-filesystems is already available in our meta-openembedded clone.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips: []
+  tools: []
+  subsystems:
+  - yocto
+file_patterns:
+- '**/build-alif-e7/conf/bblayers.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- yocto
+- alif
+- layer-deps

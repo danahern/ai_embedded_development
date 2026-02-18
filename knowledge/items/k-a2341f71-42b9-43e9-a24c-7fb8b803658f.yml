@@ -1,0 +1,29 @@
+id: k-a2341f71-42b9-43e9-a24c-7fb8b803658f
+title: Alif E7 uses devkit-e8 machine config in scarthgap (not devkit-e7)
+body: In the scarthgap branch of meta-alif-ensemble, devkit-e7.conf was renamed to devkit-e7.conf.orig and superseded by devkit-e8.conf. The E8 config still targets E7 hardware (TF-A_PLATFORM = "devkit_e7") but has updated memory layout, SMP=1 default (dual A32), and reorganized HyperRAM/OSPI logic. Always use MACHINE = "devkit-e8" for E7 DevKit builds on scarthgap.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips:
+  - ensemble-e7
+  tools: []
+  subsystems:
+  - yocto
+file_patterns:
+- '**/build-alif-e7/**'
+- '**/meta-alif-ensemble/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- yocto
+- alif
+- machine-config
+- scarthgap

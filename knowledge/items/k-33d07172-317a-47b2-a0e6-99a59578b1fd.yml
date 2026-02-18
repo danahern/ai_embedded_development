@@ -1,0 +1,27 @@
+id: k-33d07172-317a-47b2-a0e6-99a59578b1fd
+title: Cortex-A32 vs A7 cross-compilation flags
+body: 'STM32MP1 (Cortex-A7): -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard, uses Buildroot toolchain (arm-none-linux-gnueabihf-gcc). Alif E7 (Cortex-A32): -mcpu=cortex-a32 -mfpu=neon -mfloat-abi=hard, uses system cross-compiler (arm-linux-gnueabihf-gcc from crossbuild-essential-armhf). The Alif E7 Docker image is much smaller since it doesn''t need a full Buildroot build — just the distro cross-compiler package.'
+category: toolchain
+severity: informational
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - stm32mp157d_dk1
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/linux/apps/*/Makefile'
+- '**/Dockerfile.alif-e7'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- cross-compile
+- cpu-flags
+- docker

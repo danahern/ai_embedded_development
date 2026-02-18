@@ -224,8 +224,8 @@ If an MCP tool fails:
 4. `esp-idf-build.monitor(project, port, duration_seconds=10)`
 
 ### Linux (Docker Cross-Compilation)
-1. `linux-build.start_container(workspace_dir="/path/to/source")`
-2. `linux-build.build(container, command="make -j$(nproc)")`
+1. `linux-build.start_container(image="stm32mp1-sdk", workspace_dir="/path/to/source")` (or `image="alif-e7-sdk"` for E7)
+2. `linux-build.build(container, command="make -C /workspace/firmware/linux/apps BOARD=alif-e7 all install")` (omit BOARD for STM32MP1)
 3. `linux-build.collect_artifacts(container, host_path="/tmp/artifacts")`
 4. `linux-build.deploy(file_path="/tmp/artifacts/app", board_ip="192.168.1.100")`
 5. `linux-build.ssh_command(command="systemctl restart my-app", board_ip="192.168.1.100")`
@@ -272,6 +272,7 @@ Key: per-board build dirs (`build/<board>/`) prevent artifacts from being wiped 
 | esp32_devkitc/esp32/procpu | ESP32 | WiFi + BLE |
 | esp32s3_eye/esp32s3/procpu | ESP32-S3 | WiFi + BLE + camera |
 | stm32mp157c_dk2 | stm32mp157cxx | Dual-core A7+M4, OpenOCD debug |
+| alif_e7_devkit | ensemble-e7 | Dual A32+M55, Ethos-U55 NPU, XIP boot |
 | native_sim | - | Unit testing (Linux only) |
 | qemu_cortex_m3 | - | Unit testing (cross-platform) |
 

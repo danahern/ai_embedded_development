@@ -1,0 +1,27 @@
+id: k-d79371dc-0807-40a5-80d7-f0a80dc6e783
+title: 'Alif E7 XIP boot chain: SE → TFA → xipImage (no U-Boot)'
+body: 'The Alif E7 boot chain differs from STM32MP1: Secure Enclave → TF-A → xipImage. There is no U-Boot. The kernel runs XIP from MRAM (base 0x80020000) with DTB at 0x80010000. Root filesystem is cramfs-xip. Flashing requires Alif''s proprietary SETOOLS/ATOC to package images for the Secure Enclave. This is fundamentally different from STM32MP1''s dd-to-SD-card approach.'
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips:
+  - ensemble-e7
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- boot
+- alif
+- xip
+- tfa
+- flash

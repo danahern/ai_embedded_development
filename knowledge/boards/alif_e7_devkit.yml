@@ -1,0 +1,37 @@
+board: alif_e7_devkit
+chip: ensemble-e7
+family: ensemble
+arch: arm-cortex-a+arm-cortex-m
+vendor: alif
+
+flash_method: setools
+flash_tool: setools
+probe: j-link
+connect_under_reset: false
+target_chip: ensemble-e7
+board_qualifier: "devkit-e8"
+
+notes: |
+  Alif Ensemble E7 DevKit. Dual Cortex-A32 (Linux) + dual Cortex-M55 (Zephyr) + Ethos-U55 NPU.
+  Yocto machine config: devkit-e8 (supersedes devkit-e7 in scarthgap branch).
+  Boot chain: Secure Enclave → TF-A → xipImage (no U-Boot).
+  Kernel runs XIP from MRAM (0x80020000) or OSPI flash. DTB at 0x80010000.
+  Proprietary SETOOLS/ATOC required for packaging flashable images.
+  Serial console: UART2 (ttyS0) at 115200 baud.
+
+memory:
+  mram:
+    size_kb: 5760
+    base: 0x80000000
+    note: "TF-A + xipImage + DTB + cramfs (XIP)"
+  sram:
+    size_kb: 4096
+    base: 0x02000000
+    note: "Kernel data/BSS + stack (A32)"
+  hyperram:
+    size_kb: 8192
+    base: 0xA0000000
+    note: "Optional HyperRAM via OSPI0 (A32)"
+
+peripherals: [uart, spi, i2c, i3c, usb, ethernet, adc, dac, crc, mhu, hwsem]
+features: [dual-core-a32, dual-core-m55, ethos-u55-npu, xip-boot, ospi, mram, hyperram, tfa-boot]

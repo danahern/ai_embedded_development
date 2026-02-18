@@ -1,6 +1,6 @@
 # STM32MP1 Yocto Build
 
-Status: In-Progress
+Status: Complete
 Created: 2026-02-17
 
 ## Problem
@@ -65,10 +65,16 @@ diskutil unmountDisk /dev/diskN
 bzcat yocto-build/core-image-minimal-stm32mp1.wic.bz2 | sudo dd of=/dev/rdiskN bs=4m
 ```
 
+### Custom Layer: meta-eai
+Inside Docker volume at `/home/builder/yocto/meta-eai/`:
+- `recipes-connectivity/usb-ecm/` — USB CDC-ECM gadget with DHCP server
+- Auto-starts at boot via SysVinit (S90usb-ecm)
+- Fixed MAC addresses for consistent networking
+- DHCP assigns 192.168.7.1 to macOS host
+
 ### Output
-- WIC image: `yocto-build/core-image-minimal-stm32mp1.wic.bz2` (15MB compressed, ~1GB raw)
-- Only 51MB of actual data (5.1% of image is mapped blocks)
-- Includes: TF-A, OP-TEE, U-Boot, Linux 6.6, minimal rootfs with Dropbear SSH
+- WIC image: `yocto-build/core-image-minimal-stm32mp1.wic.bz2` (20MB compressed, ~1GB raw)
+- Includes: TF-A, OP-TEE, U-Boot, Linux 6.6, kernel modules, USB gadget networking, Dropbear SSH
 
 ## Implementation Notes
 
@@ -76,7 +82,11 @@ bzcat yocto-build/core-image-minimal-stm32mp1.wic.bz2 | sudo dd of=/dev/rdiskN b
 - **OOM on GCC cross-compile**: gimple-match.cc needs 4GB+ to compile. Docker Desktop defaults to ~8GB. Keep parallelism at -j 4 / BB_NUMBER_THREADS=4.
 - **gcc-multilib unavailable on ARM64**: Not needed — Yocto builds its own cross-toolchain. Remove from Dockerfile.
 - **WKS_FILE not set by stm32mp1 machine**: Must explicitly set in local.conf. DK1 and DK2 share the same SD card layout.
-- **First build ~40 min** (on M3 Max with -j 4). Incremental rebuilds use sstate cache and are much faster.
+- **BusyBox head syntax**: `head -1` is invalid in BusyBox — must use `head -n 1`.
+- **configfs not auto-mounted**: Must `mount -t configfs none /sys/kernel/config` before creating USB gadgets.
+- **kernel-modules package**: `core-image-minimal` doesn't include kernel modules by default. Add `IMAGE_INSTALL:append = " kernel-modules"` to local.conf.
+- **Yocto recipe WORKDIR vs UNPACKDIR**: In scarthgap, `file://` SRC_URI files land in `WORKDIR`, not `UNPACKDIR`. Use `${WORKDIR}` in `do_install()`.
+- **First build ~40 min** (on M3 Max with -j 4). Incremental rebuilds use sstate cache and are much faster (~2 min for rootfs changes).
 - **Build tree is ~30GB** inside the Docker volume.
 
 ## Modifications
@@ -91,5 +101,6 @@ bzcat yocto-build/core-image-minimal-stm32mp1.wic.bz2 | sudo dd of=/dev/rdiskN b
 - [x] Yocto layers cloned and configured
 - [x] bitbake core-image-minimal completes (4449 tasks, all succeeded)
 - [x] SD card image produced (WIC: core-image-minimal-stm32mp1.wic.bz2)
-- [ ] Board boots from new image
-- [ ] SSH works on new image
+- [x] Board boots from new image (TF-A → OP-TEE → U-Boot → Linux 6.6.78)
+- [x] USB CDC-ECM gadget networking works (ping + DHCP auto-config)
+- [x] SSH works on new image (Dropbear, root@192.168.7.2)
