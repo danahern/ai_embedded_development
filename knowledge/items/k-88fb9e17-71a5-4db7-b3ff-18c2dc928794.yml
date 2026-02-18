@@ -1,0 +1,34 @@
+id: k-88fb9e17-71a5-4db7-b3ff-18c2dc928794
+title: STM32MP1 DWC2 composite USB gadget fails — FIFO exhaustion
+body: |-
+  The DWC2 OTG controller on STM32MP1 (49000000.usb-otg) has limited hardware FIFOs (952 entries). Creating a composite USB gadget with both CDC-ECM and FunctionFS (ADB) exceeds the available FIFOs. Symptom: `dwc2_hsotg_ep_enable: No suitable fifo found` followed by `WARNING: dma_free_attrs` kernel crash in the ECM endpoint enable path. The ECM link fails to come up on the host side.
+
+  Workaround: Use ADB-only gadget (single FunctionFS function) which uses fewer endpoints and works fine. ADB provides shell, file transfer, and port forwarding — replacing SSH/SCP entirely.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - stm32mp157c_dk2
+  chips:
+  - stm32mp157
+  tools: []
+  subsystems:
+  - usb-gadget
+  - dwc2
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- usb
+- gadget
+- dwc2
+- composite
+- ecm
+- adb
+- fifo
