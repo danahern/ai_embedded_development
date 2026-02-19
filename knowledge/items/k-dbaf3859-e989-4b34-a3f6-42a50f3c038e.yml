@@ -1,0 +1,37 @@
+id: k-dbaf3859-e989-4b34-a3f6-42a50f3c038e
+title: 'eai_audio mixer: test via callback, not full backend integration'
+body: |-
+  The mini-flinger mixer is tested in isolation by providing a test `hw_write` callback rather than going through the full POSIX audio backend. This avoids coupling mixer tests to backend state and makes timing assertions simpler.
+
+  Pattern: `eai_audio_mixer_init()` takes a `hw_write` function pointer. Tests provide a callback that stores output to a static buffer, then verify mixed samples after `mixer_kick()` + `thread_sleep(50ms)`.
+
+  The 50ms sleep is sufficient because the mixer thread wakes on semaphore post (from `mixer_kick()`) and processes synchronously. On CI or slow machines, increase to 100ms if flaky.
+
+  Mixer tests require eai_osal POSIX backend — enabled via `ENABLE_MIXER=ON` in CMake (default). This links all OSAL POSIX sources into the test binary.
+category: pattern
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - audio
+  - mixer
+  - testing
+file_patterns:
+- '**/eai_audio/**'
+- '**/mixer*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-19
+updated: 2026-02-19
+author: claude
+source_session: null
+tags:
+- eai_audio
+- mixer
+- testing
+- posix
+- callback
