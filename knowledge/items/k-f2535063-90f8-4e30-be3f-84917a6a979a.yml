@@ -1,0 +1,28 @@
+id: k-f2535063-90f8-4e30-be3f-84917a6a979a
+title: 'MCP server test counts include inline #[cfg(test)] modules'
+body: When counting MCP server tests, don't just look at `tests/` directories. Many servers have substantial inline test suites in `#[cfg(test)] mod tests` blocks within source files. For example, linux-build has 25 unit tests in `tools/linux_build_tools.rs` and esp-idf-build has 8 in `tools/build_tools.rs`. Run `cargo test` to see the full count, not just `ls tests/`.
+category: pattern
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - cargo
+  subsystems:
+  - testing
+file_patterns:
+- '**/claude-mcps/**/src/**/*.rs'
+- '**/claude-mcps/**/tests/*.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- testing
+- mcp-servers
+- rust
+- cargo-test

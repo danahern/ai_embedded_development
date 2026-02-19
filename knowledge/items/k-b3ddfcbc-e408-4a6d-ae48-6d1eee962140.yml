@@ -1,0 +1,27 @@
+id: k-b3ddfcbc-e408-4a6d-ae48-6d1eee962140
+title: regenerate_gotchas() now requires validated status
+body: The regenerate_gotchas() function in knowledge-server now filters by `status == "validated"` in addition to `severity == "critical"` and `!deprecated`. Only validated critical items reach Tier 1 (CLAUDE.md Key Gotchas). The output JSON includes `unvalidated_critical_count` and `unvalidated_critical` array showing items excluded due to unvalidated status. This prevents unvetted advice from being promoted to always-in-context gotchas.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - knowledge-server
+  subsystems:
+  - knowledge
+file_patterns:
+- '**/knowledge-server/src/tools/handler.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- knowledge
+- gotchas
+- validation
+- tier-1

@@ -32,117 +32,6 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 - **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to work queue. Copy data to static buffer before submitting work.
 - **qemu_cortex_m3 has no flash driver**: lm3s6965 has no flash driver in Zephyr — NVS/Settings cannot work. Use `mps2/an385` for Settings/NVS tests. Use `platform_allow` in testcase.yaml (not just `integration_platforms`).
 
-## Permission Rules (settings.local.json)
-
-Claude Code tracks tool permissions in `.claude/settings.local.json`. This file is auto-generated when you click "Allow" on tool prompts — you never need to create it manually.
-
-- **Location**: `.claude/settings.local.json` (gitignored, per-machine)
-- **Pattern syntax**: `ToolName(prefix:*)` — e.g., `Bash(git *)` allows all git commands
-- **Key categories in this workspace**:
-  - `Bash(git *)` — git operations
-  - `Bash(cargo *)`, `Bash(cd * && cargo *)` — Rust builds and tests
-  - `Bash(python3 *)`, `Bash(*/bin/pip *)` — Python tooling
-  - `mcp__*` — MCP server tool calls (auto-allowed per server)
-- **Maintenance**: Safe to delete the file or prune entries. Permissions are re-added the next time you approve a prompt. If tool prompts become excessive, check that the file exists and hasn't been corrupted.
-
-## Plans
-
-Plans track significant new work. **Required for:** new MCPs, skills, agents, commands, apps, libraries, test tool groups, or changes touching 5+ source files.
-
-### Lifecycle
-
-`Ideation` → `Planned` → `In-Progress` → `Complete`
-
-All plans live in `plans/`. Completed plans stay in place — status in the file header distinguishes active from done. No archive directory.
-
-### Plan template
-
-```markdown
-# Feature Name
-
-Status: Planned
-Created: 2026-02-14
-
-## Problem
-What's broken or missing, and why it matters.
-
-## Approach
-High-level strategy and key decisions.
-
-## Solution
-What was built — deliverables, APIs, behavior.
-
-## Implementation Notes
-Files changed, gotchas, things that surprised you.
-
-## Modifications
-What was deferred, descoped, or changed from the original approach.
-```
-
-Sections are added as the plan progresses — an Ideation plan may only have Problem and Approach; a Complete plan should have all five.
-
-- **Naming:** descriptive kebab-case, no phase numbers
-- **No index file** — `ls plans/` shows all plans; status in header shows what's active
-- Plans are git-tracked
-
-### CRITICAL: Plan maintenance rules
-
-**Plans must be kept in sync with reality. Violations create confusion and lost context.**
-
-1. **One plan, one location.** The file in `plans/` is the single source of truth. Session plan files (`.claude/plans/`) are drafts — once approved, copy the full content to `plans/<name>.md` immediately. Never leave a plan only in the session file.
-2. **Create the plan file BEFORE starting implementation.** When you begin coding, the plan must already exist in `plans/` with status `In-Progress`.
-3. **Never mark Complete until ALL verification steps pass.** If the plan has a Verification section, every item must be confirmed. If tools haven't been live-tested, the plan is not complete.
-4. **Update incrementally.** When you discover gotchas, make design decisions, or change approach during implementation — update the plan file right then, not later.
-
-## Project Documentation
-
-The same threshold that requires a plan also determines documentation depth:
-
-- **New MCPs, skills, agents, commands, apps, libraries, test tool groups** — Full three docs + a plan:
-  - **`README.md`** — Human-facing: setup, usage, configuration, troubleshooting
-  - **`PRD.md`** — Requirements: purpose, design decisions, API surface, constraints
-  - **`CLAUDE.md`** — Claude-facing: architecture, tool listings, implementation details
-- **Small components** (device_shell, single-file libraries) — **`CLAUDE.md` only** is sufficient
-
-Keep docs current as requirements change or features are added.
-
-## Testing
-
-**All code must be unit tested — apps, libraries, AND MCP servers.** Not just happy path — test failure cases too.
-
-- Tests should verify **expected behavior**, not mirror implementation details.
-- Cover edge cases: invalid input, missing files, empty data, error conditions.
-- If a function can fail, test that it fails correctly.
-- **MCP servers**: Every tool that transforms data or manages state needs a test. Core logic (ID generation, parsing, encoding) is especially important — these bugs are silent and destructive.
-
-## Knowledge
-
-All learnings are stored as structured YAML in `knowledge/items/` and indexed by the knowledge MCP server. Three-tier retrieval ensures the right knowledge reaches Claude at the right time:
-
-| Tier | What | Where | When |
-|------|------|-------|------|
-| 1 | Critical gotchas (10-15) | `CLAUDE.md` Key Gotchas section | Every session, always in context |
-| 2 | Topic rules | `.claude/rules/*.md` (auto-generated) | Auto-injected when editing matching files |
-| 3 | Full corpus | `knowledge/items/*.yml` | On-demand via `/recall` or `knowledge.search()` |
-
-### Capturing knowledge
-
-Use `/learn` during a session or `/wrap-up` at session end. Both use `knowledge.capture()` to create structured YAML items with metadata (severity, category, file patterns, board/chip scoping).
-
-### Regenerating derived files
-
-Tier 1 and Tier 2 are auto-generated from the knowledge store:
-- `knowledge.regenerate_gotchas()` — updates Key Gotchas in CLAUDE.md from severity=critical items
-- `knowledge.regenerate_rules()` — updates `.claude/rules/*.md` from file_patterns
-
-### Session workflow
-
-**Run `/start` at the beginning of a session** to bootstrap context (refreshes recent knowledge, shows recent activity, checks hardware).
-
-**Run `/wrap-up` at the end of a session** to capture learnings and commit work.
-
-After debugging surprises or non-obvious behavior, run `/learn` to capture findings immediately.
-
 ## CRITICAL: MCP-First Policy
 
 **ALWAYS use MCP tools for operations they support. NEVER shell out to CLI equivalents (addr2line, west, idf.py, nrfjprog, etc.).**
@@ -154,154 +43,76 @@ If an MCP tool fails:
 
 ## MCP Servers
 
-### zephyr-build (Building & Testing)
-- `list_apps()`, `list_boards(filter="nrf")`, `build(app, board, pristine=true)`, `build(app, board, background=true)`, `build_all(board, pristine=true)`, `build_status(build_id)`, `clean(app, board?)`
-- `list_templates()` — discover available app templates before creating
-- `create_app(name, template?, board?, libraries?, description?)` — scaffold a new app from template
-- `run_tests(board, path?, filter?, background?)`, `test_status(test_id)`, `test_results(test_id?, results_dir?)`
+Tool signatures are in each server's own CLAUDE.md (`claude-mcps/<server>/CLAUDE.md`). Available servers:
 
-### elf-analysis (Size Analysis)
-- `analyze_size(elf_path, target?, depth?, workspace_path?)` — ROM/RAM breakdown with per-file tree
-- `compare_sizes(elf_path_a, elf_path_b, workspace_path?)` — diff two ELFs, show top increases/decreases
-- `top_consumers(elf_path, target, limit?, level?, workspace_path?)` — biggest files/symbols sorted by size
+- **zephyr-build** — Build, test, scaffold Zephyr apps (west wrapper)
+- **elf-analysis** — ROM/RAM size analysis, diffing, top consumers
+- **esp-idf-build** — ESP-IDF build, flash, monitor
+- **linux-build** — Docker cross-compilation, SSH/ADB deployment, Yocto builds
+- **embedded-probe** — Debug probes, flash programming, RTT, coredump analysis, nrfutil
+- **knowledge** — Knowledge capture, search, board profiles, rule/gotcha regeneration
+- **saleae-logic** — Logic analyzer capture and protocol decoding
+- **hw-test-runner** — BLE GATT, WiFi provisioning, TCP throughput testing
 
-### esp-idf-build (ESP-IDF)
-- `list_projects()`, `list_targets()`, `set_target(project, target)`, `build(project)`, `flash(project, port)`, `monitor(project, port, duration_seconds)`, `clean(project)`
-- `detect_device()` — scan serial ports for ESP32 devices by USB VID/PID
-
-### linux-build (Docker Cross-Compilation & Deployment)
-- `start_container(name?, image?, workspace_dir?, extra_volumes?)` — start Docker build container with workspace mount
-- `stop_container(container)` — stop and remove container
-- `container_status(container)` — check container state
-- `run_command(container, command, workdir?)` — execute command in container
-- `build(container, command?, workdir?)` — run build command (default: `make` in `/workspace`)
-- `list_artifacts(container, container_path?)` — list files in container artifacts directory
-- `collect_artifacts(container, container_path?, host_path)` — copy artifacts from container to host
-- `deploy(file_path, remote_path?, board_ip?)` — SCP file to board
-- `ssh_command(command, board_ip?)` — run command on board via SSH
-- `adb_shell(command, serial?)` — run shell command on device via ADB
-- `adb_deploy(file_path, remote_path?, serial?)` — push file to device via ADB
-- `adb_pull(remote_path, local_path, serial?)` — pull file from device via ADB
-- `flash_image(image_path, transport, device?, board_ip?, serial?)` — flash compressed WIC image via SSH or ADB
-- `yocto_build(container, build_dir?, image?, recipes_to_clean?, background?)` — run bitbake build
-- `yocto_build_status(build_id)` — check background Yocto build status
-- `board_connect(transport, board_ip?, serial?, ssh_key?, ssh_user?)` — register board connection (SSH/ADB/auto)
-- `board_disconnect(board_id)` — remove board connection
-- `board_status(board_id?)` — check board connection status or list all
-
-### embedded-probe (Debug & Flash)
-- `list_probes()`, `connect(probe_selector, target_chip)`, `flash_program(session_id, file_path)`, `validate_boot(session_id, file_path, success_pattern)`, `rtt_attach(session_id)`, `rtt_read(session_id)`, `reset(session_id)`, `resolve_symbol(address, elf_path)`, `stack_trace(session_id, elf_path)`, `analyze_coredump(log_text, elf_path)`
-- `nrfutil_program(file_path, core?, snr?, verify?, reset_after?)` — flash via nrfutil (nRF5340 dual-core support)
-- `nrfutil_recover(snr?)` — clear APPROTECT via nrfutil
-- `nrfutil_reset(snr?)` — reset device via nrfutil
-
-### knowledge (Knowledge Management)
-- `capture(title, body, category?, severity?, boards?, chips?, tools?, subsystems?, file_patterns?, tags?, author?)` — create knowledge item
-- `search(query, tags?, chips?, category?, limit?)` — full-text search with FTS5
-- `for_context(files, board?)` — knowledge relevant to current files + build target
-- `deprecate(id, superseded_by?)`, `validate(id, validated_by)` — lifecycle management
-- `recent(days?, limit?)`, `stale(days?)`, `list_tags(prefix?)` — discovery and maintenance
-- `board_info(board)`, `for_chip(chip)`, `for_board(board)`, `list_boards(vendor?)` — hardware-aware retrieval
-- `regenerate_rules(dry_run?)`, `regenerate_gotchas(dry_run?)` — auto-generate rules and gotchas
-
-### saleae-logic (Logic Analyzer)
-- `get_app_info()`, `list_devices()`, `start_capture(channels, duration_seconds)`, `wait_capture(capture_id)`, `add_analyzer(capture_id, analyzer_name, settings)`, `export_analyzer_data(capture_id, analyzer_index)`, `analyze_capture(capture_id, analyzer_index)`, `stream_capture(channels, duration, analyzer_name, settings)`
-
-### hw-test-runner (BLE & TCP Testing)
-- `ble_discover(service_uuid?, timeout?)` — scan for BLE devices
-- `ble_read(address, characteristic_uuid)` — read a GATT characteristic
-- `ble_write(address, characteristic_uuid, data)` — write hex data to a characteristic
-- `ble_subscribe(address, characteristic_uuid, timeout?)` — subscribe to notifications
-- `wifi_provision(ssid, psk, security?, address?, timeout?)` — full WiFi provisioning flow over BLE
-- `wifi_scan_aps(address?, timeout?)` — trigger WiFi AP scan on device
-- `wifi_status(address?)` — query WiFi connection status
-- `wifi_factory_reset(address?)` — send factory reset command
-- `tcp_throughput(host, mode, port?, duration?, block_size?)` — upload/download/echo throughput test
+Board details available via `knowledge.board_info("board_name")` or `knowledge.list_boards()`.
 
 ## Typical Workflows
 
-### Zephyr
+### Zephyr (Build-Flash-Test)
 1. `zephyr-build.build(app, board, pristine=true)`
 2. `embedded-probe.connect(probe_selector="auto", target_chip="...")`
 3. `embedded-probe.validate_boot(session_id, file_path, success_pattern="Booting Zephyr")`
 4. `embedded-probe.rtt_read(session_id)`
 
 ### ESP-IDF
-1. `esp-idf-build.set_target(project, target)`
-2. `esp-idf-build.build(project)`
-3. `esp-idf-build.flash(project, port)`
-4. `esp-idf-build.monitor(project, port, duration_seconds=10)`
-
-### Linux (Docker Cross-Compilation)
-1. `linux-build.start_container(image="stm32mp1-sdk", workspace_dir="/path/to/source")` (or `image="alif-e7-sdk"` for E7)
-2. `linux-build.build(container, command="make -C /workspace/firmware/linux/apps BOARD=alif-e7 all install")` (omit BOARD for STM32MP1)
-3. `linux-build.collect_artifacts(container, host_path="/tmp/artifacts")`
-4. `linux-build.deploy(file_path="/tmp/artifacts/app", board_ip="192.168.1.100")`
-5. `linux-build.ssh_command(command="systemctl restart my-app", board_ip="192.168.1.100")`
+1. `esp-idf-build.set_target(project, target)` → `build(project)` → `flash(project, port)` → `monitor(project, port, duration_seconds=10)`
 
 ### Crash Debug
-1. Build with `zephyr-build.build(app="crash_debug", board="nrf54l15dk/nrf54l15/cpuapp")`
-2. Connect, flash `.hex`, reset with `halt_after_reset=false`, attach RTT
-3. Read RTT until `#CD:END#` (concatenate chunks)
-4. `embedded-probe.analyze_coredump(log_text, elf_path)` → crash PC, function, call chain
+1. Build, connect, flash `.hex`, reset with `halt_after_reset=false`, attach RTT
+2. Read RTT until `#CD:END#` (concatenate chunks)
+3. `embedded-probe.analyze_coredump(log_text, elf_path)` → crash PC, function, call chain
 
-### Signal Analysis
-1. `saleae-logic.start_capture(channels=[0,1], duration_seconds=2)`
-2. `saleae-logic.wait_capture(capture_id)`
-3. `saleae-logic.add_analyzer(capture_id, "I2C", {"SCL": 0, "SDA": 1})`
-4. `saleae-logic.analyze_capture(capture_id, analyzer_index)`
+### Unit Tests
+1. `zephyr-build.run_tests(board="qemu_cortex_m3")` — all lib tests
+2. `zephyr-build.test_results(test_id=...)` — structured pass/fail
 
-### Hardware Testing (BLE/WiFi)
-1. `hw-test-runner.ble_discover(service_uuid="a0e4f2b0-0001-...")` — find provisioning device
-2. `hw-test-runner.wifi_provision(ssid="MyNetwork", psk="password")` — provision WiFi
-3. `hw-test-runner.tcp_throughput(host="192.168.1.x", mode="upload")` — throughput test
-4. No probe-rs disconnect needed — BLE uses CoreBluetooth, independent of J-Link
+## Plans
 
-### Parallel Board Testing
-When an app targets both nRF and ESP32:
-1. Build both: `build(app, nrf_board, background=true)` + `build(app, esp_board, background=true)`
-2. Flash both: `nrfutil_program(nrf.hex)` + `esptool_flash(esp.bin)` (different interfaces, no conflict)
-3. Test both: `hw-test-runner` for BLE/WiFi + `monitor` for ESP32 serial
-4. Debug as needed: connect probe-rs for RTT on whichever board needs it
+Plans in `plans/` track significant work (new MCPs, skills, agents, apps, libs, or changes touching 5+ files). Status lifecycle: `Ideation` → `Planned` → `In-Progress` → `Complete`. Descriptive kebab-case names, git-tracked.
 
-Key: per-board build dirs (`build/<board>/`) prevent artifacts from being wiped when switching targets.
+**Rules:** Create plan file BEFORE starting implementation. Update incrementally during work. Never mark Complete until all verification passes. The `plans/` file is the single source of truth — not session drafts.
 
-### Testing
-1. `zephyr-build.run_tests(board="qemu_cortex_m3")` — run all lib tests
-2. `zephyr-build.run_tests(path="lib/crash_log", board="qemu_cortex_m3")` — filtered
-3. `zephyr-build.test_results(test_id=...)` — get structured pass/fail details
+## Project Documentation
 
-## Common Boards
+- **Significant components** (MCPs, skills, agents, apps, libs) — `README.md` + `PRD.md` + `CLAUDE.md` + plan
+- **Small components** — `CLAUDE.md` only is sufficient
 
-| Board | target_chip | Use Case |
-|-------|-------------|----------|
-| nrf52840dk/nrf52840 | nRF52840_xxAA | BLE development |
-| nrf5340dk/nrf5340/cpuapp | nRF5340_xxAA | BLE + net core |
-| nrf54l15dk/nrf54l15/cpuapp | nrf54l15 | Low-power BLE, crash debug |
-| esp32_devkitc/esp32/procpu | ESP32 | WiFi + BLE |
-| esp32s3_eye/esp32s3/procpu | ESP32-S3 | WiFi + BLE + camera |
-| stm32mp157c_dk2 | stm32mp157cxx | Dual-core A7+M4, OpenOCD debug |
-| alif_e7_devkit | ensemble-e7 | Dual A32+M55, Ethos-U55 NPU, XIP boot |
-| native_sim | - | Unit testing (Linux only) |
-| qemu_cortex_m3 | - | Unit testing (cross-platform) |
+## Testing
+
+**All code must be unit tested — apps, libraries, AND MCP servers.** Test failure cases, not just happy path. Cover edge cases: invalid input, missing files, empty data, error conditions. MCP servers: test core logic (ID generation, parsing, encoding) — these bugs are silent and destructive.
+
+## Knowledge
+
+Three-tier retrieval delivers the right knowledge at the right time:
+
+| Tier | What | Where | When |
+|------|------|-------|------|
+| 1 | Critical gotchas | `CLAUDE.md` Key Gotchas section | Every session, always in context |
+| 2 | Topic rules | `.claude/rules/*.md` (auto-generated) | Auto-injected when editing matching files |
+| 3 | Full corpus | `knowledge/items/*.yml` | On-demand via `/recall` or `knowledge.search()` |
+
+Capture with `/learn` or `/wrap-up`. Regenerate derived files with `knowledge.regenerate_gotchas()` (Tier 1) and `knowledge.regenerate_rules()` (Tier 2).
 
 ## Workspace Structure
 
-| Directory | Purpose | Git |
-|-----------|---------|-----|
-| `claude-config/` | Skills (`/embedded`, `/start`, `/wrap-up`) and settings | Submodule |
-| `claude-mcps/` | MCP servers (embedded-probe, zephyr-build, elf-analysis, esp-idf-build, saleae-logic, knowledge-server, hw-test-runner) | Submodule |
-| `knowledge/` | Knowledge items (`items/*.yml`) and board profiles (`boards/*.yml`) | Tracked |
-| `firmware/` | Zephyr apps, ESP-IDF apps, shared libraries, tests | Submodule |
-| `esp-dev-kits/` | ESP-IDF example projects | Cloned |
-| `test-tools/` | Python BLE/power testing utilities | Tracked |
-| `zephyr/`, `bootloader/`, `modules/`, `tools/` | West-managed dependencies | Gitignored |
+`firmware/` (Zephyr/ESP-IDF apps + shared libs), `claude-mcps/` (MCP servers, submodule), `claude-config/` (skills/agents, submodule), `knowledge/` (items + board profiles), `test-tools/` (Python BLE/power utils), `plans/` + `retrospective/`. West-managed deps: `zephyr/`, `bootloader/`, `modules/`, `tools/` (gitignored).
 
 ## Key Commands
 
-- `/start` — Bootstrap a session (refresh recent knowledge, check hardware, show recent changes)
-- `/wrap-up` — End a session (review changes, capture knowledge, commit)
-- `/learn` — Capture a knowledge item via `knowledge.capture()` with metadata and tags
-- `/recall` — Search knowledge via `knowledge.search()` by topic, tag, or keyword
+- `/start` — Bootstrap session (recent knowledge, hardware check, git status)
+- `/wrap-up` — End session (capture knowledge, commit work)
+- `/learn` — Capture a knowledge item with metadata and tags
+- `/recall` — Search knowledge by topic, tag, or keyword
 - `/embedded` — Full embedded development guidelines (memory, style, Zephyr patterns)
-- `/hw-verify <app> <board>` — Guided hardware verification checklist (build, flash, boot, BLE, functional tests)
+- `/bft <app> <board>` — Build, flash, validate boot, read output — single command inner loop
+- `/hw-verify <app> <board>` — Guided hardware verification checklist

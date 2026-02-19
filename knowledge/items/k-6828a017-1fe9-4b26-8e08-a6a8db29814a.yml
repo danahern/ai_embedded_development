@@ -1,0 +1,25 @@
+id: k-6828a017-1fe9-4b26-8e08-a6a8db29814a
+title: CLAUDE.md should stay under 8 KB for context window efficiency
+body: 'The workspace CLAUDE.md grew to 18.6 KB with MCP tool reference tables, board tables, and 7 workflow examples — all duplicating info already in individual server CLAUDE.md files and knowledge/boards/*.yml. Trimmed to 8 KB by: removing MCP tool tables (5.2 KB savings — server descriptions provide this), removing Common Boards table (use knowledge.board_info()), removing Permission Rules section, trimming workflows from 7 to 3, and condensing Plans/Workspace/Documentation sections. Rule: CLAUDE.md = policy + gotchas + commands, not a reference manual.'
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/CLAUDE.md'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-18
+updated: 2026-02-18
+author: claude
+source_session: null
+tags:
+- context-engineering
+- claude-md
+- documentation
+- optimization
