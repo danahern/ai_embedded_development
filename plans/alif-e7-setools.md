@@ -123,11 +123,9 @@ adb shell       # Root shell
   - `EXTRA_IMAGEDEPENDS:append = " trusted-firmware-a"` — builds bl32.bin
   - `IMAGE_CLASSES += "cramfs-xip"` and `IMAGE_FSTYPES:append = " cramfs-xip"` — builds cramfs-xip rootfs
 - **Incremental rebuild**: Only TF-A compilation and cramfs-xip generation are new. Most of the 3384 tasks are cached (sstate). Build succeeded (3431 tasks total, 62 new).
-- **BLOCKER — cramfs-xip too large**: The rootfs is **9.7MB** — far exceeds the 2MB MTD partition (`KERNEL_MTD_LEN=0x200000`) and doesn't fit in MRAM (5.7MB total) alongside the kernel. Root cause: `core-image-minimal` + dropbear + openssh-sftp-server + android-tools-adbd + usb-ecm. Options:
-  1. Strip packages for first boot (remove ADB/SSH, add back later via OSPI)
-  2. Boot rootfs from OSPI flash instead of MRAM (`OSPI_BOOT=1`)
-  3. Use initramfs instead of cramfs-xip
-  4. Create a custom minimal image recipe without heavy packages
+- **cramfs-xip too large with poky distro**: Even bare `core-image-minimal` with `poky` distro produces 8.5MB cramfs-xip (glibc 2.5MB+ + openssl 1.5MB+ + eudev). Doesn't fit in 5.7MB MRAM. Switched to `DISTRO = "apss-tiny"` which uses musl libc + poky-tiny + busybox init — designed specifically for cramfs-xip on MRAM. Result: **1.2MB cramfs-xip** (vs 8.5MB with poky). Total MRAM usage ~4.3MB of 5.7MB.
+- **apss-tiny own-mirrors**: The distro inherits `own-mirrors` class but `SOURCE_MIRROR_URL` is unset (normally configured by Alif's build-setup script). Added `INHERIT:remove = "own-mirrors"` to local.conf to fix fetch failures.
+- **apss-tiny provides TF-A + cramfs-xip automatically**: Removed manual `EXTRA_IMAGEDEPENDS` and `IMAGE_CLASSES/IMAGE_FSTYPES` additions — apss-tiny handles both natively.
 
 ## Files
 
@@ -139,7 +137,7 @@ adb shell       # Root shell
 | `firmware/linux/alif-e7/setools/flash-e7.sh` | **New** — copies artifacts + runs SETOOLS |
 | `firmware/linux/alif-e7/setools/README.md` | **New** — SETOOLS setup and usage |
 | `firmware/linux/alif-e7/README.md` | Updated flashing section (was TBD) |
-| `yocto-build/build-alif-e7/conf/local.conf` | Added TF-A + cramfs-xip build config |
+| `yocto-build/build-alif-e7/conf/local.conf` | Switched to apss-tiny distro, disabled own-mirrors |
 | `knowledge/boards/alif_e7_devkit.yml` | Added SE-UART/PRG_USB connection details |
 | `plans/alif-e7-setools.md` | **New** — this plan |
 | `plans/alif-e7-adb-gadget.md` | Updated verification notes |
@@ -168,7 +166,7 @@ adb shell       # Root shell
 
 - **ATOC JSON schema uncertainty**: Exact field names and cpu_id for A32 cores inferred from M55 examples. SETOOLS download includes docs that should clarify. May need iteration.
 - **Device config JSON**: ATOC has two parts — device config (clocks, pins, firewalls) and application images. May need separate device config JSON, or DevKit default may work.
-- **MRAM capacity**: cramfs-xip is 9.7MB — doesn't fit in MRAM. Must resolve before flashing (see Implementation Notes).
+- **MRAM capacity**: Resolved — apss-tiny cramfs-xip is 1.2MB. Total ~4.3MB of 5.7MB MRAM (1.4MB headroom).
 - **macOS serial driver**: Modern macOS (14+) has built-in FTDI support. If DevKit uses different USB-serial chip, may need driver.
 - **First boot ever**: Any boot chain issue (TF-A config, DTB, kernel cmdline) requires debugging with limited visibility (serial console only).
 - **SE-UART exclusivity**: Only one process can use SE-UART at a time. Close terminal sessions on that port before running `app-write-mram`.
