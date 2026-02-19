@@ -11,6 +11,13 @@ connect_under_reset: false
 target_chip: ensemble-e7
 board_qualifier: "devkit-e8"
 
+connection:
+  prg_usb: "Micro-USB closest to board corner — power + 2x serial (SE-UART + console)"
+  se_uart: "First serial port from PRG_USB — SETOOLS programming"
+  console_uart: "Second serial port from PRG_USB — UART2, 115200 baud, ttyS0"
+  usb_otg: "USB-C/micro-USB OTG port — ADB gadget (separate from PRG_USB)"
+  jumper_j26: "Pins 1-3 and 2-4 for serial communication"
+
 notes: |
   Alif Ensemble E7 DevKit. Dual Cortex-A32 (Linux) + dual Cortex-M55 (Zephyr) + Ethos-U55 NPU.
   Yocto machine config: devkit-e8 (supersedes devkit-e7 in scarthgap branch).
@@ -18,6 +25,8 @@ notes: |
   Kernel runs XIP from MRAM (0x80020000) or OSPI flash. DTB at 0x80010000.
   Proprietary SETOOLS/ATOC required for packaging flashable images.
   Serial console: UART2 (ttyS0) at 115200 baud.
+  PRG_USB provides SE-UART (programming) + console UART via dual USB-serial.
+  SETOOLS config tracked in firmware/linux/alif-e7/setools/, binaries in tools/setools/ (gitignored).
 
 memory:
   mram:

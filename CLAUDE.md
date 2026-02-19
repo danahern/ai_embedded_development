@@ -13,24 +13,52 @@
 
 Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search()` or `/recall`.
 
+### Zephyr / Build System
 - **nRF54L15**: Use `.hex` not `.elf` for flashing. `flash_program` works; `run_firmware` (erase+program) fails. Use `connect_under_reset=true` to recover stuck states.
-- **Log buffer drops**: Boot-time coredump auto-report drops messages if `CONFIG_LOG_BUFFER_SIZE` is too small (default 1024). Set to 4096+. The bottleneck is the deferred log buffer, not the RTT buffer.
-- **RTT chunks**: Output arrives in ~1KB chunks. Concatenate all reads until `#CD:END#` before passing to `analyze_coredump`.
-- **Shell naming**: Zephyr has a built-in `device` shell command. Pick unique names for custom commands.
-- **RTT buffer conflict**: `LOG_BACKEND_RTT` and `SHELL_BACKEND_RTT` both default to buffer 0. Set `SHELL_BACKEND_RTT_BUFFER=1`.
 - **native_sim**: Linux-only. Use `qemu_cortex_m3` for unit tests on macOS.
+- **qemu_cortex_m3 has no flash driver**: lm3s6965 — NVS/Settings cannot work. Use `mps2/an385` instead. Use `platform_allow` in testcase.yaml (not just `integration_platforms`).
+- **Flash backend needs real hardware**: `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED`. Won't build on QEMU — use `build_only: true` with `platform_allow`.
+- **QEMU + core template**: `create_app` core template includes crash_log/device_shell overlays that require RTT and flash — unavailable on QEMU. Remove `OVERLAY_CONFIG` lines for QEMU-only apps.
+- **Shell naming**: Zephyr has a built-in `device` shell command. Pick unique names for custom commands.
+- **Log buffer drops**: Boot-time coredump auto-report drops messages if `CONFIG_LOG_BUFFER_SIZE` is too small (default 1024). Set to 4096+.
+- **RTT buffer conflict**: `LOG_BACKEND_RTT` and `SHELL_BACKEND_RTT` both default to buffer 0. Set `SHELL_BACKEND_RTT_BUFFER=1`.
+- **RTT chunks**: Output arrives in ~1KB chunks. Concatenate all reads until `#CD:END#` before passing to `analyze_coredump`.
 - **module.yml paths**: Relative to module root (parent of `zephyr/`), not relative to the yml file.
-- **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`). Let Zephyr auto-discover overlays from `boards/`.
+- **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`).
 - **coredump_cmd return**: `COREDUMP_CMD_COPY_STORED_DUMP` returns positive byte count on success, not 0.
-- **Build dirs are per-board**: Each app builds to `apps/<name>/build/<board_sanitized>/` (e.g., `build/nrf52840dk_nrf52840/`). Multiple boards can coexist without wiping each other's artifacts.
-- **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. The `run_tests` tool auto-detects the SDK from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT=zephyr` and `ZEPHYR_SDK_INSTALL_DIR` in the MCP launch environment.
-- **QEMU + core template**: `create_app` core template includes crash_log/device_shell overlays that require RTT and flash — unavailable on `qemu_cortex_m3`. Remove `OVERLAY_CONFIG` lines for QEMU-only apps.
-- **Flash backend needs real hardware**: `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED`. Won't build on QEMU — use `build_only: true` with `platform_allow` for real boards.
-- **Gitignore negation**: `.claude/` (trailing slash) makes git skip the entire directory. Use `.claude/*` with `!.claude/rules/` to allow negation.
-- **ESP32 WiFi power management**: Modem sleep blocks incoming TCP/ping even though ARP resolves. Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()` for reliable incoming connections.
-- **ESP32 FreeRTOS stack sizes**: `StackType_t` is `uint8_t` on Xtensa ESP32 — `xTaskCreate` stack_depth is in bytes, not words. 2048 = 2KB, not 8KB. Use 4096+ for tasks calling WiFi APIs.
-- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to work queue. Copy data to static buffer before submitting work.
-- **qemu_cortex_m3 has no flash driver**: lm3s6965 has no flash driver in Zephyr — NVS/Settings cannot work. Use `mps2/an385` for Settings/NVS tests. Use `platform_allow` in testcase.yaml (not just `integration_platforms`).
+- **Build dirs are per-board**: Each app builds to `apps/<name>/build/<board_sanitized>/`. Multiple boards coexist.
+- **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. Auto-detects from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT` and `ZEPHYR_SDK_INSTALL_DIR`.
+- **Zephyr CI container**: `ghcr.io/zephyrproject-rtos/ci` registers SDK for `user`, but GH Actions runs as root. Run `/opt/toolchains/zephyr-sdk-*/setup.sh -c` first.
+- **Gitignore negation**: `.claude/` (trailing slash) makes git skip the entire directory. Use `.claude/*` with `!.claude/rules/`.
+
+### nRF7002-DK / nRF5340
+- **nRF7002-DK flash**: probe-rs fails on nRF5340 (APPROTECT). Use `nrfutil device recover` then `nrfutil device program --firmware <hex> --core Application --traits jlink`.
+- **nRF7002-DK dual-core BLE**: Net core needs `hci_ipc` firmware. Without it, BLE init fails with HCI error -11 (EAGAIN).
+- **nRF7002 WiFi Kconfig**: Use `CONFIG_WIFI_NRF70=y`, not `CONFIG_WIFI_NRF700X`. Also `CONFIG_WIFI_NM_WPA_SUPPLICANT=y`, not `CONFIG_WPA_SUPP`. Fetch blobs first: `west blobs fetch nrf_wifi`.
+
+### ESP32
+- **ESP32 WiFi power management**: Modem sleep blocks incoming TCP/ping. Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()`.
+- **ESP32 FreeRTOS stack sizes**: `StackType_t` is `uint8_t` on Xtensa — `xTaskCreate` stack_depth is in bytes, not words. Use 4096+ for WiFi tasks.
+- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to `k_work`/work queue. Copy data to static buffer before submitting.
+
+### STM32MP1
+- **M4 has no persistent flash**: Firmware loaded to RETRAM/MCUSRAM via OpenOCD `load_image`. Lost on power cycle. Production uses remoteproc.
+- **Use remoteproc for M4 firmware**: Copy ELF to `/lib/firmware/`, echo to `/sys/class/remoteproc/remoteproc0/`. OpenOCD is for bare-metal debug only.
+- **OpenOCD config**: Must disable A7 GDB ports and set M4 as active target for M4-only debugging.
+- **USB gadget macOS**: No RNDIS support on macOS. Must use pure CDC-ECM. Build kernel with `CONFIG_USB_ETH_RNDIS=n`.
+- **DWC2 composite USB fails**: Limited FIFOs (952 entries). CDC-ECM + FunctionFS (ADB) exceeds them. Use ADB-only gadget.
+- **CDC-ECM IP conflict**: Bring down usb0 (RNDIS, 192.168.7.2) before configuring ECM, or kernel routes via wrong interface.
+- **Dropbear SSH on macOS**: v2018.76 only supports ssh-rsa. Add `HostKeyAlgorithms +ssh-rsa` to `~/.ssh/config`.
+- **Buildroot glibc mismatch**: Cross-compiled binaries may need `-static` if SD card has older glibc.
+- **Serial FD leak**: Killed serial scripts leak FDs to parent process. Replug USB to recover.
+
+### Yocto / Docker
+- **Yocto case-sensitive FS**: macOS is case-insensitive. Use Docker named volume (not bind mount) for build dir.
+- **Yocto OOM on Apple Silicon**: Docker defaults ~8GB RAM. Set `BB_NUMBER_THREADS=4` and `PARALLEL_MAKE="-j 4"` to avoid OOM on GCC build.
+- **Alif E7 BSP vars**: With `DISTRO="poky"` (not `apss-tiny`), must set `ALIF_KERNEL_TREE`, `TFA_TREE`, etc. manually in `local.conf`.
+
+### Operational
+- **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
 
 ## CRITICAL: MCP-First Policy
 

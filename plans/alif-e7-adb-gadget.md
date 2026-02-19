@@ -68,7 +68,7 @@ UDC auto-detection works for both DWC2 and DWC3.
 - [x] `bitbake core-image-minimal` succeeds (3384/3384 tasks)
 - [x] xipImage includes DWC3 + FunctionFS support (both `=y` in .config)
 - [x] adbd + usb-ecm.sh + init script present in rootfs
-- [ ] On hardware: gadget script auto-detects DWC3 UDC
+- [ ] On hardware: gadget script auto-detects DWC3 UDC (requires SETOOLS first boot — see `plans/alif-e7-setools.md`)
 - [ ] `adb devices` on Mac sees `eai-alif-e7-001`
 - [ ] `adb shell` works
 
@@ -79,3 +79,4 @@ UDC auto-detection works for both DWC2 and DWC3.
 - Added Alif BSP source URL variables to local.conf (not set by poky distro)
 - Added `BB_DANGLINGAPPENDS_WARNONLY` for cross-board bbappend compatibility
 - Pre-cloned Alif kernel/TFA repos to work around bitbake fetch timeout
+- TF-A (`bl32.bin`) and cramfs-xip rootfs not built by poky distro — added to local.conf in SETOOLS plan (`plans/alif-e7-setools.md`)

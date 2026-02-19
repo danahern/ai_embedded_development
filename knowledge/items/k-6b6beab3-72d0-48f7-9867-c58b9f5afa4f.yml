@@ -20,12 +20,13 @@ applies_to:
   - openocd
   subsystems: []
 file_patterns: []
-status: unvalidated
-validated_by: []
+status: validated
+validated_by:
+- danahern
 deprecated: false
 superseded_by: null
 created: 2026-02-17
-updated: 2026-02-17
+updated: 2026-02-19
 author: claude
 source_session: null
 tags:
