@@ -1,0 +1,66 @@
+id: k-a3f8b4aa-1c7d-42d3-9bd2-b1d2ea4c2def
+title: EAI HAL library unified contract and scaffolding pattern
+body: |-
+  Every `eai_<hal>` library follows a consistent contract. When creating new libraries, follow this pattern exactly:
+
+  **Naming convention:**
+  - Module lifecycle: `eai_<hal>_init()` / `_deinit()`
+  - Device count: `eai_<hal>_get_device_count()`
+  - Device by index: `eai_<hal>_get_device(index, *out)`
+  - Device by property: `eai_<hal>_find_device(criteria, *out)`
+  - Session open/start/stop/close: `eai_<hal>_<session>_open/start/stop/close()`
+  - Data read/write: `eai_<hal>_<session>_read/write(*s, *data, count, timeout_ms)`
+  - Properties: `eai_<hal>_set_<prop>()` / `eai_<hal>_get_<prop>()`
+  - Test helpers: `eai_<hal>_test_reset()`, `eai_<hal>_test_inject_<input>()`
+
+  **Error semantics:** All return `int`: 0 success, negative errno on failure, positive count for data I/O.
+
+  **Memory model:** Static allocation only. Caller-allocated handles with opaque `_backend[]` array.
+
+  **Backend dispatch:** `types.h` includes `../../src/<backend>/types.h` based on `CONFIG_EAI_<HAL>_BACKEND_*`.
+
+  **File structure per library:**
+  ```
+  lib/eai_<hal>/
+    CLAUDE.md, CMakeLists.txt, Kconfig, zephyr/module.yml
+    include/eai_<hal>/  (eai_<hal>.h umbrella, types.h, device.h, session/layer/event.h)
+    src/posix/          (types.h + <hal>.c test stub)
+    src/zephyr/         (types.h + <hal>.c real backend)
+    tests/native/       (CMakeLists.txt, main.c, unity/)
+  ```
+
+  **POSIX test backend must provide:** `test_reset()` (setUp), `test_inject_*()` (input), `test_get_*()` (output capture).
+
+  **Native test CMake pattern:** Define `CONFIG_EAI_<HAL>_BACKEND_POSIX`, `EAI_<HAL>_TEST`, plus any `CONFIG_EAI_<HAL>_MAX_*` defines. Link vendored Unity.
+
+  **Existing libraries following this pattern:** eai_audio (reference), eai_sensor, eai_display, eai_input, eai_osal, eai_ble, eai_wifi, eai_settings, eai_ipc.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - eai_audio
+  - eai_sensor
+  - eai_display
+  - eai_input
+  - eai_osal
+file_patterns:
+- '**/lib/eai_*/include/**'
+- '**/lib/eai_*/src/**'
+- '**/lib/eai_*/CLAUDE.md'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-19
+updated: 2026-02-19
+author: claude
+source_session: null
+tags:
+- eai
+- hal
+- library-pattern
+- posix-backend
+- unity-tests
