@@ -1,0 +1,60 @@
+id: k-706dd85f-9a56-4d80-b227-0529b0dc3e6c
+title: Alif E7 ISP full protocol flow for MRAM programming
+body: |-
+  Complete ISP protocol flow for writing images to MRAM via SE-UART:
+
+  1. START_ISP (0x00) → ACK (0xFE)
+  2. SET_MAINTENANCE (0x16) → ACK
+  3. STOP_ISP (0x01) → ACK
+  4. RESET_DEVICE (0x09) → device reboots (no response)
+  5. Close serial, wait 5s for reboot
+  6. Reconnect serial
+  7. START_ISP (0x00) → ACK (now in maintenance mode)
+  8. ENQUIRY (0x0F) → DATA_RESP (0xFD) with device info
+     - Byte 9 of response = maintenance mode flag (1=enabled)
+  9. BURN_MRAM (0x08) + struct.pack('<II', addr, size) → ACK
+  10. DOWNLOAD_DATA (0x04) + seq(2B) + data(240B) → ACK per chunk
+      - Repeat until all data sent
+  11. DOWNLOAD_DONE (0x05) → ACK
+  12. STOP_ISP (0x01)
+  13. RESET_DEVICE (0x09) → final reboot
+
+  Packet format: [length, cmd, data..., checksum]
+  - length includes itself and checksum: len(cmd + data) + 2
+  - checksum: (0 - sum(all_bytes)) & 0xFF
+
+  Response types:
+  - CMD_ACK (0xFE): Success acknowledgment
+  - CMD_DATA_RESP (0xFD): Data response (with payload)
+
+  Settings: 55000 baud, 8N1, no flow control
+  Timeout: 2s per response
+  Data rate at 55000 baud: ~4KB/s effective
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  - isp
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- isp
+- protocol
+- mram
+- flash

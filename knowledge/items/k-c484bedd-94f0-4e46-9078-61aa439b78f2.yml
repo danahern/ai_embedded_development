@@ -1,0 +1,51 @@
+id: k-c484bedd-94f0-4e46-9078-61aa439b78f2
+title: Alif E7 MRAM is write-protected from JLink SWD after SE boot
+body: |-
+  MRAM (0x80000000+) cannot be written via JLink SWD after the Secure Enclave has booted. Writes either fail silently or return "Failed to write memory".
+
+  This means:
+  - Cannot patch DTB/kernel/TF-A in MRAM via debugger
+  - Cannot use JLink as a fallback for ISP programming
+  - Must use SETOOLS ISP protocol via SE-UART for all MRAM writes
+  - AXI-AP (AP[2]) direct writes also fail
+
+  If ISP is also broken (e.g., firewall exception flood), the only recovery path is Hard Maintenance Mode via the SETOOLS maintenance tool + physical RESET button.
+
+  JLink CAN:
+  - Read MRAM (with MMU disabled)
+  - Write SRAM (0x02000000-0x023FFFFF)
+  - Halt/resume A32 cores
+  - Drive nRESET pin (SetRESET/ClrRESET)
+  - Read/write CP15 registers (RCE/WCE commands)
+
+  To disable MMU for raw memory access via JLink:
+    RCE 0,1,0,0     → read SCTLR
+    WCE 0,1,0,0,<value & ~1>  → clear bit 0 (MMU enable)
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  - alif_e7_devkit
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- mram
+- write-protect
+- jlink
+- swd
+- debug

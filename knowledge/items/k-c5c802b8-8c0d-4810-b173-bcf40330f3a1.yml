@@ -1,0 +1,65 @@
+id: k-c5c802b8-8c0d-4810-b173-bcf40330f3a1
+title: Alif E7 XIP kernel memory layout and address mapping
+body: |-
+  Alif E7 Linux XIP kernel memory layout:
+
+  Physical memory:
+  - SRAM: 0x02000000 - 0x023FFFFF (4MB actual on AK-E7-AIML)
+  - MRAM: 0x80000000 - 0x805BFFFF (5.76MB)
+
+  MRAM image layout (from app-cfg.json):
+  - 0x80002000: bl32.bin (TF-A, ~20KB)
+  - 0x80010000: appkit-e8.dtb (Device Tree, ~33KB)
+  - 0x80020000: xipImage (Linux kernel, ~3.3MB)
+  - 0x80380000: core-image-minimal.cramfs-xip (rootfs, ~1.2MB)
+
+  Kernel config:
+  - CONFIG_XIP_KERNEL=y, CONFIG_XIP_PHYS_ADDR=0x80020000
+  - CONFIG_PHYS_OFFSET=0x02000000 (SRAM base)
+  - CONFIG_PAGE_OFFSET=0xC0000000 (VMSPLIT_3G)
+  - CONFIG_XIP_DEFLATED_DATA=y
+  - CONFIG_MTD_PHYSMAP_START=0x80380000, CONFIG_MTD_PHYSMAP_LEN=0x200000
+
+  Virtual address mapping (from swapper_pg_dir at physical 0x02004000):
+  - VA 0xBF800000 → PA 0x80000000 (MRAM, XIP text)
+  - VA 0xC0000000 → PA 0x02000000 (SRAM, kernel data)
+  - VA 0xFFFF0000 → 2nd level table at PA 0x027DDC00 (exception vectors)
+
+  Key kernel symbols:
+  - _text/stext: 0xBF820000
+  - swapper_pg_dir: 0xC0004000 (physical: 0x02004000)
+  - __bss_stop/_end: 0xC005CA30
+
+  DTB bootargs: earlycon=uart8250,mmio32,0x4901a000,115200n8 console=ttyS0,115200n8
+  - UART2 (earlycon): 0x4901a000
+  - UART4 (serial0 alias / ttyS0): 0x4901c000
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - memory
+  - linux
+  - dts
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- memory-map
+- xip
+- mram
+- sram
+- kernel
+- addresses

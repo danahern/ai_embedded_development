@@ -1,0 +1,38 @@
+id: k-bffb60b1-5bd2-4a57-808f-3cdd41ad6114
+title: Saleae Async Serial analyzer setting name is "Bit Rate (Bits/s)" not "Bit Rate"
+body: |-
+  When adding an Async Serial analyzer via the Saleae MCP, the baud rate setting name is `"Bit Rate (Bits/s)"`, NOT `"Bit Rate"`. Using the wrong name gives "Invalid setting name" error.
+
+  Correct:
+  ```json
+  {"Input Channel": 0, "Bit Rate (Bits/s)": 115200}
+  ```
+
+  Wrong:
+  ```json
+  {"Input Channel": 0, "Bit Rate": 115200}
+  ```
+
+  Full list of available settings: "Input Channel", "Bit Rate (Bits/s)", "Bits per Frame", "Stop Bits", "Parity Bit", "Significant Bit", "Signal inversion", "Mode".
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - saleae-logic
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- saleae
+- uart
+- async-serial
+- analyzer

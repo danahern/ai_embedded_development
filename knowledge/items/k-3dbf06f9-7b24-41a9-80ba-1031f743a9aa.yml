@@ -1,0 +1,52 @@
+id: k-3dbf06f9-7b24-41a9-80ba-1031f743a9aa
+title: Alif E7 SETOOLS app-write-mram CLI options
+body: |-
+  The app-write-mram tool (Mach-O binary on macOS) supports these options:
+
+    -h, --help        Show help
+    -d, --discover    COM port discovery (lists and prompts for port selection)
+    -b BAUDRATE       Serial port baud rate (default: 55000)
+    -e ERASE          Erase mode: "APP" erases application MRAM, or "<start_addr> <size> [<pattern>]"
+    -i IMAGES         Direct image burn: "/path/image1.bin 0x80001000 /path/image2.bin 0x80003000"
+    -a, --auth_image  Authenticate image by sending signature file
+    -S, --skip        Write ATOC only - skip user managed images
+    -s, --switch      Dynamic baud rate switch toggle (default=on)
+    -p, --pad         Pad binary if size is not multiple of 16
+    -nr, --no_reset   Do not reset target before operation
+    -V, --version     Display version number
+    -v, --verbose     Verbosity mode (shows ISP trace-level protocol output)
+
+  Common workflows:
+    ./app-write-mram                    # Full ATOC + images write (uses build/ dir)
+    ./app-write-mram -e app             # Erase application MRAM
+    ./app-write-mram -i "img.bin 0x80010000"  # Write specific image to address
+    ./app-write-mram -S                 # Write ATOC only, skip images
+
+  The -v flag is useful for reverse-engineering the ISP protocol - it shows raw packet hex.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- app-write-mram
+- mram
+- flash

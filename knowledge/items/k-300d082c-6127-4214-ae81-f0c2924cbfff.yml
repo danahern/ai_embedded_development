@@ -1,0 +1,57 @@
+id: k-300d082c-6127-4214-ae81-f0c2924cbfff
+title: Alif E7 hard maintenance mode recovery via SETOOLS maintenance tool
+body: |-
+  When an Alif E7 board is "bricked" (bad application causes crash that floods SE-UART with firewall exceptions), use Hard Maintenance Mode to recover:
+
+  1. Run: ./maintenance -d
+  2. Select serial port (e.g. /dev/cu.usbmodem...)
+  3. Select "1 - Device Control"
+  4. Select "1 - Hard maintenance mode"
+  5. Press the physical RESET button on the board when prompted
+  6. Press ENTER twice to exit
+
+  Hard maintenance mode:
+  - Always restores SE-UART functionality
+  - No CPU cores boot except Secure Enclave
+  - Stops buggy applications from continuously rebooting
+
+  After entering maintenance mode:
+  - Erase app MRAM: ./app-write-mram -e app
+  - Or directly reflash: ./app-gen-toc && ./app-write-mram
+
+  Alternative erase via maintenance menu:
+  1. ./maintenance → select port
+  2. Select "3 - MRAM"
+  3. Select "3 - Fast Erase App. Mram (include NTOC)"
+
+  The maintenance tool does NOT set the maintenance flag if SE doesn't respond initially. It just waits for a fresh boot (RESET button press) to catch the ISP window.
+
+  Source: https://alifsemi.com/support/faqs/
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- recovery
+- maintenance
+- bricked
+- setools
+- mram

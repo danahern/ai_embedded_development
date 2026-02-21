@@ -1,0 +1,58 @@
+id: k-1552003c-252c-4d39-961b-0b7531a94ba0
+title: Alif E7 SE boot sequence and ISP timing from UART capture
+body: |-
+  Full SE boot sequence captured on SE-UART (55000 baud) after nRESET:
+
+  Timeline (relative to nRESET deassert):
+  1. ~170ms: Binary SEROM output (non-ASCII diagnostic data)
+  2. ~260ms: SES text output begins:
+     - "[SES] STOC DEVICE ok"
+     - "[SES] No LF XTAL" (no low-frequency crystal)
+     - "[SES] Bank 0x0 marked booted"
+     - "[SES] SERAM bank 0x0 is valid and booted"
+  3. ~280ms: ATOC processing:
+     - "[SES] ATOC DEVICE ok"
+     - "[SES] STOC ok"
+     - "[SES] ATOC ok"
+     - "[SES] LCS=1" (Lifecycle State)
+     - "[SES] FC:Rgn.0:2 4:0 4:1 5:0 5:1 7:0 7:1 8:0 8:1 9:0 9:1 11:0 11:1 12:0 12:1 13:0 13:1 13:2"
+  4. ~310ms: Firewall region table printed
+  5. ~340ms: A32 started, kernel crashes → continuous FC5 firewall exceptions:
+     "Firewall exception from FC5, caused by Master ID 0x01 at address 0x025FF000"
+     "Firewall exception from FC5, caused by Master ID 0x01 at address 0x027DDFC0"
+
+  Key observations:
+  - SE does NOT accept ISP commands during SEROM/SES boot sequence
+  - ISP handler only active after SES enters command loop (post-ATOC)
+  - Total boot-to-crash is ~340ms, leaving ~60ms theoretical ISP window
+  - Firewall exceptions are continuous (A32 stuck in fault retry loop)
+  - FC5 = SRAM firewall, Master ID 0x01 = A32 core
+  - Both 0x025FF000 and 0x027DDFC0 are beyond actual 4MB SRAM boundary
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - boot
+  - secure-enclave
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- boot-sequence
+- se-uart
+- firewall
+- timing
+- isp

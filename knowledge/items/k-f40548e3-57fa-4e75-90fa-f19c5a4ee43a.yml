@@ -1,0 +1,41 @@
+id: k-f40548e3-57fa-4e75-90fa-f19c5a4ee43a
+title: Alif E7 Linux kernel boots to EL1 — confirmed via JLink SWD
+body: |-
+  With proper ATOC (including DEVICE config), the Alif E7 boots the full Linux chain: SE → TF-A (bl32.bin at MRAM 0x80002000) → Linux kernel (xipImage at MRAM 0x80020000).
+
+  JLink SWD verification of running kernel:
+  - PC in 0xBFxxxxxx range (kernel virtual text)
+  - CPSR: EL1, Non-secure, SVC mode, IRQs enabled, Thumb-2
+  - SP in 0xC00xxxxx range (kernel virtual stack)
+  - 5 APs visible: AHB-AP, APB-AP, AXI-AP, plus 2 more AHB-APs for M55 cores
+
+  Key indicators vs stub (working baseline):
+  - Stub: PC=0x02000260, EL3, Secure, IRQs masked
+  - Linux: PC=0xBFxxxxxx, EL1, Non-secure, IRQs enabled
+
+  MRAM write via JLink does NOT work (firewall write-protect). Must use ISP/SE-UART for MRAM programming.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- linux
+- boot
+- jlink
+- swd
+- verification

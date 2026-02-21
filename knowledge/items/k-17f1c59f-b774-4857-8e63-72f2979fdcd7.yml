@@ -1,0 +1,32 @@
+id: k-17f1c59f-b774-4857-8e63-72f2979fdcd7
+title: Alif E7 SRAM is 4MB not 8MB - DTB memory node must match actual hardware
+body: "The Alif E7 SoC has 4MB SRAM (0x02000000-0x023FFFFF), NOT 8MB.\nThe upstream Yocto BSP DTB (appkit-e8.dtb) declares memory1 as:\n  reg = <0x2000000 0x7de000>  (~8MB - WRONG)\n\nThis must be patched to:\n  reg = <0x2000000 0x400000>   (4MB - CORRECT)\n\nImpact: With 8MB declared, the kernel allocates page tables at ~0x027DDC00 which is non-existent SRAM. This causes:\n1. Section translation fault at VA 0x80002000 (DFAR)\n2. Vector page table at 0x027DDC00 triggers external abort (IFAR=0xFFFF000C)\n3. CPU enters double-abort lockup at 0xFFFF000C (ABT mode)\n4. FC5 firewall continuously reports exceptions for accesses to 0x025FF000 and 0x027DDFC0\n5. Firewall exception messages flood SE-UART, blocking ISP communication\n\nVerification: Read SRAM with JLink after disabling MMU:\n  mem32 0x02000000,1  → readable\n  mem32 0x023FFFF0,1  → readable  \n  mem32 0x02400000,1  → \"Could not read memory\" (non-existent)"
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - memory
+  - dts
+  - linux
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- sram
+- dtb
+- memory
+- crash
+- firewall

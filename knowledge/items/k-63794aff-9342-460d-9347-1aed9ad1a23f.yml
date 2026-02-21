@@ -1,0 +1,45 @@
+id: k-63794aff-9342-460d-9347-1aed9ad1a23f
+title: Alif E7 SE-UART is JLink VCOM on AK-E7-AIML board
+body: |-
+  On the AK-E7-AIML (AI/ML AppKit), the SE-UART serial port is provided through the on-board J-Link debug probe as a VCOM (Virtual COM port).
+
+  - JLink firmware: "J-Link OB-E1-AlifSemi" (custom Alif JLink)
+  - Single USB connection (PRG_USB) provides: power, SWD debug, VCOM serial
+  - Serial port appears as /dev/cu.usbmodem<JLINK_SERIAL>1 on macOS
+  - Example: JLink serial "001219307699" → port "/dev/cu.usbmodem0012193076991"
+
+  Implications:
+  - Power cycling via uhubctl kills both JLink AND serial port (1.18s to re-enumerate)
+  - JLink SWD and VCOM are independent channels - can use both simultaneously
+  - JLink SetRESET/ClrRESET commands can drive the board's nRESET pin while keeping serial alive
+  - This enables programmatic "reset button" functionality
+
+  SE-UART settings: 55000 baud, 8N1, no flow control (per SETOOLS default)
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  - setools
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- jlink
+- vcom
+- serial
+- se-uart
+- usb

@@ -1,0 +1,48 @@
+id: k-8b270c23-9c66-42cb-8923-7edeec105d7d
+title: Alif E7 TF-A patches required for AK-E7-AIML board
+body: |-
+  Two patches required in TF-A for the AK-E7-AIML (AI/ML AppKit) board:
+
+  1. PERIPH_CLK_ENA removal: The OSPI clock enable register write in devkit_e7_sp_min_setup.c
+     causes a data abort because the register doesn't exist on E7 silicon at that address.
+     Remove the PERIPH_CLK_ENA write.
+
+  2. NPU-HG (Host Gate) removal: NPU Host Gate initialization causes a data abort because
+     the NPU-HG peripheral is not accessible on the AK-E7-AIML board.
+     Remove the NPU-HG initialization code.
+
+  3. Minor: Remove unused `uint32_t value;` variable that triggers -Werror.
+
+  File: plat/alif/ensemble/devkit_e7/devkit_e7_sp_min_setup.c
+  Built via Yocto: bitbake -c compile -f virtual/trusted-firmware-a && bitbake virtual/trusted-firmware-a
+
+  After patching, TF-A boots successfully and hands off to the XIP kernel.
+  Before patching, A32 was stuck at PC=0x800050EC (data abort in TF-A).
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - tfa
+  - boot
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- tfa
+- trusted-firmware
+- patch
+- boot
+- data-abort

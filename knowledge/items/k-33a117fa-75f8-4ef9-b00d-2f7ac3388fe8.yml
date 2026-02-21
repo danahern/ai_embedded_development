@@ -1,0 +1,48 @@
+id: k-33a117fa-75f8-4ef9-b00d-2f7ac3388fe8
+title: uhubctl USB power cycling for embedded board reset
+body: |-
+  uhubctl can power-cycle individual USB hub ports to reset connected devices.
+
+  Install: brew install uhubctl
+
+  Usage:
+    uhubctl                          # Show USB hub topology
+    uhubctl -l 1-1 -p 4 -a off      # Power off hub 1-1 port 4
+    uhubctl -l 1-1 -p 4 -a on       # Power on hub 1-1 port 4
+
+  Key findings:
+  - Not all hubs support per-port power switching (check "ppps" in output)
+  - macOS keeps stale device nodes after power off - check with serial.in_waiting for actual connectivity
+  - USB re-enumeration takes ~1.18s after power on (too slow for Alif ISP window)
+  - Child hub ports may not cut actual power even when parent hub port does
+  - Use -r 0 for no delay, but default timing is more reliable
+
+  For Alif E7 boards: uhubctl power cycle is NOT sufficient for ISP recovery because:
+  1. Board re-enumeration takes ~1.2s
+  2. SE boot + crash happens in ~340ms
+  3. ISP window closes before serial port is functional
+  Use physical RESET button or JLink SetRESET/ClrRESET instead.
+category: operational
+severity: informational
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - uhubctl
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- usb
+- power-cycle
+- uhubctl
+- reset
+- debug

@@ -1,0 +1,52 @@
+id: k-b53e46a5-f5ec-4a8b-a47d-02559a66e13f
+title: JLink SetRESET/ClrRESET drives nRESET pin for full SoC reset on Alif E7
+body: |-
+  JLink Commander's SetRESET and ClrRESET commands drive the hardware nRESET pin directly, triggering a full SoC reset including the Secure Enclave. This is unlike the `r` (Reset) command which only does a debug/core reset of the connected CPU.
+
+  Usage (no debug connection required):
+    JLinkExe -device Cortex-A32 -if SWD -speed 4000 -autoconnect 0 -nogui 1
+    SetRESET      ← assert nRESET (drive low)
+    sleep 200     ← hold reset for 200ms
+    ClrRESET      ← release nRESET (drive high)
+
+  The -autoconnect 0 flag prevents JLink from trying to establish a debug connection (which may fail if the CPU is in a bad state). The reset pin toggle works regardless.
+
+  After nRESET release, the SE boot sequence observed via JLink VCOM:
+  - ~170ms: Binary SEROM data on UART
+  - ~260ms: "[SES] STOC DEVICE ok", "[SES] No LF XTAL", "[SES] SERAM bank valid"
+  - ~280ms: "[SES] ATOC DEVICE ok", "[SES] STOC ok", "[SES] ATOC ok", "[SES] LCS=1"
+  - ~310ms: Firewall region table
+  - ~340ms: A32 starts, kernel crash → firewall exception flood begins
+
+  Total boot-to-crash: ~340ms after nRESET release.
+  ISP window (if any): between SES idle state and firewall flood (~60ms).
+
+  Note: The JLink `r` command requires `RSetType 2` to use reset pin mode, but `SetRESET`/`ClrRESET` work directly without a debug connection.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  - alif_e7_devkit
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- jlink
+- reset
+- nreset
+- soc-reset
+- boot-sequence

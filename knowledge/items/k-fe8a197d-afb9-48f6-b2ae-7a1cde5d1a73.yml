@@ -1,0 +1,41 @@
+id: k-fe8a197d-afb9-48f6-b2ae-7a1cde5d1a73
+title: Alif E7 ISP protocol DOWNLOAD_DATA requires 2-byte sequence numbers
+body: |-
+  The ISP DOWNLOAD_DATA (0x04) packet format is:
+  [length, 0x04, seq_lo, seq_hi, data[240], checksum]
+
+  - 240 bytes of actual data per chunk (not 242)
+  - 2-byte little-endian sequence number counts chunks starting from 0
+  - Total packet: 245 bytes = 1(len) + 1(cmd) + 2(seq) + 240(data) + 1(checksum)
+  - All bytes including length and checksum must sum to 0 mod 256
+
+  The BURN_MRAM (0x08) command takes 8 bytes: struct.pack('<II', mram_addr, image_size)
+  Images must be padded to 16-byte alignment for MRAM writes.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - ak-e7-aiml
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  - isp
+  subsystems: []
+file_patterns: []
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- isp
+- mram
+- setools
+- protocol

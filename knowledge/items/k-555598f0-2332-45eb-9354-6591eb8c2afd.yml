@@ -1,0 +1,50 @@
+id: k-555598f0-2332-45eb-9354-6591eb8c2afd
+title: ATOC must include DEVICE entry (app-device-config.json) for A32 to boot
+body: |-
+  The ATOC JSON config MUST include a DEVICE entry referencing app-device-config.json. Without it, the SE processes the ATOC ("ATOC MISC ok") but the A32 cores never start — no clocks, no firewalls, no pin config.
+
+  Working config structure:
+  ```json
+  {
+      "DEVICE": {
+          "disabled": false,
+          "binary": "app-device-config.json",
+          "version": "0.5.00",
+          "signed": true
+      },
+      "TFA": { ... },
+      "DTB": { ... },
+      "KERNEL": { ... },
+      "ROOTFS": { ... }
+  }
+  ```
+
+  The app-device-config.json contains: firewall regions, clock sources (HFXO/LFXO), oscillator tuning, shared memory control, and register aliasing. The default one from SETOOLS works for the DevKit/AppKit.
+
+  Without DEVICE config: SE shows spinner, UART4 idle, JLink can't find A32 debug registers. With DEVICE config: A32 boots, full SWD debug works, 5 APs visible.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/linux-boot-e7.json'
+- '**/app-*-config*.json'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- atoc
+- device-config
+- boot

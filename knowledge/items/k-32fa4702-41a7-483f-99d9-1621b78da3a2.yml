@@ -1,0 +1,35 @@
+id: k-32fa4702-41a7-483f-99d9-1621b78da3a2
+title: app-write-mram GET_REVISION only works in maintenance mode; use -nr to skip it
+body: |-
+  The `app-write-mram` tool's GET_REVISION command (0x14, sub 0x02) returns a malformed response (cmd=0xFC, 251 bytes) when the SE is NOT in maintenance mode. This causes "Malformed packet received from target" error.
+
+  Two workarounds:
+  1. **Use -nr flag**: Skips GET_REVISION, writes ATOC package only. Individual images must be written separately (e.g., via custom isp_write_all.py script).
+  2. **Enter maintenance mode first**: Use programmatic ISP commands (START_ISP → SET_MAINTENANCE → STOP_ISP → RESET_DEVICE) or the maintenance tool + physical RESET button. In maintenance mode, GET_REVISION returns proper 136-byte response with part number, and app-write-mram writes ALL images (ATOC + binaries) in one shot.
+
+  Full write (maintenance mode) is preferred — it writes device config, ATOC, and all image binaries correctly. The -nr workaround misses individual image binaries.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- app-write-mram
+- maintenance-mode
+- flash

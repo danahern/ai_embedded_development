@@ -1,0 +1,38 @@
+id: k-e09d747d-1519-42bd-9434-203c1921a881
+title: 'Programmatic maintenance mode via ISP: START_ISP → SET_MAINTENANCE → STOP_ISP → RESET_DEVICE'
+body: |-
+  The SE can be put into maintenance mode programmatically over SE-UART without the interactive maintenance tool or physical RESET button.
+
+  Sequence at 57600 baud on SE-UART:
+  1. Send START_ISP (0x00) — wait for ACK (0xFE)
+  2. Send SET_MAINTENANCE (0x16) — wait for ACK
+  3. Send STOP_ISP (0x01) — wait for ACK
+  4. Send RESET_DEVICE (0x09) — board reboots into maintenance mode
+
+  This works when the SE is in normal running state (showing the spinner). All commands get ACKed. After reset, the board comes up in maintenance mode and app-write-mram works with full GET_REVISION support.
+
+  Packet format: [length, cmd, checksum] where length = payload_len + 2, checksum = (0 - sum(all_bytes)) & 0xFF.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- isp
+- maintenance-mode
+- recovery
