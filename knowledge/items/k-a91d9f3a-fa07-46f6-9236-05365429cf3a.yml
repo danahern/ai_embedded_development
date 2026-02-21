@@ -1,0 +1,31 @@
+id: k-a91d9f3a-fa07-46f6-9236-05365429cf3a
+title: Alif E7 4MB SRAM causes kernel OOM panic — need OSPI RAM or minimal kernel config
+body: "The Alif E7 AppKit has 4MB SRAM (not 8MB as the devkit-e8 DTB originally declared). With the corrected 4MB DTB, Linux boots but immediately panics with OOM:\n\n```\n1024 pages RAM (4MB)\nmanaged:3512kB (usable after kernel reserves)\nfree:200kB → OOM\nKernel panic - not syncing: System is deadlocked on memory\n```\n\nThe kernel + all driver probes consume nearly all 3.5MB of usable RAM. Key memory consumers visible in boot log:\n- DWC3 USB controller + g_serial gadget\n- SDHCI MMC driver  \n- 16 hardware semaphore instances\n- workqueue: \"Failed to create a worker thread: -11\" (EAGAIN — no memory)\n\nOptions to fix:\n1. **Use OSPI RAM** — The AK-E7-AIML has OSPI0 RAM (Conductor config has OSPI0 pins). Could be mapped as additional system memory via DTB. This is the main path for usable Linux.\n2. **Strip kernel config** — Disable unused drivers (MMC, USB, I2C, etc.) to reduce memory footprint. May get minimal boot but limits functionality.\n3. **XIP optimizations** — Ensure kernel text executes from MRAM (XIP), only data/BSS in SRAM.\n\nThe `workqueue: Failed to create a worker thread: -11` error appears BEFORE the OOM killer — this is the first sign of memory exhaustion."
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - linux
+  - memory
+file_patterns:
+- '**/alif-e7/**'
+- '**/*appkit-e8*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- oom
+- sram
+- memory
+- kernel-panic
+- ospi-ram

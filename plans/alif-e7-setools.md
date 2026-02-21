@@ -243,5 +243,6 @@ Patched bl32.bin flashed via custom ISP script (`isp_write_image.py`).
 - **RESOLVED — Board bricked**: Programmatic maintenance mode via ISP commands. No physical button needed.
 - **RESOLVED — Missing device config**: ATOC must include DEVICE entry for A32 to boot.
 - **RESOLVED — Baud rate mismatch**: E7 config says 55000 but SE actually runs 57600. Use `-b 57600`.
-- **CURRENT — No console output**: UART4 lines idle. Need J15 jumpers or UART4 pinmux in device config.
+- **RESOLVED — No console output**: Console is on UART2 (ttyS0), not UART4. J15 in UART2 position + Conductor device config with full pinmux/clocks. Full boot log captured via JLink reset + UART2 listen.
+- **CURRENT — OOM at 4MB SRAM**: Kernel boots but panics with OOM. 4MB SRAM not enough. OSPI0 RAM (32MB at 0xA0000000) needs to be added to DTB memory node.
 - **ADB not in current build**: apss-tiny cramfs-xip is minimal. ADB requires rebuild with additional packages.

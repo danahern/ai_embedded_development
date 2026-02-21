@@ -32,7 +32,7 @@ Brought up Linux on the Alif Ensemble E7 SoC for the first time. The E7 is a com
 - Multiple recovery scripts attempted (isp_precision, isp_recover, isp_aggressive)
 - **Lesson learned**: stop automating when you're going in circles
 
-### Session 4: Recovery + First Boot (This Session)
+### Session 4: Recovery + First Boot
 - User manually entered maintenance mode (maintenance tool + physical RESET)
 - Erased MRAM, wrote ATOC + images via `app-write-mram -nr` + custom `isp_write_all.py`
 - Board reset — SE-UART quiet (no firewall flood!), but no Linux console output
@@ -44,6 +44,25 @@ Brought up Linux on the Alif Ensemble E7 SoC for the first time. The E7 is a com
 - Discovered programmatic maintenance mode (START_ISP → SET_MAINTENANCE → STOP_ISP → RESET)
 - Full flash via `app-write-mram -v -p -b 57600` in maintenance mode
 - **JLink SWD confirmed: Linux kernel running at EL1, Non-secure, IRQs enabled, PC in 0xBFxxxxxx**
+
+### Session 5: Console Output + OOM Discovery (This Session)
+- Generated proper device config via Alif Conductor tool (conductor.alifsemi.com)
+  - Old config had `"pinmux": []` and `"clocks": {}` — completely empty
+  - Conductor auto-populates ~70 pin entries for the AK-E7-AIML board template
+  - User only had to enable UART2 and UART4; everything else (OSPI, I2C, I2S, camera, WiFi SPI) came from the board profile
+- Replaced `app-device-config.json` with Conductor-generated version, regenerated ATOC (7,056 bytes)
+- Full flash via maintenance mode + `app-write-mram -v -p -b 57600`
+- **First serial console output achieved!** TF-A boot messages → kernel boot log → OOM panic
+- **Key discovery: UART mapping is opposite of what we assumed**
+  - ttyS0 = UART2 (0x4901a000) — this is the main console (DTB serial0 alias)
+  - ttyS1 = UART4 (0x4901c000) — secondary UART, registered after driver probe
+  - J15 must be in UART2 position for console output, not UART4
+- **JLink reset + serial listen pattern**: Reset board via JLink while listening on UART2 captures full boot log from TF-A through kernel panic
+- **Kernel panics with OOM (Out of Memory)**:
+  - 4MB SRAM → 3.5MB usable after kernel reserves → OOM during driver init
+  - `workqueue: Failed to create a worker thread: -11` (first sign of exhaustion)
+  - `Kernel panic - not syncing: System is deadlocked on memory`
+  - USB DWC3, SDHCI, 16 hardware semaphores all consume RAM before init completes
 
 ## What Went Well
 
@@ -67,7 +86,7 @@ Brought up Linux on the Alif Ensemble E7 SoC for the first time. The E7 is a com
 
 4. **DTB binary patch instead of source fix**. Patching the DTB binary at a hardcoded offset works but is fragile. Should fix in the Yocto DTS source so rebuilds produce the correct DTB automatically.
 
-5. **No serial console visibility yet**. The kernel is running but we can't see its output. The UART4 console needs J15 jumpers or device config pinmux changes. This should have been investigated earlier.
+5. **Assumed UART4 was the console**. We spent time probing UART4 with J15 jumpers and Saleae before discovering ttyS0 = UART2 (not UART4). The DTB alias determines the mapping, and the earlycon address (0x4901a000 = UART2) was the clue all along.
 
 ## Key Technical Learnings
 
@@ -82,14 +101,20 @@ Brought up Linux on the Alif Ensemble E7 SoC for the first time. The E7 is a com
 | `app-cpu-stubs.json` is the baseline sanity check | **Pattern** — always verify with known-good before debugging custom config |
 | UART4 console needs J15 jumpers on AppKit | **Hardware** — no second serial port without them |
 | DTB SRAM size must match actual hardware | **Critical** — mismatch causes double fault + brick |
+| ttyS0 = UART2 (0x4901a000), not UART4 | **Critical** — DTB aliases determine mapping, not physical UART number |
+| Conductor tool auto-populates board pinmux | **Important** — select board, enable UARTs, get 70+ pins for free |
+| 4MB SRAM causes OOM at kernel init | **Critical** — need OSPI RAM or stripped kernel config |
+| JLink reset captures full boot log | **Pattern** — reset via JLink while listening on UART2 |
+| Empty pinmux/clocks = no peripherals | **Critical** — default device config has empty arrays, must use Conductor |
 
 ## Remaining Work
 
-1. **Get serial console working**: Install J15 jumpers on AppKit board, or add UART4 pinmux to app-device-config.json
-2. **Fix DTB in Yocto source**: Patch the DTS file in the kernel recipe, not the binary
-3. **Verify full boot**: Login prompt, networking, etc.
-4. **ADB support**: Add to Yocto image, test USB OTG
-5. **Automate the flash workflow**: Single script: gen-toc → maintenance mode → write-mram
+1. ~~**Get serial console working**~~: **DONE** — J15 on UART2 position, Conductor device config with pinmux
+2. **Enable OSPI0 RAM**: Add 32MB OSPI0 RAM (0xA0000000-0xA1FFFFFF) to DTB memory node to solve OOM
+3. **Fix DTB in Yocto source**: Patch the DTS file in the kernel recipe, not the binary
+4. **Verify full boot**: Login prompt, networking, etc.
+5. **ADB support**: Add to Yocto image, test USB OTG
+6. **Automate the flash workflow**: Single script: gen-toc → maintenance mode → write-mram
 
 ## Patterns to Reuse
 

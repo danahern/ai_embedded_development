@@ -1,0 +1,49 @@
+id: k-590d5102-d8c7-43a6-836b-aac63f60c74d
+title: 'Alif E7 UART mapping: ttyS0=UART2 (0x4901a000), ttyS1=UART4 (0x4901c000)'
+body: |-
+  On the Alif E7 with the appkit-e8 DTB, the Linux serial mapping is:
+  - ttyS0 = UART2 at 0x4901a000 (aliased as serial0 in DTB) — this is the console
+  - ttyS1 = UART4 at 0x4901c000 — registered as secondary
+
+  The DTB bootargs use `earlycon=uart8250,mmio32,0x4901a000,115200n8 console=ttyS0,115200n8`.
+
+  Earlycon is on UART2 (direct register writes before driver probe). The main console (ttyS0) is ALSO UART2. UART4 appears as ttyS1 after driver probe.
+
+  On the AK-E7-AIML AppKit, J15 jumpers select which UART routes to the JLink VCOM port. Use UART2 position for console output. The console log shows:
+  ```
+  printk: legacy console [ttyS0] enabled
+  printk: legacy bootconsole [uart8250] disabled
+  4901c000.serial: ttyS1 at MMIO 0x4901c000
+  ```
+
+  This is opposite to what was initially assumed (that UART4/ttyS0 was the console).
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - console
+  - linux
+file_patterns:
+- '**/alif-e7/**'
+- '**/*appkit-e8*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- uart
+- console
+- ttyS0
+- ttyS1
+- j15
+- earlycon

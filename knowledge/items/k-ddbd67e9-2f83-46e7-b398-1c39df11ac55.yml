@@ -1,0 +1,46 @@
+id: k-ddbd67e9-2f83-46e7-b398-1c39df11ac55
+title: Alif E7 JLink reset captures full boot log — reset + listen pattern
+body: |-
+  To capture the full Linux boot log on Alif E7, use JLink to reset the board while simultaneously listening on the console UART:
+
+  1. Open serial port on UART2 (console) at 115200 baud
+  2. Send JLink reset command: `connect → Cortex-A32 → SWD → 4000 → reset → go → q`
+  3. Capture output for 20+ seconds
+
+  This works because JLink reset triggers the full SE boot sequence (SE → TF-A → kernel). The serial listener catches everything from TF-A NOTICE messages through kernel boot.
+
+  Python pattern:
+  ```python
+  # Start listening first, then reset via JLink in background thread
+  ser = serial.Serial(port, 115200, timeout=1)
+  subprocess.run(['JLinkExe'], input='connect\nCortex-A32\nSWD\n4000\nreset\ngo\nq\n', ...)
+  # Read serial for 20s
+  ```
+
+  Note: JLink reset is a CPU reset, but the SE re-runs the full boot sequence including ATOC processing. This is different from a power cycle — MRAM contents are preserved.
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - setools
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- jlink
+- reset
+- boot-log
+- uart
+- debug

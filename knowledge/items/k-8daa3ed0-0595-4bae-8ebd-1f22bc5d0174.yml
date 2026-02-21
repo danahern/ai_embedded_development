@@ -1,0 +1,58 @@
+id: k-8daa3ed0-0595-4bae-8ebd-1f22bc5d0174
+title: Alif Conductor device config JSON format — pinmux, clocks, firewall, miscellaneous
+body: |-
+  The Alif Conductor tool (conductor.alifsemi.com) generates `app-device-config.json` with these sections:
+
+  **metadata**: device part number, project name, external clock sources (HFXO, LFXO enable + frequency)
+
+  **firewall**: firewall_components array with region configs (component_id, start/end address, permissions, master access)
+
+  **pinmux**: Array of pad entries, each with:
+  ```json
+  {
+      "pad_id": "P12_1",           // Port.Pin identifier
+      "label": "UARTB",           // Human label (nullable)
+      "port": 12, "pin": 1,       // Numeric port/pin
+      "location": "E18",           // Ball/package location
+      "function": "UART4_RX_B",   // Mux function name
+      "mux_mode": 2,               // Mux selection (0=GPIO, 1-7=alt functions)
+      "pad_config": "0x29",        // Pad electrical config
+      "reg_address": "0x1A603184"  // PINMUX register address
+  }
+  ```
+
+  Pad config values: 0x20=output-no-pull, 0x28=output-push-pull, 0x29=input-pull-up, 0x2b=input-pull-up-irq, 0x64=high-speed-output, 0x65=high-speed-bidir
+
+  **clocks**: change_sets array with register read-modify-write operations (address, mask, value)
+
+  **miscellaneous**: Array of config options (SE_BOOT_INFO, ISP_MAINTENANCE_SUPPORT, FW/PINMUX/CLOCK_RUNTIME_CFG, OSPI bus speeds, board feature counts)
+
+  The Conductor pre-populates board-default pins when you select a board. For AK-E7-AIML this includes ~70 entries (OSPI RAM/Flash, I2C, I2S, SPI, camera, WiFi, JTAG, GPIO).
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools:
+  - conductor
+  - setools
+  subsystems: []
+file_patterns:
+- '**/app-device-config.json'
+- '**/setools/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- conductor
+- pinmux
+- device-config
+- clocks
+- firewall
