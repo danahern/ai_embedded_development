@@ -1,0 +1,41 @@
+id: k-bb5ca30f-4fe8-4751-b6d5-c5b6121dbba9
+title: Alif E7 Yocto uses OE zeus (3.0) with _append syntax, NOT scarthgap :append
+body: |-
+  The official Alif E7 build system uses the alifsemi/alif_linux-apss-build-setup orchestrator which pulls OE zeus (Yocto 3.0), NOT scarthgap.
+
+  Critical differences from scarthgap:
+  - Syntax: _append/_remove (NOT :append/:remove — zeus doesn't support colon syntax)
+  - CONF_VERSION = "1" (not "2")
+  - MACHINE = "appkit-e7" (exists on devkit-ex-b0 branch; scarthgap has NO appkit-e7.conf)
+  - Kernel: 5.4.25 (devkit-b0-5.4.y), NOT v6.12-dev
+  - TF-A: alif_arm-tf repo (devkit-ex-b0 branch), NOT trusted-firmware-a_alif
+  - Docker: apss/ubuntu-builder:v18.04
+
+  The orchestrator generates auto.conf with MACHINE, DISTRO, BSP source URLs. local.conf should only contain customizations, NOT override these.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips: []
+  tools: []
+  subsystems:
+  - yocto
+  - build-system
+file_patterns:
+- '**/build-alif-e7/conf/**'
+- '**/meta-eai/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- alif-e7
+- yocto
+- zeus
+- syntax
+- orchestrator

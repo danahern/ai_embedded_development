@@ -1,0 +1,44 @@
+id: k-e8bedf3f-0018-42a7-b935-9cc21f5e10ff
+title: PicoClaw Go binary is 15MB — too large for Alif E7 MRAM cramfs
+body: |-
+  PicoClaw (sipeed/picoclaw) cross-compiles to a 15MB statically-linked ARM binary (GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0). This is 3x larger than the Alif E7 cramfs-xip rootfs capacity (~5.7MB MRAM).
+
+  For Alif E7, PicoClaw must be stored externally and loaded into PSRAM at runtime:
+  - Option A: ADB push to tmpfs (backed by 64MB OSPI PSRAM)
+  - Option B: External SPI flash partition
+  - Option C: Network download at boot
+
+  For STM32MP1 (512MB DDR3L, SD card rootfs), the 15MB binary fits comfortably in the Yocto image via the picoclaw-bin recipe.
+
+  Build command: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -tags stdjson -ldflags "-s -w" -o picoclaw ./cmd/picoclaw
+
+  The binary is statically linked with no CGO — runs on both musl (apss-tiny) and glibc systems.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - stm32mp157d_dk1
+  chips: []
+  tools: []
+  subsystems:
+  - picoclaw
+  - yocto
+  - cramfs
+file_patterns:
+- '**/picoclaw/**'
+- '**/meta-eai/recipes-apps/picoclaw/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- picoclaw
+- go
+- cross-compilation
+- mram
+- binary-size
