@@ -1,0 +1,40 @@
+id: k-0f06e72c-cd75-4e86-a636-3c5987f6e22b
+title: Bitbake kernel config fragments require cleansstate to remove
+body: |-
+  When removing a kernel config fragment from SRC_URI in a bbappend (e.g., commenting out `SRC_URI += "file://usb-gadget-adb.cfg"`), Bitbake does NOT regenerate the kernel .config from scratch. The old .config is cached and reused, keeping the removed fragment's options enabled.
+
+  **Fix**: Run `bitbake linux-alif -c cleansstate` before rebuilding. This purges the cached .config and forces regeneration from defconfig + remaining fragments.
+
+  **Verified**: Removed both `usb-gadget-adb.cfg` and `display-drm.cfg` fragments. Without cleansstate: kernel remained 3,162,244 bytes with USB+DRM still in .config. After cleansstate: kernel dropped to 2,851,324 bytes with DRM properly removed.
+
+  Note: The base `appkit_e7` defconfig has `# CONFIG_USB_SUPPORT is not set` and `# CONFIG_DRM is not set`, but the final kernel still has `CONFIG_USB_DWC3=y` — USB DWC3/gadget appears to be enabled by the kernel recipe or in-tree defconfig, not our fragments. Only DRM and USB gadget functions (configfs, ECM, functionfs) were actually added by our fragments.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips: []
+  tools:
+  - bitbake
+  - yocto
+  subsystems:
+  - kernel
+  - config-fragments
+file_patterns:
+- '**/meta-eai/recipes-kernel/**'
+- '**/linux-alif*.bb*'
+- '**/*.cfg'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- bitbake
+- cleansstate
+- kernel-config
+- defconfig
+- alif-e7

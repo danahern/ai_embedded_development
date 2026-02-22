@@ -1,0 +1,49 @@
+id: k-f41c3a3e-1d44-45d7-9f16-ebc4027fd550
+title: 'Alif E7 kernel size: DRM+USB fragments add ~311KB, base defconfig kernel is ~2.16MB'
+body: |-
+  The Alif E7 kernel size varies significantly with config fragments:
+
+  | Configuration | Size | Fits MRAM (2.875MB)? |
+  |---|---|---|
+  | Base defconfig only (no fragments) | ~2,162,000 bytes (2.06MB) | Yes (720KB margin) |
+  | Base + display-drm.cfg | ~2,851,324 bytes (2.72MB) | Yes (32KB margin) |
+  | Base + display-drm.cfg + usb-gadget-adb.cfg | ~3,162,244 bytes (3.01MB) | NO (over by 279KB) |
+
+  **display-drm.cfg** adds: `CONFIG_DRM=y`, `CONFIG_DRM_CDC200=y`, `CONFIG_MIPI_DSI=y`, `CONFIG_FB=y`, `CONFIG_FRAMEBUFFER_CONSOLE=y`, `CONFIG_DRM_FBDEV_EMULATION=y` plus all DRM helper subsystems. Total impact: ~689KB.
+
+  **usb-gadget-adb.cfg** adds: `CONFIG_USB_CONFIGFS=y`, `CONFIG_USB_F_FS=y` (FunctionFS for ADB), `CONFIG_USB_ETH=y` (CDC-ECM). Total impact: ~311KB.
+
+  Note: `CONFIG_USB_DWC3=y`, `CONFIG_USB_GADGET=y`, and `CONFIG_USB_G_SERIAL=y` are present even with NO fragments — they come from the kernel recipe or in-tree defconfig, not from our fragments.
+
+  **MRAM-only build**: Must disable BOTH fragments. DRM alone leaves only 32KB margin which may be fragile.
+  **OSPI build**: Both fragments can be enabled (OSPI has 32-64MB capacity).
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - AE722F80F55D5
+  tools: []
+  subsystems:
+  - kernel
+  - mram
+file_patterns:
+- '**/meta-eai/recipes-kernel/**'
+- '**/*.cfg'
+- '**/local.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- kernel-size
+- config-fragments
+- drm
+- usb
+- mram
+- alif-e7

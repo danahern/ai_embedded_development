@@ -1,0 +1,44 @@
+id: k-07b784db-5c94-4e98-aa0f-95ca55a7e860
+title: SETOOLS v1.107 does NOT support OSPI flash programming
+body: |-
+  The Alif SETOOLS (v1.107.0) only support MRAM addresses for flash programming. Confirmed by:
+
+  1. **SE-UART ISP protocol**: `CMD_BURN_MRAM` (0x08) rejects addresses outside MRAM range. Tested with 0xC0000000 — immediately rejected (no ACK).
+  2. **gen_toc tool**: Only validates MRAM address space (0x80000000, ~5.7MB). OSPI addresses cause "Images DO NOT FIT" error.
+  3. **Documentation**: Valid LoadAddress Regions table (page 31) lists only SRAM (0x50000000-0x63200000) and MRAM (0x80000000). No OSPI.
+  4. **app-write-mram**: The `-i` option writes to NVM (MRAM only).
+
+  **To program OSPI NOR flash (0xC0000000+)**, you must either:
+  - Program from running Linux using MTD tools
+  - Use Alif's unreleased PC flashtool
+  - Write a custom flash loader
+
+  The `OSPI_BOOT=1` build config changes kernel/TF-A addresses correctly, but the SETOOLS provide no mechanism to actually write images to OSPI NOR flash.
+category: tooling
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - setools
+  - alif-flash
+  subsystems:
+  - ospi
+  - flash
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- ospi
+- setools
+- flash
+- mram
+- limitation

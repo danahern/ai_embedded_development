@@ -1,0 +1,47 @@
+id: k-80cfe850-8595-47cb-8254-d20b98fa14c8
+title: Alif E7 MRAM JLink write fails for kernel >2.7MB at consistent address
+body: |-
+  JLink `loadbin` consistently fails writing the kernel (2,851,324 bytes) to MRAM at 0x80020000. The failure occurs at address 0x802D81F0 (offset 2,851,312 — 12 bytes from end of file).
+
+  **Symptoms**:
+  - First attempt: loadbin appears to succeed but `verifybin` fails at 0x802D81F0 (expected 0x90, read 0x44)
+  - Subsequent attempts (even after power cycle): `loadbin` itself reports "Writing target memory failed"
+  - Other components (TFA 30KB, DTB 31KB, rootfs 1.9MB at 0x80300000) all write and verify successfully
+  - The original working kernel (2,162,xxx bytes, ending ~0x80230000) flashed fine
+
+  **Not yet diagnosed**: Could be MRAM firewall boundary, JLink buffer limitation for large contiguous writes, or MRAM region access restriction set by SE after boot. The address 0x802D81F0 is consistent across power cycles and fresh JLink sessions.
+
+  **MRAM layout**: Kernel slot is 0x80020000-0x80300000 (2,883,584 bytes = 2.875MB). The 2.85MB kernel SHOULD fit with 32KB margin but the write fails at ~2.72MB offset.
+
+  **Status**: Unresolved. May need: (1) writing in smaller chunks, (2) different JLink speed, (3) writing via AXI-AP instead of AHB-AP, or (4) investigating SE firewall configuration.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  - jlink_flash
+  subsystems:
+  - mram
+  - flash
+file_patterns:
+- '**/alif-flash/**'
+- '**/jlink*.py'
+- '**/jlink*.jlink'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- mram
+- jlink
+- loadbin
+- write-failure
+- alif-e7

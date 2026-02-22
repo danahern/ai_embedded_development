@@ -73,12 +73,22 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 
 ## CRITICAL: MCP-First Policy
 
-**ALWAYS use MCP tools for operations they support. NEVER shell out to CLI equivalents (addr2line, west, idf.py, nrfjprog, etc.).**
+**ALWAYS use MCP tools for operations they support. NEVER shell out to CLI equivalents (addr2line, west, idf.py, nrfjprog, JLinkExe, etc.).**
 
 If an MCP tool fails:
 1. **STOP and tell the user.** Explain which tool failed and why.
-2. **Suggest the fix** — e.g., rebuild the MCP server and restart.
+2. **Fix the MCP server or expand its functionality** — do NOT work around it with raw CLI commands. Every workaround is a missed opportunity to standardize device interactions.
 3. **Do NOT silently fall back** to raw CLI commands.
+
+## CRITICAL: Learn and Retain
+
+**When you discover the right approach to something, verify it works first, then capture it so it loads automatically next session.**
+
+1. **Verify before capturing** — Don't capture knowledge on first discovery. Confirm the approach actually works end-to-end. Wrong knowledge is worse than no knowledge.
+2. **Capture after confirmation** — Once verified working, use `knowledge.capture()` or `/learn` for hardware discoveries, protocol quirks, tooling constraints.
+3. **Update rules** — If the learning affects how you interact with specific files or hardware, add or update a `.claude/rules/*.md` file so it auto-injects when relevant files are edited.
+4. **Update gotchas** — If it's critical enough to affect every session, add it to the Key Gotchas section above and run `knowledge.regenerate_gotchas()`.
+5. **Never repeat the same mistake** — If you find yourself doing the same wrong thing twice, that's a signal the knowledge wasn't captured correctly. Stop and fix the knowledge gap before continuing.
 
 ## MCP Servers
 

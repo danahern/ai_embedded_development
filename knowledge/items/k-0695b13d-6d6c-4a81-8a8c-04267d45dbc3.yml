@@ -1,0 +1,45 @@
+id: k-0695b13d-6d6c-4a81-8a8c-04267d45dbc3
+title: 'Alif Docker build: bitbake path requires symlink for oe-init-build-env'
+body: |-
+  In the Alif `alif-apss-build` Docker container, `oe-init-build-env` expects bitbake at `$OEROOT/bitbake` or `$OEROOT/../bitbake`. The actual bitbake binary is at `/home/apssbuilder/apss-build-setup/tools/bitbake`, not the expected location.
+
+  **Fix**: Create a symlink before sourcing oe-init-build-env:
+  ```bash
+  ln -sf /home/apssbuilder/apss-build-setup/tools/bitbake /home/apssbuilder/apss-build-setup/layers/bitbake
+  ```
+
+  Then source as:
+  ```bash
+  cd /home/apssbuilder/apss-build-setup/layers && source openembedded-core/oe-init-build-env /home/apssbuilder/apss-build-setup/build-alif-e7
+  ```
+
+  Without the symlink, you get: `Error: The bitbake directory (/home/apssbuilder/apss-build-setup/layers/bitbake) does not exist!`
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips: []
+  tools:
+  - bitbake
+  - yocto
+  - docker
+  subsystems:
+  - build-system
+file_patterns:
+- '**/local.conf'
+- '**/bblayers.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- bitbake
+- docker
+- oe-init
+- symlink
+- alif-e7
