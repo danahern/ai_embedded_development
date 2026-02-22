@@ -450,42 +450,58 @@ section ".mcp.json Generation"
 info "Generating .mcp.json with absolute paths..."
 
 python3 -c "
-import json, sys
+import json, os
 
 workspace = '$WORKSPACE_DIR'
-servers = {}
+mcp_path = workspace + '/.mcp.json'
+
+# Load existing .mcp.json to preserve entries not built in this run
+existing = {}
+if os.path.exists(mcp_path):
+    try:
+        with open(mcp_path) as f:
+            existing = json.load(f).get('mcpServers', {})
+    except Exception:
+        pass
+
+# Start from existing config, update only entries built in this run
+servers = dict(existing)
 
 # embedded-probe (always included if built)
 ep_bin = workspace + '/claude-mcps/embedded-probe/target/release/embedded-probe'
-servers['embedded-probe'] = {'command': ep_bin}
+if os.path.exists(ep_bin):
+    servers['embedded-probe'] = {'command': ep_bin}
 
 # zephyr-build
 if $( [ "$INSTALL_ZEPHYR" = true ] && echo "True" || echo "False" ):
     zb_bin = workspace + '/claude-mcps/zephyr-build/target/release/zephyr-build'
-    servers['zephyr-build'] = {
-        'command': zb_bin,
-        'args': ['--workspace', workspace, '--apps-dir', 'firmware/apps']
-    }
+    if os.path.exists(zb_bin):
+        servers['zephyr-build'] = {
+            'command': zb_bin,
+            'args': ['--workspace', workspace, '--apps-dir', 'firmware/apps']
+        }
 
 # esp-idf-build
 if $( [ "$INSTALL_ESP_IDF" = true ] && echo "True" || echo "False" ):
     ei_bin = workspace + '/claude-mcps/esp-idf-build/target/release/esp-idf-build'
-    servers['esp-idf-build'] = {
-        'command': ei_bin,
-        'args': ['--projects-dir', workspace + '/firmware/esp-idf']
-    }
+    if os.path.exists(ei_bin):
+        servers['esp-idf-build'] = {
+            'command': ei_bin,
+            'args': ['--projects-dir', workspace + '/firmware/esp-idf']
+        }
 
 # saleae-logic
 if $( [ "$INSTALL_SALEAE" = true ] && echo "True" || echo "False" ):
     sl_py = workspace + '/claude-mcps/saleae-logic/.venv/bin/python'
-    servers['saleae-logic'] = {
-        'command': sl_py,
-        'args': ['-m', 'saleae_logic'],
-        'cwd': workspace + '/claude-mcps/saleae-logic'
-    }
+    if os.path.exists(sl_py):
+        servers['saleae-logic'] = {
+            'command': sl_py,
+            'args': ['-m', 'saleae_logic'],
+            'cwd': workspace + '/claude-mcps/saleae-logic'
+        }
 
 config = {'mcpServers': servers}
-with open(workspace + '/.mcp.json', 'w') as f:
+with open(mcp_path, 'w') as f:
     json.dump(config, f, indent=2)
     f.write('\n')
 
