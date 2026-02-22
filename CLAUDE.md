@@ -55,7 +55,17 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 ### Yocto / Docker
 - **Yocto case-sensitive FS**: macOS is case-insensitive. Use Docker named volume (not bind mount) for build dir.
 - **Yocto OOM on Apple Silicon**: Docker defaults ~8GB RAM. Set `BB_NUMBER_THREADS=4` and `PARALLEL_MAKE="-j 4"` to avoid OOM on GCC build.
-- **Alif E7 BSP vars**: With `DISTRO="poky"` (not `apss-tiny`), must set `ALIF_KERNEL_TREE`, `TFA_TREE`, etc. manually in `local.conf`.
+- **Alif E7 BSP vars**: Use `DISTRO="apss-tiny"` (official). With `DISTRO="poky"`, must set `ALIF_KERNEL_TREE`, `TFA_TREE`, etc. manually in `local.conf`. Prefer the official `alif_linux-apss-build-setup` orchestrator which handles all of this.
+
+### Alif E7 AppKit
+- **Use devkit-ex-b0, NOT scarthgap**: `MACHINE=appkit-e7` on `meta-alif-ensemble` branch `devkit-ex-b0`. Scarthgap has NO `appkit-e7.conf` — only `appkit-e8.conf` which targets different hardware. TF-A from scarthgap crashes on E7 AppKit.
+- **Official build system**: Use `alifsemi/alif_linux-apss-build-setup` orchestrator. It pulls OE zeus (Yocto 3.0), kernel 5.4.25 (`alif_linux` branch `devkit-b0-5.4.y`), and TF-A `devkit-ex-b0`. Newer `linux_alif` (v6.12-dev) has NO appkit-e7 DTS.
+- **TF-A vars differ by branch**: `devkit-ex-b0` uses `HYPRAM_EN`, `TRUSTED_SRAM1=0x08000000`, `ENABLE_PIE=1`. Scarthgap uses `AP_HYPERRAM_EN`, `ALIF_TRUSTED_SRAM_BASE=0x027DE000`, no PIE.
+- **Rootfs address**: E7 AppKit rootfs at `0x80300000` (NOT `0x80380000` which is E8). MRAM layout: TF-A@0x80002000, DTB@0x80010000, kernel@0x80020000, rootfs@0x80300000.
+- **4MB SRAM, not 8MB**: The E7 has 4MB SRAM (0x02000000-0x023FFFFF). The scarthgap DTB declares ~8MB causing OOM panic. Correct DTB required.
+- **Power cycle after flash**: JLink reset doesn't trigger SE boot sequence. Must unplug/replug PRG_USB after SETOOLS flash for A32 to boot.
+- **SETOOLS baud rate**: SE-UART runs at 57600, set in `isp_config_data.cfg`. Wrong baud causes "Malformed packet" errors.
+- **Console on UART2**: J15 jumpers select UART. Use UART2 position. `earlycon=uart8250,mmio32,0x4901a000,115200n8`.
 
 ### Operational
 - **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
@@ -81,6 +91,7 @@ Tool signatures are in each server's own CLAUDE.md (`claude-mcps/<server>/CLAUDE
 - **knowledge** — Knowledge capture, search, board profiles, rule/gotcha regeneration
 - **saleae-logic** — Logic analyzer capture and protocol decoding
 - **hw-test-runner** — BLE GATT, WiFi provisioning, TCP throughput testing
+- **alif-flash** — Alif E7 MRAM flash via SE-UART ISP protocol
 
 Board details available via `knowledge.board_info("board_name")` or `knowledge.list_boards()`.
 

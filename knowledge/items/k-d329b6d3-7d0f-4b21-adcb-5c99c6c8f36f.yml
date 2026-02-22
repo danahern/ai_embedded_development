@@ -1,0 +1,40 @@
+id: k-d329b6d3-7d0f-4b21-adcb-5c99c6c8f36f
+title: alif-flash MCP missing ATOC and device config writes — must flash AppTocPackage.bin separately
+body: |-
+  The `alif-flash` MCP server's `flash` tool only writes the 4 individual images (TFA, DTB, KERNEL, ROOTFS) from the ATOC JSON config. It does NOT write:
+
+  1. **ATOC package** (`AppTocPackage.bin` at 0x80000000) — The SE reads this at boot to know what images exist and where to find them. Without it, the SE has no boot instructions and the A32 never starts.
+  2. **Device config** (`app-device-config.json` content, written as part of the ATOC package) — Contains pinmux, clocks, and firewall configuration that the SE applies before booting the A32.
+
+  The proprietary `app-write-mram` tool writes ALL of these in one shot (ATOC + device config + image binaries). Our `flash_images()` function only iterates `("TFA", "DTB", "KERNEL", "ROOTFS")` keys.
+
+  **Fix needed**: After `gen_toc` generates `AppTocPackage.bin`, the `flash` tool must also write it to 0x80000000 before writing the individual images. The ATOC package already contains the device config — `app-gen-toc` bakes it in during generation.
+
+  **Workaround**: Run `app-write-mram` in maintenance mode for a full write, or add ATOC flashing to the MCP tool.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - setools
+  subsystems: []
+file_patterns:
+- claude-mcps/alif-flash/**/*.py
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- flash
+- mcp
+- boot-failure

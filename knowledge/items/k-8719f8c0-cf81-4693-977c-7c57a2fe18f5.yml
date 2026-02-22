@@ -1,0 +1,26 @@
+id: k-8719f8c0-cf81-4693-977c-7c57a2fe18f5
+title: Try SETOOLS maintenance mode programmatically before asking user
+body: The SETOOLS `./maintenance` tool can enter hard maintenance mode programmatically — run it with menu selections "1\n1\n" (Device Control → Hard maintenance mode). Try this first before asking the user to manually enter maintenance mode. Only ask the user to intervene if the programmatic attempt fails (e.g., "Waiting for Target" timeout or "Malformed packet" errors). After entering maintenance mode, flash with `./app-write-mram -v -p -nr -b 57600`.
+category: operational
+severity: informational
+applies_to:
+  boards:
+  - alif_e7_dk
+  chips: []
+  tools:
+  - setools
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- maintenance-mode
+- workflow

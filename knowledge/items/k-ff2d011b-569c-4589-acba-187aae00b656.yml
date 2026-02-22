@@ -1,0 +1,44 @@
+id: k-ff2d011b-569c-4589-acba-187aae00b656
+title: 'Alif E7: ATOC is NOT at 0x80000000 — SE reads from system MRAM, app-write-mram handles addressing'
+body: |-
+  Writing AppTocPackage.bin to 0x80000000 (APP MRAM base) does NOT work. The SE reads the ATOC from the system MRAM area (~0x8057xxxx), not the application MRAM base.
+
+  Evidence: SE boot log shows ATOC entries stored at addresses like 0x8057C830, 0x8057D530 — all in system MRAM near 0x80580000 (System MRAM Base Address per gen_toc output).
+
+  The `app-write-mram` proprietary tool handles the correct ATOC placement internally via the ISP protocol. It knows where the SE expects to find the ATOC. Raw ISP BURN_MRAM to 0x80000000 writes application image data, but the SE never looks there for the ATOC.
+
+  **Implication for alif-flash MCP**: The `flash` tool's ATOC write to 0x80000000 is wrong. Individual image writes (TFA@0x80002000, DTB@0x80010000, etc.) are correct since those addresses are in APP MRAM and referenced by the ATOC. But the ATOC package itself must be written by `app-write-mram` (or the correct system MRAM address must be determined from the ISP protocol).
+
+  **Correct flash workflow**:
+  1. `app-write-mram` for full write (ATOC + device config + images) — OR
+  2. `app-write-mram -S` for ATOC-only + our tool for individual images
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - setools
+  - app-write-mram
+  subsystems: []
+file_patterns:
+- claude-mcps/alif-flash/**/*.py
+- tools/setools/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- mram
+- flash
+- system-mram
+- boot

@@ -1,0 +1,90 @@
+id: k-ee7c06f8-d17b-4475-ad92-b33e60f73a0d
+title: 'Alif E7 Linux: Official build system is meta-alif-ensemble scarthgap with linux 6.12'
+body: |-
+  The official Alif Linux build system for the E7 AppKit uses:
+
+  **Repos:**
+  - `alifsemi/meta-alif-ensemble` branch `scarthgap` — Yocto BSP layer
+  - `alifsemi/meta-alif` — Alif distro layer (apss-tiny distro)
+  - `alifsemi/alif_arm-tf` — TF-A source
+  - `alifsemi/linux_alif` branch `v6.12-dev` — Linux kernel 6.12
+  - `alifsemi/alif_linux-apss-build-setup` — Build environment setup
+
+  **Machine configs:**
+  - `appkit-e8.conf` — AK-E7-AIML AppKit Gen 2
+  - `devkit-e8.conf` — DK-E7 DevKit
+
+  **Key appkit-e8 settings (MRAM-only, BASE_IMAGE=1):**
+  - `BL32_XIP_BASE=0x80002000` (TF-A in MRAM)
+  - `XIP_KERNEL_LOAD_ADDR=0x80020000`
+  - `KERNEL_DTB_ADDR=0x80010000`
+  - `KERNEL_MTD_START_ADDR=0x80380000` (cramfs-xip rootfs)
+  - `KERNEL_XIP_RAM=0x02000000` (SRAM, when no HyperRAM)
+  - `AP_HYPERRAM_EN=0` (disabled by default for MRAM-only)
+  - `UART=2` (console on UART2 at 115200)
+  - `SMP=1` (dual A32 cores)
+
+  **HyperRAM mode (BASE_IMAGE2=1):**
+  - `HYPRAM_ONLY=1`, `AP_HYPERRAM_EN=1`
+  - `KERNEL_XIP_RAM=0xA0000000` (HyperRAM)
+  - There is also `ISSI_HYPERRAM_EN` (separate from `AP_HYPERRAM_EN`)
+
+  **OSPI flash mode (BASE_IMAGE3=1):**
+  - `OSPI_BOOT=1`, kernel+rootfs in OSPI1 flash at 0xC0000000
+  - Requires PC flashtool to program OSPI1
+
+  **TF-A build options passed via TF-A_EXTRA_OPTIONS:**
+  ```
+  RESET_TO_SP_MIN=1 ARM_LINUX_KERNEL_AS_BL33=1
+  PRELOADED_BL33_BASE=${XIP_KERNEL_LOAD_ADDR}
+  ARM_PRELOADED_DTB_BASE=${KERNEL_DTB_ADDR}
+  ALIF_TRUSTED_SRAM_BASE=0x027DE000
+  BL32_IN_XIP_MEM=1 BL32_XIP_BASE=0x80002000
+  AP_HYPERRAM_EN=0/1 ISSI_HYPERRAM_EN=0
+  MX_FLASH_EN=0 ISSI_FLASH_EN=0 AES_EN=0 UART=2
+  ```
+
+  **Build command:** `bitbake alif-tiny-image` (or `alif-helloworld-image`)
+
+  **Flashing (from PDF AUGD00013 v0.5.2):**
+  ```
+  ./app-gen-toc -f build/config/APSS-B2-MRAM.json
+  ./app-write-mram -p
+  ```
+  Console output appears on UART2 (/dev/ttyACM1 on Linux, /dev/cu.usbmodem* on macOS) at 115200 baud. Login as root.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  - dk-e7
+  chips:
+  - alif-e7
+  - AE722F80F55D5LS
+  tools:
+  - yocto
+  - setools
+  - bitbake
+  subsystems:
+  - linux
+  - tfa
+  - boot
+file_patterns:
+- '**/appkit-e8*'
+- '**/devkit-e8*'
+- '**/meta-alif*'
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- linux
+- yocto
+- meta-alif-ensemble
+- scarthgap
+- build-system

@@ -1,0 +1,47 @@
+id: k-a098d8f9-87cb-466d-ac5a-ce7587ce2878
+title: Alif E7 MRAM writable via J-Link loadbin (no FLM needed)
+body: |-
+  MRAM at 0x80000000 is directly writable via JLinkExe `loadbin` command — no flash algorithm (FLM) needed. MRAM is memory-mapped and doesn't require erase cycles, so direct memory writes work.
+
+  **Critical requirement:** A custom JLinkScript must override `ResetTarget()` to be a no-op. Without this, `loadbin` performs an implicit reset that kills the SE boot sequence, causing AP[3] (M55_HP) to disappear and writes to fail.
+
+  **Setup:**
+  1. Install `Devices.xml` + `AlifE7.JLinkScript` to `~/Library/Application Support/SEGGER/JLinkDevices/AlifSemi/` (run `claude-mcps/alif-flash/jlink/setup.sh`)
+  2. Power cycle board (unplug/replug PRG_USB) before first connection
+  3. Use: `JLinkExe -device AE722F80F55D5_M55_HP -if SWD -speed 4000 -autoconnect 1`
+
+  **Performance:** ~44 KB/s sustained (1MB in 23s). About 9x faster than SE-UART SETOOLS (~5 KB/s). Full 5.1MB Linux image in ~2 minutes vs ~17 minutes.
+
+  **Key details:**
+  - Connects to M55_HP core at AP[3] (APAddr 0x00300000)
+  - "CPU could not be halted" and "Failed to halt CPU" warnings are normal — writes succeed anyway
+  - The Ensemble.FLM from CMSIS pack has a GetSectorInfo bug with JLink V8.70 — don't use it
+  - Multiple loadbin calls work within a single JLinkExe session without power cycling
+  - Board needs power cycle (not just reset) after flashing for SE to re-read ATOC and boot Linux
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  - jlinkexe
+  subsystems: []
+file_patterns:
+- claude-mcps/alif-flash/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- alif
+- mram
+- jlink
+- flash
+- loadbin

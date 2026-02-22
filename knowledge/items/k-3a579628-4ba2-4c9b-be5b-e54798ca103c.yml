@@ -1,0 +1,55 @@
+id: k-3a579628-4ba2-4c9b-be5b-e54798ca103c
+title: Alif E7 AppKit requires MACHINE=appkit-e7 on devkit-ex-b0 branch (NOT scarthgap)
+body: |-
+  The AK-E7-AIML AppKit Gen 2 (AE722F80F55D5LS) requires `MACHINE=appkit-e7` using the `devkit-ex-b0` branch of `meta-alif-ensemble` — NOT `appkit-e8` on `scarthgap`.
+
+  **Why scarthgap fails:**
+  - scarthgap has NO `appkit-e7.conf` — only `appkit-e8.conf` and `devkit-e8.conf`
+  - TF-A on scarthgap uses wrong variable names (`AP_HYPERRAM_EN` vs `HYPRAM_EN`)
+  - TF-A crashes in `devkit_e7_clocks_init()` at PERIPH_CLK_ENA (0x4902F03C) — data abort
+  - `linux_alif` kernel (v6.12-dev and APSS-v2.1.0) has NO appkit-e7 DTS — only E6 and E8
+
+  **What works:**
+  - `meta-alif-ensemble` branch `devkit-ex-b0` has `appkit-e7.conf`
+  - `alif_linux` kernel branch `devkit-b0-5.4.y` has `appkit_e7_defconfig` and `appkit-e7.dts`
+  - `alif_arm-tf` branch `devkit-ex-b0` uses correct `HYPRAM_EN` variable
+
+  **Key difference from scarthgap:**
+  - `TRUSTED_SRAM1 = 0x08000000` (not 0x027DE000)
+  - `KERNEL_MTD_START_ADDR = 0x80300000` (not 0x80380000)
+  - `ENABLE_PIE = 1` (missing in scarthgap configs)
+  - `HYPRAM_EN` (not `AP_HYPERRAM_EN`)
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  - AE722F80F55D5LS
+  tools:
+  - yocto
+  - bitbake
+  subsystems:
+  - linux
+  - tfa
+  - boot
+file_patterns:
+- '**/meta-alif-ensemble/**'
+- '**/appkit-e7*'
+- '**/build-alif-e7/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- linux
+- yocto
+- machine-config
+- devkit-ex-b0
+- appkit-e7

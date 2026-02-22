@@ -1,0 +1,80 @@
+id: k-cf4c4df9-f7de-4c37-9d4c-6a0c1041b9d9
+title: 'ATOC format rules: mramAddress+boot for XIP, loadAddress+load,boot for SRAM copy'
+body: |-
+  Alif SETOOLS ATOC (Application Table of Contents) JSON format rules:
+
+  **XIP (execute-in-place from MRAM):**
+  ```json
+  {
+      "binary": "bl32.bin",
+      "mramAddress": "0x80002000",
+      "cpu_id": "A32_0",
+      "flags": ["boot"]
+  }
+  ```
+  - Use `mramAddress` — image stays in MRAM and executes from there
+  - `flags: ["boot"]` — tells SE to mark this CPU for boot
+
+  **SRAM copy (load to SRAM then execute):**
+  ```json
+  {
+      "binary": "firmware.bin",
+      "loadAddress": "0x02000000",
+      "flags": ["load", "boot"]
+  }
+  ```
+  - Use `loadAddress` — SE copies image from MRAM to this address before boot
+  - `flags: ["load", "boot"]` — both load (copy) and boot
+
+  **Non-bootable images (DTB, rootfs):**
+  ```json
+  {
+      "binary": "appkit-e7.dtb",
+      "mramAddress": "0x80010000"
+  }
+  ```
+  - No `flags` or `cpu_id` — just placed in MRAM at the given address
+
+  **MRAM-only config (APSS-B2-MRAM.json pattern):**
+  - TF-A: `mramAddress=0x80002000`, flags=boot, cpu_id=A32_0
+  - DTB: `mramAddress=0x80010000`, no flags
+  - Kernel: `mramAddress=0x80020000`, no flags (TF-A jumps to it)
+  - Rootfs: `mramAddress=0x80300000` (E7) or `0x80380000` (E8), no flags
+
+  **Flashing:**
+  ```bash
+  ./app-gen-toc -f build/config/linux-boot-e7.json
+  ./app-write-mram -v -p -b 57600
+  ```
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  - dk-e7
+  chips:
+  - alif-e7
+  tools:
+  - setools
+  subsystems:
+  - boot
+  - mram
+file_patterns:
+- '**/linux-boot*.json'
+- '**/app-cfg*.json'
+- '**/APSS-B2*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- setools
+- mram
+- flashing
+- xip

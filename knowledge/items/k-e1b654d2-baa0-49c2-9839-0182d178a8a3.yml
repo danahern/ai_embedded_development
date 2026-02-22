@@ -1,0 +1,48 @@
+id: k-e1b654d2-baa0-49c2-9839-0182d178a8a3
+title: 'Alif E7: JLink reset doesn''t power on A32 — full power cycle needed after first flash'
+body: |-
+  On the Alif E7 AppKit, a JLink reset (via probe-rs or JLink Commander) does NOT power on the A32 core. The Secure Enclave (SE) must run the full boot sequence to:
+
+  1. Read the ATOC from MRAM
+  2. Initialize clocks and peripherals
+  3. Load/boot the A32 core with TF-A
+
+  **After flashing MRAM with SETOOLS:**
+  - A JLink reset only resets the debug connection, not the SE boot flow
+  - Must do a full power cycle: unplug and replug the PRG_USB cable
+  - The SE then reads ATOC, initializes hardware, and boots TF-A → kernel
+
+  **Debugging implications:**
+  - Cannot use probe-rs `reset` to restart Linux boot
+  - Must physically power cycle the board
+  - Serial console output starts fresh after power cycle
+  - SE boot takes ~2-3 seconds before TF-A output appears
+category: operational
+severity: important
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools:
+  - setools
+  - jlink
+  subsystems:
+  - boot
+  - debug
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- jlink
+- reset
+- power-cycle
+- boot
+- a32

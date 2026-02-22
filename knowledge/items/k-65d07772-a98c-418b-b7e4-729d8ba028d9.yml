@@ -1,0 +1,55 @@
+id: k-65d07772-a98c-418b-b7e4-729d8ba028d9
+title: 'Alif E7 AppKit Linux boot: full chain working with correct DTB'
+body: |-
+  Full Linux boot chain verified on Alif E7 AppKit (AE722F80F55D5LS):
+
+  **Boot sequence**: SE → TF-A (SP_MIN v2.1) → Linux 5.4.25 → cramfs rootfs → /sbin/init → root shell
+
+  **MRAM layout** (flashed via alif-flash MCP):
+  - ATOC: 0x80000000 (7 KB)
+  - TF-A bl32.bin: 0x80002000 (26 KB)
+  - DTB: 0x80010000 (31 KB) — from appkit-e7-flatboard.dts
+  - xipImage: 0x80020000 (2.16 MB)
+  - cramfs rootfs: 0x80300000 (1.36 MB)
+
+  **Key boot log details**:
+  - Memory: 6652K total (4MB SRAM@0x02000000 + 2.5MB stitch@0x08000000), 6156K available
+  - Console: UART2 at 0x4901A000 (ttyS0), 115200 baud
+  - Timer: arch_sys_counter at 100MHz, 200 BogoMIPS
+  - Single CPU (SMP configured for 2 but only 1 activated)
+  - cramfs 1332KB mounted readonly from physmap-flash
+  - Minor: sysfs mount fails (CONFIG_SYSFS likely not enabled)
+  - Login: root, no password
+
+  **Console access**: J15 jumpers in UART2 position, JLink VCOM at 115200. Power cycle (unplug/replug PRG_USB) required after flash — JLink reset doesn't trigger SE boot sequence.
+
+  **Images source**: Pre-built from Alif Yocto (alif_linux-apss-build-setup, branch devkit-ex-b0). DTB compiled manually from alif_linux repo appkit-e7-flatboard.dts using arm-zephyr-eabi-cpp + dtc.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems:
+  - linux
+  - tfa
+  - setools
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- linux
+- boot
+- tfa
+- cramfs
+- uart
+- milestone

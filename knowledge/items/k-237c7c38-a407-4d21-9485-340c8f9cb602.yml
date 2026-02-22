@@ -1,0 +1,68 @@
+id: k-237c7c38-a407-4d21-9485-340c8f9cb602
+title: 'Official Alif Linux build system: repos, branches, and build orchestrator'
+body: |-
+  The official Alif Linux build system is orchestrated by `alifsemi/alif_linux-apss-build-setup` (main branch).
+
+  **Repo map (all use devkit-ex-b0 branch unless noted):**
+  | Repo | Branch | Purpose |
+  |------|--------|---------|
+  | `alifsemi/alif_linux-apss-build-setup` | `main` | Build orchestrator — fetch-layers.sh, setup.sh |
+  | `alifsemi/meta-alif` | `devkit-ex-b0` | BSP core layer — DISTRO=apss-tiny |
+  | `alifsemi/meta-alif-ensemble` | `devkit-ex-b0` | Machine configs, kernel recipe, TF-A recipe |
+  | `alifsemi/alif_linux` | `devkit-b0-5.4.y` | Kernel 5.4.25 — has appkit-e7 DTS |
+  | `alifsemi/alif_arm-tf` | `devkit-ex-b0` | TF-A (Trusted Firmware-A) |
+  | openembedded-core | `zeus` | OE core (Yocto 3.0) |
+  | meta-openembedded | `zeus` | meta-filesystems, meta-python, etc. |
+  | meta-yocto | `zeus` | meta-poky |
+
+  **Build steps:**
+  ```bash
+  git clone https://github.com/alifsemi/alif_linux-apss-build-setup.git
+  cd alif_linux-apss-build-setup
+  # Edit scripts/setup.sh: MACHINE="appkit-e7"
+  bash scripts/fetch-layers.sh
+  source scripts/setup.sh
+  bitbake alif-tiny-image
+  ```
+
+  **Output artifacts** in `tmp/deploy/images/appkit-e7/`:
+  - `bl32.bin` — TF-A
+  - `appkit-e7.dtb` — Device Tree
+  - `xipImage` — XIP Linux kernel
+  - `alif-tiny-image-appkit-e7.cramfs-xip` — Root filesystem
+
+  **IMPORTANT:** The newer `linux_alif` repo (v6.12-dev, APSS-v2.1.0) does NOT have appkit-e7 DTS. Only the older `alif_linux` repo with kernel 5.4.25 has E7 AppKit support. OE zeus (Yocto 3.0) is NOT compatible with scarthgap (Yocto 5.0) layers.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  - dk-e7
+  chips:
+  - alif-e7
+  tools:
+  - yocto
+  - bitbake
+  - setools
+  subsystems:
+  - linux
+  - tfa
+  - boot
+file_patterns:
+- '**/alif_linux-apss-build-setup/**'
+- '**/meta-alif*/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- linux
+- yocto
+- build-system
+- devkit-ex-b0
+- zeus

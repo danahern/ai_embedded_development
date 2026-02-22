@@ -65,16 +65,18 @@ Without J15 jumpers, only SE-UART appears. UART4 (Linux console, ttyS0) uses P12
 For SETOOLS programming: use the JLink VCOM port at 57600 baud.
 For Linux console: install J15 jumpers, use second serial port at 115200 baud.
 
-### Memory Map (from devkit-e8.conf)
+### Memory Map (from appkit-e7.conf, devkit-ex-b0 branch)
 
 | Image | MRAM Address | Size (approx) | Source |
 |-------|-------------|----------------|--------|
 | bl32.bin (TF-A) | 0x80002000 | ~64KB | `BL32_XIP_BASE` |
-| devkit-e8.dtb | 0x80010000 | ~32KB | `KERNEL_DTB_ADDR` |
+| appkit-e7.dtb | 0x80010000 | ~32KB | `KERNEL_DTB_ADDR` |
 | xipImage | 0x80020000 | ~3.3MB | `XIP_KERNEL_LOAD_ADDR` |
-| cramfs-xip rootfs | 0x80380000 | ≤2MB | `KERNEL_MTD_START_ADDR` (BASE_IMAGE=1) |
+| cramfs-xip rootfs | 0x80300000 | ≤2MB | `KERNEL_MTD_START_ADDR` |
 
-Total: ~5.4MB of 5.7MB MRAM.
+Total: ~5.1MB of 5.7MB MRAM.
+
+**Note:** Previous sessions used `appkit-e8.conf` from `scarthgap` with rootfs at 0x80380000 — this was WRONG. The correct config is `appkit-e7.conf` from `devkit-ex-b0` with rootfs at 0x80300000.
 
 ### ATOC JSON Config
 
@@ -200,6 +202,18 @@ Patched bl32.bin flashed via custom ISP script (`isp_write_image.py`).
 5. **No console output visible** — UART4 (ttyS0) lines are idle. Default `app-device-config.json` has `"pinmux": []` (empty). Need either: add UART4 pinmux to device config, or install J15 jumpers + rely on kernel pinctrl.
 6. **Programmatic maintenance mode works**: START_ISP → SET_MAINTENANCE → STOP_ISP → RESET_DEVICE over SE-UART. No physical button needed.
 
+### Session 5: DTB Fix & First Console Boot
+
+**Root cause of no console output** (from session 4): Kernel was panicking immediately due to DTB compatible string mismatch.
+
+**Diagnosis via JTAG**: Connected JLink to Cortex-A32 (`device Cortex-A32`, JTAG mode). Found A32 alive but stuck in infinite loop (`B .` = 0xE7FE at PC). Dumped 256KB SRAM via `savebin`, found kernel log: "OF: fdt: Error: unrecognized/unsupported device tree compatible list". DTB had `compatible = "arm,Appkit-E7"` but kernel expects `"alif,ensemble"`.
+
+**Fix**: Cloned `alifsemi/alif_linux` (branch `devkit-b0-5.4.y`). Compiled DTB from correct source `appkit-e7-flatboard.dts` using `arm-zephyr-eabi-cpp` + `dtc`. This DTS has `compatible = "alif,ensemble"` and correct clock frequencies (CPU 800MHz, AXI 400MHz, AHB 200MHz, APB 100MHz).
+
+**Result**: Full boot to root shell. Boot log shows: TF-A SP_MIN v2.1 → Linux 5.4.25 → 6652K memory → UART2 console → cramfs mounted → `/sbin/init` → login prompt. Login as `root` (no password).
+
+**alif-flash MCP**: Used for maintenance mode, ATOC generation, and full flash (3.59MB, ~12 min at 57600 baud).
+
 ### Recovery Procedures
 
 **Programmatic (preferred):** Send ISP commands over SE-UART at 57600 baud:
@@ -228,7 +242,8 @@ Patched bl32.bin flashed via custom ISP script (`isp_write_image.py`).
 - [x] DTB memory fix flashed (4MB SRAM, binary patch at offset 560)
 - [x] DEVICE config included in ATOC (app-device-config.json)
 - [x] **Linux kernel running** — confirmed via JLink SWD (PC=0xBFxxxxxx, EL1, Non-secure, IRQs on)
-- [ ] Serial console shows login prompt (UART4/ttyS0 — needs J15 jumpers or device config pinmux)
+- [x] Serial console shows login prompt (UART2/ttyS0 — J15 in UART2 position, JLink VCOM at 115200)
+- [x] **Full Linux boot to root shell** — TF-A → kernel 5.4.25 → cramfs rootfs → /sbin/init → login
 - [ ] `adb devices` shows `eai-alif-e7-001` (requires USB OTG cable + ADB in image)
 
 ## Risks
@@ -244,5 +259,7 @@ Patched bl32.bin flashed via custom ISP script (`isp_write_image.py`).
 - **RESOLVED — Missing device config**: ATOC must include DEVICE entry for A32 to boot.
 - **RESOLVED — Baud rate mismatch**: E7 config says 55000 but SE actually runs 57600. Use `-b 57600`.
 - **RESOLVED — No console output**: Console is on UART2 (ttyS0), not UART4. J15 in UART2 position + Conductor device config with full pinmux/clocks. Full boot log captured via JLink reset + UART2 listen.
-- **CURRENT — OOM at 4MB SRAM**: Kernel boots but panics with OOM. 4MB SRAM not enough. OSPI0 RAM (32MB at 0xA0000000) needs to be added to DTB memory node.
+- **RESOLVED — Wrong machine/branch**: All early sessions used `MACHINE=appkit-e8`/`devkit-e8` on `scarthgap` branch. Should be `MACHINE=appkit-e7` on `devkit-ex-b0`. TF-A vars, memory addresses, and kernel DTS all differ. Fixed by using pre-built images from official orchestrator.
+- **RESOLVED — OOM / kernel panic**: Two root causes: (1) wrong DTB declared 8MB SRAM (patched to 4MB), (2) DTB `compatible = "arm,Appkit-E7"` didn't match kernel's `"alif,ensemble"`. Fixed by compiling DTB from correct source (`appkit-e7-flatboard.dts`). Memory now: 6652K total (4MB SRAM + 2.5MB stitch), 6156K available.
+- **RESOLVED — Wrong DTS file**: `alif_linux` repo has 3 AppKit DTS files. Only `appkit-e7-flatboard.dts` is correct (`compatible = "alif,ensemble"`, proper clock frequencies). `appkit-e7.dts` and `appkit-e7-devboard.dts` have wrong compatible string and all-20MHz clocks.
 - **ADB not in current build**: apss-tiny cramfs-xip is minimal. ADB requires rebuild with additional packages.

@@ -1,0 +1,46 @@
+id: k-555274f2-a7fa-4748-82b1-f92857c8e732
+title: 'Alif E7 AppKit J15 jumper: 4 positions select UART for JLink VCOM'
+body: |-
+  The Alif E7 AppKit (220-00307-D1) has a 10-pin header J15 that selects which UART feeds the JLink-OB VCOM (single USB-serial port via Cypress CYC63215 bridge).
+
+  **J15 positions (pins shorted):**
+  - **1-3 & 2-4**: SE-UART (for ISP flashing at 57600 baud)
+  - **3-5 & 4-6**: Labeled "UART2" but may actually be UART0 (Rev C fixed "UART0 and UART2 swapped signals")
+  - **5-7 & 6-8**: Labeled "UART2" — this is the correct UART2 position for Linux console
+  - **7-9 & 8-10**: UART4
+
+  **Key details:**
+  - Same `/dev/cu.usbmodem*` port is used for all positions — J15 physically switches what feeds the bridge chip
+  - Must swap jumper between SE-UART (for flashing) and UART2 (for console) — cannot do both simultaneously
+  - UART2 @ 0x4901a000 is the Linux console (TF-A + earlycon + ttyS0)
+  - UART4 @ 0x4901c000 is ttyS1
+  - Schematic page 13 shows the J15 routing in detail
+
+  **Rev C note:** Earlier board revisions had UART0 and UART2 signals swapped on J15. If position 3-5/4-6 gives no output, try 5-7/6-8.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - setools
+  subsystems: []
+file_patterns:
+- tools/setools/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- uart
+- jumper
+- console
+- j15
+- schematic

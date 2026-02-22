@@ -1,0 +1,44 @@
+id: k-2d4e2acc-2283-4fbd-af48-dcbe37518dfd
+title: 'Alif E7 AppKit DTB: use appkit-e7-flatboard.dts, not appkit-e7.dts'
+body: |-
+  The `alif_linux` repo (branch `devkit-b0-5.4.y`) has multiple DTS files for the E7 AppKit. Only `appkit-e7-flatboard.dts` works:
+
+  - `appkit-e7.dts` — WRONG: `compatible = "arm,Appkit-E7"`, all clocks 20MHz
+  - `appkit-e7-devboard.dts` — WRONG: same issues
+  - `appkit-e7-flatboard.dts` — CORRECT: `compatible = "alif,ensemble"`, CPU 800MHz, AXI 400MHz, AHB 200MHz, APB 100MHz, UART 10/100MHz
+
+  The kernel has `DT_MACHINE_START` for `"alif,ensemble"` only. Using the wrong DTS causes an immediate panic: "OF: fdt: Error: unrecognized/unsupported device tree compatible list". Kernel enters infinite loop (`B .` at PC, detectable via JTAG as instruction 0xE7FE).
+
+  Diagnosis method: JLink JTAG → Cortex-A32 → halt → savebin SRAM → strings to find kernel log.
+
+  The DTB can be compiled standalone: `arm-zephyr-eabi-cpp -nostdinc -I arch/arm/boot/dts -I include -undef -x assembler-with-cpp arch/arm/boot/dts/appkit-e7-flatboard.dts -o /tmp/preprocessed.dts && dtc -I dts -O dtb -o appkit-e7.dtb /tmp/preprocessed.dts`
+
+  Note: The kernel Makefile only lists `devkit-e7.dtb` for `CONFIG_SOC_ENSEMBLE` — appkit DTBs are not registered and must be compiled manually or the Makefile amended.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems:
+  - linux
+  - device-tree
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- dtb
+- dts
+- linux
+- boot
+- compatible

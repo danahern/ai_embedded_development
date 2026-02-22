@@ -1,0 +1,72 @@
+id: k-ede41bad-4455-454f-b2aa-9755f57cc84d
+title: appkit-e7.conf key memory addresses and TF-A options (devkit-ex-b0)
+body: |-
+  Key values from `appkit-e7.conf` in `meta-alif-ensemble` branch `devkit-ex-b0`:
+
+  **Memory addresses:**
+  ```
+  TF-A_PLATFORM = "devkit_e7"
+  BL32_XIP_BASE = "0x80002000"        # TF-A in MRAM
+  TRUSTED_SRAM1 = "0x08000000"        # NOT 0x027DE000 (scarthgap)
+  KERNEL_XIP_RAM = "0x02000000"       # SRAM base for kernel data
+  XIP_KERNEL_LOAD_ADDR = "0x80020000" # Kernel XIP in MRAM
+  KERNEL_DTB_ADDR = "0x80010000"      # DTB in MRAM
+  KERNEL_MTD_START_ADDR = "0x80300000" # Rootfs in MRAM (NOT 0x80380000)
+  KERNEL_MTD_LEN = "0x200000"         # 2MB rootfs partition
+  UART = "2"                          # Console on UART2
+  ```
+
+  **TF-A build flags:**
+  ```
+  HYPRAM_EN = "1"                     # NOT AP_HYPERRAM_EN
+  FLASH_EN = "0"
+  ENABLE_PIE = 1                     # Missing in scarthgap
+  ENABLE_STACK_PROTECTOR = strong    # Missing in scarthgap
+  ```
+
+  **Kernel:**
+  ```
+  KERNEL_DEVICETREE = "appkit-e7.dtb"
+  KBUILD_DEFCONFIG = "appkit_e7_defconfig"
+  ```
+
+  **Critical differences from scarthgap appkit-e8.conf:**
+  - Rootfs at 0x80300000 (not 0x80380000) — 512KB earlier in MRAM
+  - TRUSTED_SRAM1 at 0x08000000 (not 0x027DE000)
+  - Uses HYPRAM_EN (not AP_HYPERRAM_EN)
+  - Has ENABLE_PIE and ENABLE_STACK_PROTECTOR
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  - AE722F80F55D5LS
+  tools:
+  - yocto
+  - bitbake
+  subsystems:
+  - linux
+  - tfa
+  - boot
+  - memory
+file_patterns:
+- '**/appkit-e7.conf*'
+- '**/meta-alif-ensemble/**'
+- '**/linux-boot-e7*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- appkit-e7
+- memory-map
+- tfa
+- addresses
+- mram

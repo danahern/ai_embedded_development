@@ -1,0 +1,28 @@
+id: k-ce7d34f2-1176-40d0-b67b-ed952ae5ee84
+title: Alif SETOOLS SE-UART baud rate is 57600
+body: The Alif SETOOLS (maintenance, app-write-mram, app-gen-toc) communicate with the Secure Enclave UART at 57600 baud, not the default 55000. Set `baudrate 57600` in `isp_config_data.cfg`. The config file also needs the correct `comport` path (e.g., `/dev/cu.usbmodem0012193076991` on macOS). Without the correct baud rate, tools fail with "Malformed packet received from target".
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_dk
+  chips:
+  - AE722F80F55D5LS
+  tools:
+  - setools
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- se-uart
+- baud-rate
+- flashing

@@ -1,0 +1,39 @@
+id: k-fd976018-3941-4a97-9b64-5e4d7709e9d3
+title: 'Alif E7: hold RESET during maintenance to ensure reliable entry'
+body: |-
+  The maintenance mode entry sequence (START_ISP → SET_MAINTENANCE → STOP_ISP → RESET_DEVICE → wait → reconnect → verify) often fails because the SE doesn't respond after the software reset.
+
+  **Reliable workaround:** Hold the physical RESET button on the board during the maintenance command. The MCP tool sends SET_MAINTENANCE + RESET_DEVICE, then waits for reconnect. While it's waiting, release the RESET button. This ensures the SE reboots cleanly into maintenance mode.
+
+  This is more reliable than the software-only reset because:
+  1. The SE's ISP window after power-up is brief (~2-3 seconds)
+  2. Software RESET_DEVICE sometimes doesn't trigger a clean reboot
+  3. Holding hardware reset guarantees the SE starts fresh when released
+
+  **Potential MCP improvement:** Add a `hard_maintenance` mode that prompts the user to hold/release RESET at the right time, with longer reconnect timeouts.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - setools
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-21
+updated: 2026-02-21
+author: claude
+source_session: null
+tags:
+- alif
+- maintenance
+- reset
+- flash
+- reliability

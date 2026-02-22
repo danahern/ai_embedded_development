@@ -58,6 +58,16 @@
     },
     "openocd-debug": {
       "command": "./claude-mcps/openocd-debug/target/release/openocd-debug"
+    },
+    "alif-flash": {
+      "command": "./claude-mcps/alif-flash/.venv/bin/python",
+      "args": [
+        "-m",
+        "alif_flash",
+        "--setools-dir",
+        "./tools/setools"
+      ],
+      "cwd": "./claude-mcps/alif-flash"
     }
   }
 }
