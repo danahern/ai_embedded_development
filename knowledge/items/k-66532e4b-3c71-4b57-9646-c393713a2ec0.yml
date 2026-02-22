@@ -1,0 +1,50 @@
+id: k-66532e4b-3c71-4b57-9646-c393713a2ec0
+title: 'alif-flash MCP: flash() resolves images from config_dir/../images/, not config dir'
+body: |-
+  The `flash()` tool in alif-flash MCP resolves binary file paths using this logic:
+
+  ```python
+  build_dir = os.path.normpath(os.path.join(os.path.dirname(config_path), ".."))
+  images_dir = os.path.join(build_dir, "images")
+  ```
+
+  So for config at `firmware/linux/alif-e7/setools/linux-boot-e7.json`:
+  - `build_dir` = `firmware/linux/alif-e7/`
+  - `images_dir` = `firmware/linux/alif-e7/images/`
+
+  **NOT** `firmware/linux/alif-e7/setools/` where the config file lives.
+
+  Place image files (bl32.bin, appkit-e7.dtb, xipImage, rootfs) in the `images/` sibling directory of the `setools/` directory. Putting them in `setools/` directly will not work — the flash tool won't find them.
+
+  The ATOC package (`AppTocPackage.bin`) is also resolved from `build_dir`, not `images_dir`.
+
+  Similarly, `jlink_flash()` with a config path uses `flash_from_config()` which reads the same JSON and resolves paths the same way.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - alif-flash
+  subsystems:
+  - flash
+  - mcp
+file_patterns:
+- claude-mcps/alif-flash/**/isp.py
+- claude-mcps/alif-flash/**/jlink.py
+- '**/linux-boot-e7.json'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- alif-flash
+- path-resolution
+- images
+- config
+- flash

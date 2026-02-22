@@ -1,0 +1,54 @@
+id: k-d2fcc93f-fa50-4ef4-9717-7b7cadbcdc3b
+title: 'Alif E7 AppKit: Fixed dual-serial setup — no jumper switching needed'
+body: |-
+  The Alif E7 AppKit can run with a **fixed serial setup** that eliminates J15 jumper switching:
+
+  **Hardware setup:**
+  - **J15 jumpers**: Permanently on UART2 position (pins 5-7/6-8)
+  - **External FTDI adapter**: Connected to SE-UART header for ISP flash protocol
+
+  **Port mapping (macOS):**
+  | Port | Device | Use | Baud |
+  |------|--------|-----|------|
+  | `/dev/cu.usbserial-*` | External FTDI | SE-UART ISP flash | 57600 |
+  | `/dev/cu.usbmodem*` | Onboard JLink VCOM | Linux console + TF-A | 115200 |
+
+  **Benefits:**
+  - No physical jumper changes between flash and console operations
+  - Both ports available simultaneously
+  - alif-flash MCP auto-detects: `usbserial` for ISP, `usbmodem` for monitoring
+
+  **VCOM caveat:** JLink VCOM only produces output during an active JLink debug session. After power cycle, connect JLink first, then monitor VCOM.
+
+  **Previous setup** required switching J15 between SE-UART (for flashing) and UART2 (for console). The external FTDI adapter eliminates this.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - serial
+  - uart
+  - flash
+file_patterns:
+- claude-mcps/alif-flash/**/server.py
+- '**/alif-e7/**'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- serial
+- ftdi
+- vcom
+- j15
+- no-switching
+- dual-serial

@@ -1,0 +1,56 @@
+id: k-aca06b75-eb40-4e6d-ade5-875d28c44f7d
+title: Never round-trip DTB through dtc decompile/recompile — corrupts clock values
+body: |-
+  **NEVER** decompile a DTB and recompile it via `dtc -I dtb -O dts | dtc -I dts -O dtb`. This round-trip corrupts data:
+
+  - Clock frequency values get changed (e.g., dwuartclk 100 MHz became 20 MHz)
+  - String table ordering changes, potentially affecting phandle resolution
+  - DTB size changes, requiring ATOC regeneration on Alif E7
+
+  **Always compile from the original `.dts` source** with proper preprocessing:
+
+  ```bash
+  CPP=~/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-cpp
+  DTS_DIR=alif_linux/arch/arm/boot/dts
+  INCLUDE_DIR=alif_linux/include
+  $CPP -nostdinc -I${INCLUDE_DIR} -I${DTS_DIR} -undef -D__DTS__ -x assembler-with-cpp \
+    ${DTS_DIR}/appkit-e7-flatboard.dts -o /tmp/appkit-e7-pp.dts
+  dtc -I dts -O dtb -o appkit-e7.dtb /tmp/appkit-e7-pp.dts
+  ```
+
+  The Zephyr SDK `arm-zephyr-eabi-cpp` works as the preprocessor. System `cpp` may also work but is untested. `dtc` is available via Homebrew on macOS.
+
+  This bug cost hours of debugging — the corrupted 20 MHz dwuartclk caused the kernel UART driver to set divisor 11 instead of 54, producing ~568K baud instead of 115200.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - dtc
+  - zephyr-sdk
+  subsystems:
+  - dtb
+  - linux
+file_patterns:
+- '**/*.dts'
+- '**/*.dtb'
+- '**/appkit-e7*'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- dtc
+- dtb
+- round-trip
+- clock
+- corruption
+- compilation

@@ -1,0 +1,49 @@
+id: k-8512f68a-cc14-4010-8a72-6b25ac54c68b
+title: Alif E7 UART peripheral clock is 100 MHz (dwuartclk), not 20 MHz
+body: |-
+  The Alif E7 UART peripheral clock (dwuartclk / baudclk) is **100 MHz**, confirmed by three independent sources:
+
+  1. **Source DTS**: `appkit-e7-flatboard.dts` line 167: `clock-frequency = <100000000>`
+  2. **TF-A source**: `platform_def.h` line 142: `UART_CLOCK_FREQ = 100000000`
+  3. **Hardware register**: UART2 divisor register reads 54 → 100MHz / (16 × 54) = 115,741 ≈ 115200 baud ✓
+
+  The DTB `dwuartclk` node provides the baudclk to the kernel's `dw8250` driver, which uses it for baud rate divisor calculation. If this value is wrong, the UART produces garbled output or no output at all.
+
+  **Clock reference chain in DTB:**
+  - UART nodes: `clocks = <&dwuartclk &apb_pclk>`, `clock-names = "baudclk", "apb_pclk"`
+  - `dwuartclk`: 100 MHz (phandle 0x12) — baudclk for divisor calculation
+  - `apb_pclk`: 100 MHz (phandle 0x03) — APB bus clock
+  - `uartclk`: 10 MHz (phandle 0x0F) — NOT used by UART nodes despite the name
+
+  **Do NOT confuse** `uartclk` (10 MHz) with `dwuartclk` (100 MHz). The UART hardware uses `dwuartclk`.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - clock
+  - linux
+file_patterns:
+- '**/*appkit-e7*.dts'
+- '**/platform_def.h'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- uart
+- clock
+- dwuartclk
+- baud-rate
+- dw8250
+- 100mhz
