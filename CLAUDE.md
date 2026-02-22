@@ -63,6 +63,7 @@ Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search(
 - **TF-A vars differ by branch**: `devkit-ex-b0` uses `HYPRAM_EN`, `TRUSTED_SRAM1=0x08000000`, `ENABLE_PIE=1`. Scarthgap uses `AP_HYPERRAM_EN`, `ALIF_TRUSTED_SRAM_BASE=0x027DE000`, no PIE.
 - **Rootfs address**: E7 AppKit rootfs at `0x80300000` (NOT `0x80380000` which is E8). MRAM layout: TF-A@0x80002000, DTB@0x80010000, kernel@0x80020000, rootfs@0x80300000.
 - **4MB SRAM, not 8MB**: The E7 has 4MB SRAM (0x02000000-0x023FFFFF). The scarthgap DTB declares ~8MB causing OOM panic. Correct DTB required.
+- **Always use `jlink_flash`, NEVER `flash` (SE-UART) for image updates**: J-Link is 9x faster (~78s vs ~19min). Only use SE-UART `flash()` for initial ATOC setup or if J-Link is unavailable.
 - **Power cycle after flash**: JLink reset doesn't trigger SE boot sequence. Must unplug/replug PRG_USB after SETOOLS flash for A32 to boot.
 - **SETOOLS baud rate**: SE-UART runs at 57600, set in `isp_config_data.cfg`. Wrong baud causes "Malformed packet" errors.
 - **Console on UART2**: J15 jumpers select UART. Use UART2 position. `earlycon=uart8250,mmio32,0x4901a000,115200n8`.
