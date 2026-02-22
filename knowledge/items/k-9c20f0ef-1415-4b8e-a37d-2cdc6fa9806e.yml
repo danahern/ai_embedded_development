@@ -1,0 +1,48 @@
+id: k-9c20f0ef-1415-4b8e-a37d-2cdc6fa9806e
+title: JLinkExe loadbin rejects non-.bin file extensions
+body: |-
+  JLinkExe's `loadbin` command silently rejects files with unrecognized extensions. Files like `.dtb`, `.img`, `.cramfs-xip`, or extensionless files (e.g., `xipImage`) fail with "File is of unknown / unsupported format." — only `.bin` works reliably.
+
+  **Symptom:** `loadbin /path/to/appkit-e7.dtb 0x80010000` outputs "File is of unknown / unsupported format." with no "Downloading file" or "O.K." lines. The command appears to silently skip the file.
+
+  **Fix:** Copy non-`.bin` files to a temp directory with `.bin` extension before passing to loadbin:
+  ```python
+  base = os.path.splitext(os.path.basename(path))[0] or os.path.basename(path)
+  tmp_path = os.path.join(tmp_dir, base + ".bin")
+  shutil.copy2(path, tmp_path)
+  # Use tmp_path in loadbin command
+  ```
+
+  **Impact:** Without this workaround, only `bl32.bin` (TF-A) was actually written during a "successful" 4-component flash. DTB, kernel, and rootfs were silently skipped. The overall operation appeared to succeed because `_run_jlink` didn't detect the format error, and the parser only found 1 file result (bl32.bin with O.K.).
+
+  Tested with JLinkExe V8.70. The `verifybin` command has the same extension sensitivity.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  - JLinkExe
+  subsystems:
+  - flash
+  - mram
+file_patterns:
+- '**/jlink.py'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- jlink
+- loadbin
+- mram
+- file-extension
+- alif-e7

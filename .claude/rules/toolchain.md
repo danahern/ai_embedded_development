@@ -3,5 +3,5 @@ paths: ["**/freertos/thread.c", "**/freertos/workqueue.c", "**/local.conf", "yoc
 ---
 # Toolchain Learnings
 
-- **Alif E7 Yocto: BSP source variables must be set manually with poky distro** — When using `DISTRO = "poky"` (not `apss-tiny`), the Alif BSP source variables are not auto-configured. These must be set in `local.conf`:
 - **ESP32 FreeRTOS StackType_t is uint8_t — stack sizes in bytes not words** — On Xtensa ESP32, `StackType_t` is `uint8_t` (not `uint32_t` like ARM Cortex-M). This means `xTaskCreate()` stack_depth parameter is in BYTES, not words. A value of 2048 gives only 2KB of stack, not 8KB.
+- **Alif E7 Yocto: BSP source variables must be set manually with poky distro** — When using `DISTRO = "poky"` (not `apss-tiny`), the Alif BSP source variables are not auto-configured. These must be set in `local.conf`:
