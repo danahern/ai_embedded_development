@@ -1,0 +1,53 @@
+id: k-9fbd4046-42b1-469a-9ced-ef3b8f8b220f
+title: 'Alif E7: SE-UART ISP flash requires chunked 256KB segments for USB stability'
+body: |-
+  Large MRAM writes via SE-UART ISP cause FTDI USB adapter drops. The alif-flash MCP server works around this with chunked writes.
+
+  **Problem:** Writing images larger than ~256KB in a single BURN_MRAM command causes the FTDI USB-serial adapter to disconnect mid-transfer. The SE keeps writing, but the host loses the serial connection. Proprietary `app-write-mram` has the same issue (hangs on large images).
+
+  **Solution — chunked writes:**
+  1. Split images into 256KB (262144 byte) segments
+  2. Each segment gets its own BURN_MRAM → DOWNLOAD_DATA → DOWNLOAD_DONE cycle
+  3. If USB drops during a segment, reconnect and retry that segment
+  4. Address auto-increments: segment N starts at `base_addr + N * 256KB`
+
+  **Bug fixes for USB drop recovery:**
+  - `open_serial()`: Catch `OSError` (not just `SerialException`) when draining `ser.in_waiting` — FTDI port raises OSError when not fully ready after reconnect
+  - `write_image()` finally block: Wrap `send_cmd(STOP_ISP)` and `ser.close()` in try/except — serial object may be dead after failed reconnect
+  - `start_isp()`: Wrap `ser.in_waiting` in try/except for OSError
+
+  **Performance:** ~5 KB/s effective at 57600 baud. Full flash of 5 images (ATOC + 4 Linux images) takes ~13.5 minutes. JLink loadbin is 9x faster for image-only updates.
+
+  **FTDI port identification:** The FTDI adapter appears as `/dev/cu.usbserial-*` on macOS (e.g., `/dev/cu.usbserial-A10LOVM2`). The onboard JLink VCOM appears as `/dev/cu.usbmodem*`. Always prefer `usbserial` for ISP operations.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - setools
+  subsystems:
+  - flash
+  - isp
+  - usb
+file_patterns:
+- claude-mcps/alif-flash/**/isp.py
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- ftdi
+- usb-drop
+- chunked
+- se-uart
+- isp
+- mram
+- flash

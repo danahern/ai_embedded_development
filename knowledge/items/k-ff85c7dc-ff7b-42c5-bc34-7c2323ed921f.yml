@@ -1,0 +1,59 @@
+id: k-ff85c7dc-ff7b-42c5-bc34-7c2323ed921f
+title: 'Alif E7: JLink loadbin MRAM flash — 9x faster than SE-UART ISP'
+body: |-
+  JLink `loadbin` can write directly to MRAM at ~44 KB/s (vs ~5 KB/s for SE-UART ISP), completing all 4 Linux images in ~78 seconds.
+
+  **Setup:**
+  - Device definition: `AE722F80F55D5_M55_HP` installed to `~/Library/Application Support/SEGGER/JLinkDevices/AlifSemi/`
+  - Requires `Devices.xml` + `AlifE7.JLinkScript` (prevents JLink from resetting the board)
+  - Interface: SWD at 4000 kHz
+  - alif-flash MCP tools: `jlink_setup` (installs device def), `jlink_flash` (flashes images)
+
+  **JLinkExe `loadbin` quirks:**
+  - Only accepts `.bin` extension. Non-.bin files (e.g., `.dtb`) get "unsupported format" error
+  - Workaround: copy to temp file with `.bin` extension before loading
+  - "Failed to halt CPU" errors between downloads are harmless — JLink can't halt the A32 but MRAM writes still succeed
+  - Must use `-NoGui 1` flag or JLinkExe opens a GUI port selector
+
+  **MRAM layout for loadbin:**
+  ```
+  loadbin /path/bl32.bin,0x80002000
+  loadbin /path/appkit-e7.bin,0x80010000   # DTB renamed to .bin
+  loadbin /path/xipImage.bin,0x80020000    # renamed to .bin
+  loadbin /path/cramfs-xip.bin,0x80300000  # renamed to .bin
+  ```
+
+  **Important:** JLink loadbin writes individual images only. It does NOT write the ATOC. Use SE-UART ISP (alif-flash `flash` tool or `app-write-mram`) for ATOC writes first, then JLink for fast image updates during development.
+
+  **Probe selection:** Use `-USB <serial>` to select a specific probe when multiple are connected. Example: `-USB 1223000022` for external J-Trace PRO.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - linux
+  - flash
+file_patterns:
+- claude-mcps/alif-flash/**/jlink.py
+- claude-mcps/alif-flash/jlink/**
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- jlink
+- loadbin
+- mram
+- flash
+- speed
+- device-definition

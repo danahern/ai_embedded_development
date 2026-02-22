@@ -1,0 +1,50 @@
+id: k-e224be35-0193-4f49-912e-945b2e1dd5ea
+title: 'Alif E7: Serial port detection — FTDI (usbserial) for ISP, JLink VCOM (usbmodem) for console'
+body: |-
+  The Alif E7 AppKit has TWO serial ports on macOS, and picking the wrong one causes silent failures:
+
+  **Ports:**
+  - `/dev/cu.usbserial-*` (e.g., `usbserial-A10LOVM2`) — External FTDI adapter connected to SE-UART header. Used for ISP flash protocol at 57600 baud.
+  - `/dev/cu.usbmodem*` (e.g., `usbmodem0012193076991`) — Onboard JLink VCOM. Routes through J15 jumper to selected UART. Used for console output at 115200 baud.
+
+  **Auto-detection rule:** When both ports are present, always prefer `usbserial` (FTDI) for ISP operations. The `_resolve_port()` function in alif-flash MCP filters for ports containing "usbserial" first.
+
+  **JLink VCOM caveat:** The VCOM port only produces output when there's an active JLink debug session. After a plain power cycle (unplug/replug PRG_USB) without JLink connected, VCOM shows nothing. To get console output after power cycle, either:
+  1. Keep J15 on UART2, connect JLink, use `jlink_reset` to trigger TF-A boot
+  2. Use an external UART adapter on the UART2 header pins directly
+
+  **J15 jumper positions (what feeds the single VCOM port):**
+  - Pins 1-3/2-4: SE-UART (for ISP at 57600)
+  - Pins 3-5/4-6: UART0 (TF-A output at 115200)
+  - Pins 5-7/6-8: UART2 (Linux console at 115200)
+  - Pins 7-9/8-10: UART4
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  subsystems:
+  - serial
+  - usb
+file_patterns:
+- claude-mcps/alif-flash/**/server.py
+- claude-mcps/alif-flash/**/isp.py
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-22
+updated: 2026-02-22
+author: claude
+source_session: null
+tags:
+- ftdi
+- vcom
+- jlink
+- serial
+- port-detection
+- j15
