@@ -1,0 +1,50 @@
+id: k-bcd2147b-07bd-4199-b029-b5dcec4e9fd5
+title: 'Alif E7: gen_toc and flash both read from build/images/, not build/config/'
+body: |-
+  When updating a TF-A binary (or any image) for the Alif E7:
+
+  1. `gen_toc` reads binary files from `build/images/` to create content certificates and signatures
+  2. `flash()` reads binary files from `build/images/` to write to MRAM
+
+  The config JSON files live in `build/config/` but the **binary files must be in `build/images/`**.
+
+  **Common mistake:** Copying a newly built `bl32.bin` to `build/config/bl32-ospi.bin` but not to `build/images/bl32-ospi.bin`. Result: gen_toc signs the OLD binary from `build/images/`, and the OLD binary gets flashed. The new binary is never used.
+
+  **Correct workflow:**
+  ```bash
+  # Copy to BOTH locations (or at minimum, build/images/)
+  cp build/devkit_e7/debug/bl32.bin tools/setools/build/images/bl32-ospi.bin
+  cp build/devkit_e7/debug/bl32.bin tools/setools/build/config/bl32-ospi.bin
+  # Then gen_toc + flash
+  ```
+
+  **Verify with MD5:** Always check `md5 build/images/bl32-ospi.bin build/config/bl32-ospi.bin` to confirm they match before flashing.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems:
+  - flash
+  - build
+file_patterns:
+- '**/setools/build/**'
+- claude-mcps/alif-flash/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- gen-toc
+- build-images
+- binary-path
+- flash
+- mram

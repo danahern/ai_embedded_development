@@ -1,0 +1,45 @@
+id: k-e9bd81b2-818c-4223-b3f7-aca0878115ee
+title: 'Alif E7: JLink requires -SelectEmuBySN with multiple probes; M55 enters LOCKUP after SE boot'
+body: |-
+  **Multiple probes:** When both a J-Trace PRO (SN: 001223000022) and the on-board J-Link (SN: 001219307699) are connected, JLinkExe hangs at "Connecting to J-Link via USB..." without specifying which probe. Always use:
+  ```
+  JLinkExe -device CORTEX-M55 -if SWD -speed 4000 -SelectEmuBySN 001219307699
+  ```
+
+  **M55 LOCKUP state:** After SE boot, if no M55 firmware is loaded, the M55_HP core enters LOCKUP. JLink `r` (reset) command fails with "CPU could not be halted" because:
+  - SYSRESETREQ confuses the core
+  - VC_CORERESET doesn't halt (debug logic also reset by reset pin)
+  - Multiple retry strategies all fail
+
+  **However, JLink can still read memory** while the M55 is in LOCKUP (using `connect` without reset). This is useful for reading SRAM debug markers.
+
+  **For board reset:** The JLink reset pin toggle during failed reset attempts DOES trigger a full SE re-boot sequence, which re-launches TF-A on A32. So even though JLink reports failure, the system does reset. Monitor UART output during the JLink reset attempts to confirm TF-A boot.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  subsystems:
+  - debug
+  - m55
+file_patterns:
+- '**/alif_e7_target.yaml'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- jlink
+- m55
+- lockup
+- serial-number
+- reset
+- swd

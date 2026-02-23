@@ -1,0 +1,47 @@
+id: k-44046fb3-1086-44d0-86ed-f4c4274f3a00
+title: 'Alif E7: JLink MRAM writes silently dropped after SE boot'
+body: |-
+  After the Alif SE (Secure Enclave) boots and starts the A32 core, **JLink writes to MRAM addresses are silently dropped**. The write appears to succeed (no error) but readback shows the old value. This applies even when the board is in SE maintenance mode.
+
+  **Verification test:**
+  ```
+  JLinkExe> w4 0x800055F0 0xDEADBEEF
+  JLinkExe> mem32 0x800055F0 1
+  800055F0 = <old value, NOT 0xDEADBEEF>
+  ```
+
+  This means `jlink_flash()` (which uses JLink `loadbin`) **cannot update MRAM** after initial SE boot. It reports success writing megabytes of data, but nothing actually changes in MRAM.
+
+  **Only SE-UART ISP can write MRAM.** Use `alif-flash.flash(config=..., maintenance=true)` for all MRAM updates. The `jlink_flash()` tool is only useful if the board has never been SE-booted (which is not a practical scenario).
+
+  This was a major debugging time-sink — flashing appeared to succeed repeatedly but the old binary kept running.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - mram
+  - flash
+file_patterns:
+- claude-mcps/alif-flash/**
+- '**/alif*flash*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- jlink
+- mram
+- silent-failure
+- se-uart
+- flash
