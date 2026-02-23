@@ -1,0 +1,77 @@
+id: k-e662ce9b-6386-4464-9be5-3deaa431e961
+title: Alif E7 TF-A build command — full flags for arm-linux-gnueabihf-gcc
+body: |-
+  TF-A for the Alif E7 DevKit must be built with specific flags. The build uses `arm-linux-gnueabihf-gcc` from the `alif-e7-sdk` Docker container (the Zephyr SDK's `arm-zephyr-eabi-gcc` also works but needs the same flags).
+
+  **Complete build command:**
+  ```bash
+  make PLAT=devkit_e7 ARCH=aarch32 SPD=none AARCH32_SP=sp_min \
+      CROSS_COMPILE=arm-linux-gnueabihf- \
+      RESET_TO_SP_MIN=1 \
+      ARM_LINUX_KERNEL_AS_BL33=1 \
+      ARM_TRUSTED_SRAM_BASE=0x08000000 \
+      PRELOADED_BL33_BASE=0xC0100000 \
+      ARM_PRELOADED_DTB_BASE=0x80010000 \
+      RAM_PRELOADED_DTB_BASE=0x02390000 \
+      ENABLE_STACK_PROTECTOR=strong \
+      ENABLE_PIE=1 \
+      BL32_IN_XIP_MEM=1 \
+      BL32_XIP_BASE=0x80002000 \
+      UART=4 \
+      HYPRAM_EN=1 \
+      FLASH_EN=1 \
+      AES_EN=0 \
+      MODEM_SRAM=0 \
+      DEBUG=1 \
+      march32-directive="-march=armv8-a -mfpu=neon" \
+      bl32
+  ```
+
+  **Key flags explained:**
+  - `ARCH=aarch32` — MUST be explicit; default is aarch64 which causes `-mstrict-align` error
+  - `march32-directive="-march=armv8-a -mfpu=neon"` — Required for `arm-linux-gnueabihf-gcc` (hard-float needs FPU spec). Not needed with `arm-zephyr-eabi-gcc`.
+  - `BL32_IN_XIP_MEM=1 BL32_XIP_BASE=0x80002000` — TF-A runs XIP from MRAM at 0x80002000
+  - `ARM_TRUSTED_SRAM_BASE=0x08000000` — SRAM base for runtime data
+  - `PRELOADED_BL33_BASE=0xC0100000` — Kernel XIP address in OSPI NOR flash
+  - `FLASH_EN=1` — Enables OSPI NOR flash driver and XIP mapping
+  - `UART=4` — UART4_B for console output (use UART=2 for UART2_A)
+
+  **Docker build:**
+  ```bash
+  linux-build.start_container(image="alif-e7-sdk:latest", workspace_dir="path/alif_arm-tf")
+  linux-build.build(container="tfa-build", command="make ... clean")
+  linux-build.build(container="tfa-build", command="make ... bl32")
+  ```
+
+  **Output:** `build/devkit_e7/debug/bl32.bin` (~30KB) — flash to MRAM at 0x80002000 via JLink or SE-UART ISP.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - linux-build
+  - alif-flash
+  subsystems: []
+file_patterns:
+- alif_arm-tf/**/*.c
+- alif_arm-tf/**/*.h
+- alif_arm-tf/**/*.mk
+status: validated
+validated_by:
+- build-test
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- tfa
+- build
+- alif
+- cross-compile
+- docker
+- mram

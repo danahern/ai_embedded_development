@@ -1,0 +1,56 @@
+id: k-5a99d26d-e0d5-4015-ae13-4c993a7c183d
+title: 'TF-A OSPI flash programmer: MRAM staging with magic word trigger'
+body: |-
+  The Alif E7 AppKit TF-A includes an OSPI NOR flash programmer that copies data from MRAM to OSPI on boot. This enables programming the OSPI flash without JLink (which can't access OSPI due to M55_HP LOCKUP).
+
+  Trigger mechanism: 16-byte header at MRAM 0x8000E000:
+    struct ospi_prog_hdr { magic=0x4F535049 ("OSPI"), dest_addr, length, src_addr }
+
+  Usage flow:
+  1. Write kernel to MRAM at 0x80020000 via SE-UART
+  2. Write header to MRAM at 0x8000E000 via SE-UART
+  3. Power cycle → TF-A sees magic → erases + programs OSPI → clears magic → re-inits XIP → boots
+  4. Subsequent boots: no magic → skip programming → boot from OSPI XIP
+
+  Performance: 34 sectors erase (~17s with 500ms fixed delays) + 8511 pages program (~17s with 2ms delays) ≈ 34s total for 2.2MB kernel.
+
+  Key implementation details:
+  - All flash operations in DDR Octal mode with DFS=16
+  - Page program command: 0x12 (OPI mode), NOT 0x84 (SPI mode)
+  - Fixed delays instead of status register polling (DFS=8 read broken in DDR mode)
+  - Software Reset + full re-init after programming for reliable XIP
+  - Build: FLASH_EN=1 AES_EN=0 PRELOADED_BL33_BASE=0xC0100000
+
+  The alif-flash MCP server's flash() function skips OSPI_HDR config entries — use isp_write_hdr.py as workaround.
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - se-uart
+  subsystems:
+  - ospi
+  - flash
+  - tfa
+  - mram
+file_patterns:
+- '**/norflash_ospi_setup.*'
+- '**/ospi_flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- ospi-programmer
+- mram-staging
+- tfa
+- flash-programming
+- alif-e7

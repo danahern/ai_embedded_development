@@ -1,0 +1,50 @@
+id: k-d94d3cb4-6fcf-4817-b968-96f46f080cb0
+title: Alif E7 VCOM serial requires full ATOC with DEVICE entry for A32 boot
+body: |-
+  When flashing TF-A to the Alif E7, a TFA-only ATOC (without DEVICE entry or with only TFA+DEVICE) may not boot the A32 core. The full ATOC with DEVICE entry is required for the SE to properly configure clocks, firewalls, and start the A32.
+
+  **Symptom:** No serial output on any UART after flashing TFA-only config, even though SE responds to ISP probe.
+
+  **Fix:** Always flash with a full ATOC config that includes the DEVICE entry with `app-device-config.json`. The DEVICE entry configures essential chip peripherals.
+
+  **Verified working ATOC structure:**
+  ```json
+  {
+      "DEVICE": { "binary": "app-device-config.json", "signed": true },
+      "TFA": { "binary": "bl32-ospi.bin", "mramAddress": "0x80002000", "flags": ["boot"] },
+      "DTB": { "binary": "appkit-e7-ospi.dtb", "mramAddress": "0x80010000" }
+  }
+  ```
+
+  **Console capture workflow:**
+  1. Flash via SE-UART (`alif-flash.flash`)
+  2. Move J15 to UART2 position (pins 5-7/6-8)
+  3. Open serial on VCOM port (`/dev/cu.usbmodem*`) at 115200
+  4. JLink reset to trigger boot (not power cycle — keeps VCOM connected)
+  5. Capture TF-A boot output on UART2
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- atoc
+- device-config
+- serial
+- vcom
+- uart
+- boot

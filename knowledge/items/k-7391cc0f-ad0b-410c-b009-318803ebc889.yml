@@ -1,0 +1,45 @@
+id: k-7391cc0f-ad0b-410c-b009-318803ebc889
+title: Alif E7 JLink VCOM — use JLink reset (not power cycle) to capture boot output
+body: |-
+  To capture TF-A/Linux boot output on the Alif E7 AppKit VCOM serial port, use JLink reset instead of USB power cycle.
+
+  **Why:** Power cycling (unplug/replug PRG_USB) disconnects the USB serial port, causing the host to lose the connection. By the time the port reappears and the serial listener reconnects, boot messages are already gone.
+
+  **Working approach:**
+  1. Open serial listener on `/dev/cu.usbmodem*` at 115200 baud
+  2. Trigger JLink reset (e.g., `alif-flash.maintenance(jlink_reset=true)` just for the reset, or JLinkExe `r` command)
+  3. Boot output appears immediately on the open serial connection
+
+  **J15 jumper positions for VCOM:**
+  - Pins 1-3/2-4: SE-UART (ISP at 57600)
+  - Pins 3-5/4-6: UART0 (Rev C label says UART2 — swapped)
+  - Pins 5-7/6-8: UART2 (TF-A console at 115200) ← use this
+  - Pins 7-9/8-10: UART4
+
+  **Note:** The `/dev/cu.usbserial-*` (FTDI) port is always SE-UART regardless of J15. Only the `/dev/cu.usbmodem*` (JLink VCOM) port switches with J15.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- jlink
+- vcom
+- serial
+- j15
+- uart
+- boot-capture

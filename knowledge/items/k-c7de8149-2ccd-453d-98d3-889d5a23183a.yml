@@ -1,0 +1,47 @@
+id: k-c7de8149-2ccd-453d-98d3-889d5a23183a
+title: DWC SSI DDR Octal mode requires DFS=16 for ALL operations
+body: |-
+  The Synopsys DWC SSI (SPI controller) in DDR Octal mode transfers 16 bits per clock cycle (8 IO lines × 2 DDR edges). The Data Frame Size (DFS) MUST be set to 16-bit for all DDR Octal operations — writes AND reads.
+
+  With DFS=8 in DDR Octal mode:
+  - Write commands: the controller pairs adjacent 8-bit frames into 16-bit bus transfers, corrupting command bytes and addresses
+  - Read operations (e.g., status register): return 0x00 instead of actual data
+
+  This affects:
+  - Write Enable (0x06) — command garbled, flash ignores it
+  - Sector Erase (0xDC) — address scrambled to wrong location
+  - Page Program (0x12) — data not written
+  - Status Register Read (0x05) — always returns 0, breaking WIP polling
+
+  The Alif CMSIS reference driver (alif_usb-to-ospi-flasher) uses DFS=16 for ALL DDR Octal operations. The existing TF-A OSPI driver functions (ospi_setup_write, ospi_setup_read) use DFS=8 and only work correctly in SDR/SPI modes.
+
+  Fix: Use ospi_setup_write_ddr16() for writes and a DFS=16 read setup for reads when the flash is in DDR Octal mode.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/ospi_flash/**'
+- '**/ospi_drv.*'
+- '**/norflash_ospi_setup.*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- dwc-ssi
+- ddr-octal
+- dfs
+- ospi
+- is25wx256

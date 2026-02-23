@@ -1,0 +1,52 @@
+id: k-eb248390-abeb-4dd1-97ed-423374c845e7
+title: Alif reference OSPI flasher command set for IS25WX256 DDR Octal mode
+body: |-
+  The Alif USB-to-OSPI flasher (alifsemi/alif_usb-to-ospi-flasher) uses these commands in DDR Octal mode for IS25WX256:
+
+  | Operation | Command | Opcode |
+  |-----------|---------|--------|
+  | Write Enable | CMD_WRITE_ENABLE | 0x06 |
+  | Page Program | CMD_PAGE_PROGRAM | 0x84 |
+  | Sector Erase (32KB) | CMD_SECTOR_ERASE | 0x52 |
+  | Bulk Erase | CMD_BULK_ERASE | 0xC7 |
+  | Read Data | CMD_READ_DATA | 0x7C |
+  | Read Flag Status | CMD_READ_FLAG_STATUS | 0x70 |
+  | Read Status | CMD_READ_STATUS | 0x05 |
+  | Write Vol Config | CMD_WRITE_VOL_CONFIG | 0x81 |
+
+  Key design decisions:
+  - Flash is switched to DDR Octal once at init and stays there for ALL operations
+  - All operations use DFS=16 (16-bit data frames for DDR Octal)
+  - Write Enable verified via status register (bit 1 = WEL) after init
+  - Completion polling uses Flag Status Register (0x70), bit 7 = ready
+  - Error detection via Flag Status bits 5:4
+
+  The TF-A OSPI programmer uses different commands (0xDC for 64KB erase, 0xFD for XIP read) because setup_flash_xip() configures the flash differently. Both command sets are valid for IS25WX256 in DDR Octal mode.
+category: hardware
+severity: informational
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/ospi_flash/**'
+- '**/norflash_ospi_setup.*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- is25wx256
+- reference-flasher
+- command-set
+- ddr-octal
+- alif

@@ -1,0 +1,45 @@
+id: k-4a8c8f40-e342-41df-bd90-9c1de8fc5e52
+title: OSPI XIP re-entry after flash programming requires full re-init via Software Reset
+body: |-
+  After performing erase/program operations on the ISSI IS25WX256 in DDR Octal mode, calling ospi_xip_enter() alone does NOT reliably restore XIP. The XIP reads return all zeros even though AES control register shows XIP_EN=1.
+
+  Root cause: the DWC SSI controller state after multiple DFS/mode switches during programming cannot be properly restored by just re-entering XIP mode.
+
+  Solution: After programming, send Software Reset to the flash (0x66 Reset Enable + 0x99 Reset Memory). This returns the flash to SPI single-wire mode. Then re-run the full setup_flash_xip() sequence which performs probe, mode switch to DDR Octal, and XIP enter from a known-good state.
+
+  Implementation in init_nor_flash():
+  1. setup_flash_xip() — initial setup, enters XIP
+  2. ospi_program_from_mram() — exits XIP, erases/programs, sends Software Reset, returns 1
+  3. If programmed: re-run setup_flash_xip() — full re-init from SPI mode
+  4. Verify XIP data matches source
+
+  The Software Reset commands (0x66, 0x99) must also use DFS=16 since the flash is still in DDR Octal mode at that point. After reset, set ospi_cfg->ddr_en = 0 since flash returns to SPI mode.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+  - xip
+file_patterns:
+- '**/ospi_flash/**'
+- '**/norflash_ospi_setup.*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- xip
+- software-reset
+- ospi
+- is25wx256
+- flash-programming

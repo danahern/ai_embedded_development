@@ -1,0 +1,70 @@
+id: k-502e0e95-135c-46ea-9081-471129c05488
+title: Alif E7 OSPI flash programmer in TF-A — trigger via MRAM magic word
+body: |-
+  TF-A for the Alif E7 DevKit includes an OSPI NOR flash programmer triggered by a magic word at MRAM address 0x80008000. This allows programming the OSPI flash (for XIP kernel boot) without JLink or external tools.
+
+  **Trigger mechanism:**
+  A 16-byte header at MRAM 0x80008000:
+  ```c
+  struct ospi_prog_hdr {
+      uint32_t magic;      /* 0x4F535049 = "OSPI" */
+      uint32_t dest_addr;  /* OSPI destination (e.g. 0xC0100000) */
+      uint32_t length;     /* bytes to program */
+      uint32_t src_addr;   /* MRAM source (e.g. 0x80020000) */
+  };
+  ```
+
+  **Normal boot:** No magic at 0x80008000 → skip programming → boot from OSPI XIP.
+
+  **Programming boot:** Magic present → exit XIP → erase sectors → program pages → re-enter XIP → clear magic → boot.
+
+  **Writing the header via SE-UART ISP:**
+  ```python
+  from alif_flash.isp import write_image
+  # Board must be in maintenance mode first
+  write_image('/dev/cu.usbserial-...', '/path/to/header.bin', 0x80008000)
+  ```
+
+  **Header construction:**
+  ```python
+  import struct
+  header = struct.pack('<IIII',
+      0x4F535049,    # magic "OSPI"
+      0xC0100000,    # dest: OSPI XIP address
+      2178700,       # length: kernel size in bytes
+      0x80020000)    # src: MRAM staging address
+  ```
+
+  **Timing:** ~15 seconds for 2.2MB kernel (erase ~10s + program ~5s).
+
+  **Console output:** `OSPI PROG: N bytes from 0x80020000 to 0xC0100000` messages on UART during programming.
+
+  **Files modified:** `norflash_ospi_setup.c` (erase/program/poll functions + `ospi_program_from_mram()`), `dwc_spi.h` (ISSI command defines).
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns:
+- alif_arm-tf/**/norflash_ospi_setup.c
+- alif_arm-tf/**/dwc_spi.h
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- ospi
+- flash
+- tfa
+- mram
+- xip
+- issi

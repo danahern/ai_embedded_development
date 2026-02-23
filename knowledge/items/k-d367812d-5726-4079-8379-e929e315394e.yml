@@ -1,0 +1,45 @@
+id: k-d367812d-5726-4079-8379-e929e315394e
+title: IS25WX256 OPI DDR mode uses 0x12 for Page Program, not 0x84
+body: |-
+  The ISSI IS25WX256 NOR flash has different command sets for SPI mode vs OPI (Octal) DDR mode:
+
+  - 0x84 = "4-Byte Octal Input Fast Program" — SPI-mode command (1-8-8), only data phase uses 8 lines
+  - 0x12 = "Page Program" — valid in OPI DDR (8D-8D-8D) mode, all phases on 8 lines
+  - 0xDC = "4-Byte Sector Erase" — valid in both SPI and OPI modes
+  - 0x06 = "Write Enable" — valid in both modes
+  - 0x05 = "Read Status Register" — valid in both modes
+
+  When the flash is in OPI DDR mode (set during setup_flash_xip), sending 0x84 is silently ignored because it's not a recognized OPI command. The flash doesn't assert WIP, so status polling returns "ready" immediately, masking the failure.
+
+  Confirmed by Renesas xSPI reference: OPI DDR Page Program = 0x12ED (command + complement). The DWC SSI controller handles complement generation.
+
+  Symptom: erase works (0xDC valid in OPI), pages "written" quickly (no WIP delay), but flash reads all 0xFF (data never programmed).
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/ospi_flash/**'
+- '**/norflash_ospi_setup.*'
+- '**/dwc_spi.h'
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- is25wx256
+- opi-ddr
+- page-program
+- flash-commands
+- ospi

@@ -1,0 +1,52 @@
+id: k-54c92f4b-f932-4c11-b27f-bcec50db1240
+title: 'IS25WX256 OPI DDR: status register read broken with DFS=8, use Flag Status (0x70) or fixed delays'
+body: |-
+  The ISSI IS25WX256 Read Status Register (0x05) returns 0x00 when read via the DWC SSI with DFS=8 in DDR Octal mode. This breaks WIP (Write-In-Progress) polling, causing erase/program operations to race.
+
+  Symptoms when status read is broken:
+  - issi_wait_ready() returns immediately (WIP=0, status=0x00)
+  - Subsequent operations start while flash is still busy from previous erase
+  - Page program silently fails (flash rejects writes during busy state)
+  - Erase *appears* to work because it's the first operation and has no timing dependency
+
+  The Alif reference flasher (alif_usb-to-ospi-flasher) uses:
+  - 0x70 (Read Flag Status Register) for completion polling, NOT 0x05
+  - Flag Status bit 7: 1=ready, 0=busy; bits 5:4 for error detection
+  - DFS=16 for ALL DDR Octal operations including reads
+
+  Workaround: use fixed delays instead of polling:
+  - Sector erase: delay_in_us(500000) — 500ms (IS25WX256 max: 2000ms)
+  - Page program: delay_in_us(2000) — 2ms (IS25WX256 max: 5ms)
+
+  Proper fix (TODO): implement DFS=16 read for Flag Status Register (0x70) with proper DDR Octal bus setup, similar to how the reference flasher handles it.
+
+  Note: both 0x84 (Octal Page Program) and 0x12 (4-Byte Page Program) are valid in OPI DDR mode per the reference flasher. The page program failure was caused by the broken status read, not the command opcode.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/ospi_flash/**'
+- '**/norflash_ospi_setup.*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: claude
+source_session: null
+tags:
+- is25wx256
+- status-register
+- wip-polling
+- dfs
+- ddr-octal
+- flag-status
