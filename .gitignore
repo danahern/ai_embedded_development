@@ -22,6 +22,8 @@ yocto-build/
 # ==============================================
 .claude/*
 !.claude/rules/
+!.claude/hooks/
+!.claude/settings.json
 
 # ==============================================
 # Caches

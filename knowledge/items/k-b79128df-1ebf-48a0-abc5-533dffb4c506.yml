@@ -1,0 +1,34 @@
+id: k-b79128df-1ebf-48a0-abc5-533dffb4c506
+title: 'CLAUDE.md DRY-up pattern: hooks enforce, rules define, CLAUDE.md sets policy'
+body: |-
+  The three-tier knowledge system works best when each tier has a distinct role:
+  - **CLAUDE.md** (Tier 1): Only cross-cutting policy and gotchas (~6 items). Target under 8KB. Anything board/platform-specific belongs in Tier 2.
+  - **`.claude/rules/*.md`** (Tier 2): Board/platform-specific rules with `paths:` frontmatter for targeted auto-injection. Use YAML frontmatter `paths: ["glob1", "glob2"]` to scope when rules load.
+  - **Hooks** (enforcement): PreToolUse hooks enforce policies that CLAUDE.md declares. "Hooks enforce, rules define, CLAUDE.md sets policy."
+
+  Trimming CLAUDE.md from ~13KB/38 gotchas to ~6KB/6 gotchas significantly reduces context dilution. The removed gotchas still exist in Tier 2 rules and Tier 3 knowledge items — they auto-inject when editing relevant files.
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - knowledge
+  - documentation
+file_patterns:
+- '**/CLAUDE.md'
+- '**/.claude/rules/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: danahern
+source_session: null
+tags:
+- knowledge-management
+- documentation
+- dry
+- claude-code

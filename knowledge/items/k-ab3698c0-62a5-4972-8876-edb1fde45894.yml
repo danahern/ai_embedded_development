@@ -1,0 +1,38 @@
+id: k-ab3698c0-62a5-4972-8876-edb1fde45894
+title: PreToolUse hook for MCP-first enforcement
+body: |-
+  Claude Code PreToolUse hooks can enforce MCP-first policy by intercepting Bash tool calls and blocking CLI tools that have MCP equivalents. The hook reads tool_input JSON from stdin, extracts the command, and returns `{"decision":"deny","reason":"..."}` to block with an explanation.
+
+  Key implementation details:
+  - Hook script at `.claude/hooks/enforce-mcp-first.sh`, registered in `.claude/settings.json` with `matcher: "Bash"`
+  - Use `python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))"` to extract the command
+  - Return empty output (just `exit 0`) to allow, or JSON with `decision`/`reason` to deny
+  - Timeout of 10s in settings.json is sufficient
+  - `.claude/hooks/` and `.claude/settings.json` must be negated in `.gitignore` (add `!.claude/hooks/` and `!.claude/settings.json`)
+  - Exception patterns (like JLinkExe VCOM persistence) need to check for distinguishing markers in the command string, not in referenced files
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - claude-code
+  subsystems:
+  - hooks
+  - mcp
+file_patterns:
+- '**/.claude/hooks/**'
+- '**/.claude/settings.json'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-23
+updated: 2026-02-23
+author: danahern
+source_session: null
+tags:
+- hooks
+- enforcement
+- mcp-first
+- claude-code

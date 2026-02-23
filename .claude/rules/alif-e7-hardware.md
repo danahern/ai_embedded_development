@@ -1,3 +1,7 @@
+---
+paths: ["**/alif-e7/**", "**/alif_e7*", "**/appkit-e7*", "**/linux-boot-e7*", "claude-mcps/alif-flash/**"]
+---
+
 # Alif E7 AppKit Hardware Interaction Rules
 
 ## Serial Port Setup (CRITICAL — do not guess)
@@ -37,10 +41,22 @@ EOF
 - **Onboard JLink** (VCOM + debug): Serial `001219307699`
 - **J-Trace PRO** (external): Serial `001223000022`
 
-## Flashing — Two Separate Tools
+## Flashing — When to Use Which Tool (CRITICAL)
 
-- **MRAM** (0x80000000+): Use `jlink_flash` or SE-UART `flash()`. MRAM is directly writable.
-- **OSPI NOR Flash** (0xC0000000+): SETOOLS do NOT support OSPI programming. SE-UART `CMD_BURN_MRAM` rejects OSPI addresses. Must program from Linux or use alternative tooling.
+**`jlink_flash` (fast, ~44 KB/s, ~78s for full image set):**
+- Use for ALL image updates (TF-A, DTB, kernel, rootfs) at existing MRAM addresses
+- Uses `loadbin` on M55_HP AP — MRAM is directly memory-mapped and writable
+- Custom JLinkScript skips resets (SE manages boot sequence)
+- Must power cycle after to trigger SE boot
+
+**SE-UART `flash()` (slow, ~5 KB/s, ~15 min):**
+- ONLY use when ATOC itself must change (new components, different addresses, initial setup)
+- Writes AppTocPackage.bin + all images via ISP protocol
+- Also requires power cycle after
+
+**NEVER use SE-UART for routine image updates. It is 9x slower than jlink_flash.**
+
+- **OSPI NOR Flash** (0xC0000000+): SETOOLS do NOT support OSPI programming. SE-UART `CMD_BURN_MRAM` rejects OSPI addresses. Use J-Link with FLM flash algorithm (`Ensemble_IS25WX256.FLM`).
 
 ## ATOC / gen_toc
 

@@ -11,74 +11,18 @@
 
 ## Key Gotchas
 
-Hard-won lessons (Tier 1 — always loaded). Full details via `knowledge.search()` or `/recall`.
+Cross-cutting lessons (Tier 1 — always loaded). Board/platform-specific gotchas auto-inject via `.claude/rules/` (Tier 2). Full corpus via `/recall` or `knowledge.search()` (Tier 3).
 
-### Zephyr / Build System
-- **nRF54L15**: Use `.hex` not `.elf` for flashing. `flash_program` works; `run_firmware` (erase+program) fails. Use `connect_under_reset=true` to recover stuck states.
-- **native_sim**: Linux-only. Use `qemu_cortex_m3` for unit tests on macOS.
-- **qemu_cortex_m3 has no flash driver**: lm3s6965 — NVS/Settings cannot work. Use `mps2/an385` instead. Use `platform_allow` in testcase.yaml (not just `integration_platforms`).
-- **Flash backend needs real hardware**: `CONFIG_DEBUG_COREDUMP_BACKEND_FLASH_PARTITION` requires `FLASH_HAS_DRIVER_ENABLED`. Won't build on QEMU — use `build_only: true` with `platform_allow`.
-- **QEMU + core template**: `create_app` core template includes crash_log/device_shell overlays that require RTT and flash — unavailable on QEMU. Remove `OVERLAY_CONFIG` lines for QEMU-only apps.
-- **Shell naming**: Zephyr has a built-in `device` shell command. Pick unique names for custom commands.
-- **Log buffer drops**: Boot-time coredump auto-report drops messages if `CONFIG_LOG_BUFFER_SIZE` is too small (default 1024). Set to 4096+.
-- **RTT buffer conflict**: `LOG_BACKEND_RTT` and `SHELL_BACKEND_RTT` both default to buffer 0. Set `SHELL_BACKEND_RTT_BUFFER=1`.
-- **RTT chunks**: Output arrives in ~1KB chunks. Concatenate all reads until `#CD:END#` before passing to `analyze_coredump`.
-- **module.yml paths**: Relative to module root (parent of `zephyr/`), not relative to the yml file.
 - **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`).
-- **coredump_cmd return**: `COREDUMP_CMD_COPY_STORED_DUMP` returns positive byte count on success, not 0.
+- **native_sim**: Linux-only. Use `qemu_cortex_m3` for unit tests on macOS.
+- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to `k_work`/work queue.
+- **RTT buffer conflict**: `LOG_BACKEND_RTT` and `SHELL_BACKEND_RTT` both default to buffer 0. Set `SHELL_BACKEND_RTT_BUFFER=1`.
 - **Build dirs are per-board**: Each app builds to `apps/<name>/build/<board_sanitized>/`. Multiple boards coexist.
-- **Twister SDK env vars**: MCP subprocesses don't inherit shell profile env vars. Auto-detects from `~/.cmake/packages/Zephyr-sdk/`. If that fails, set `ZEPHYR_TOOLCHAIN_VARIANT` and `ZEPHYR_SDK_INSTALL_DIR`.
-- **Zephyr CI container**: `ghcr.io/zephyrproject-rtos/ci` registers SDK for `user`, but GH Actions runs as root. Run `/opt/toolchains/zephyr-sdk-*/setup.sh -c` first.
-- **Gitignore negation**: `.claude/` (trailing slash) makes git skip the entire directory. Use `.claude/*` with `!.claude/rules/`.
-
-### nRF7002-DK / nRF5340
-- **nRF7002-DK flash**: probe-rs fails on nRF5340 (APPROTECT). Use `nrfutil device recover` then `nrfutil device program --firmware <hex> --core Application --traits jlink`.
-- **nRF7002-DK dual-core BLE**: Net core needs `hci_ipc` firmware. Without it, BLE init fails with HCI error -11 (EAGAIN).
-- **nRF7002 WiFi Kconfig**: Use `CONFIG_WIFI_NRF70=y`, not `CONFIG_WIFI_NRF700X`. Also `CONFIG_WIFI_NM_WPA_SUPPLICANT=y`, not `CONFIG_WPA_SUPP`. Fetch blobs first: `west blobs fetch nrf_wifi`.
-
-### ESP32
-- **ESP32 WiFi power management**: Modem sleep blocks incoming TCP/ping. Call `esp_wifi_set_ps(WIFI_PS_NONE)` after `esp_wifi_start()`.
-- **ESP32 FreeRTOS stack sizes**: `StackType_t` is `uint8_t` on Xtensa — `xTaskCreate` stack_depth is in bytes, not words. Use 4096+ for WiFi tasks.
-- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to `k_work`/work queue. Copy data to static buffer before submitting.
-
-### STM32MP1
-- **M4 has no persistent flash**: Firmware loaded to RETRAM/MCUSRAM via OpenOCD `load_image`. Lost on power cycle. Production uses remoteproc.
-- **Use remoteproc for M4 firmware**: Copy ELF to `/lib/firmware/`, echo to `/sys/class/remoteproc/remoteproc0/`. OpenOCD is for bare-metal debug only.
-- **OpenOCD config**: Must disable A7 GDB ports and set M4 as active target for M4-only debugging.
-- **USB gadget macOS**: No RNDIS support on macOS. Must use pure CDC-ECM. Build kernel with `CONFIG_USB_ETH_RNDIS=n`.
-- **DWC2 composite USB fails**: Limited FIFOs (952 entries). CDC-ECM + FunctionFS (ADB) exceeds them. Use ADB-only gadget.
-- **CDC-ECM IP conflict**: Bring down usb0 (RNDIS, 192.168.7.2) before configuring ECM, or kernel routes via wrong interface.
-- **Dropbear SSH on macOS**: v2018.76 only supports ssh-rsa. Add `HostKeyAlgorithms +ssh-rsa` to `~/.ssh/config`.
-- **Buildroot glibc mismatch**: Cross-compiled binaries may need `-static` if SD card has older glibc.
-- **Serial FD leak**: Killed serial scripts leak FDs to parent process. Replug USB to recover.
-
-### Yocto / Docker
-- **Yocto case-sensitive FS**: macOS is case-insensitive. Use Docker named volume (not bind mount) for build dir.
-- **Yocto OOM on Apple Silicon**: Docker defaults ~8GB RAM. Set `BB_NUMBER_THREADS=4` and `PARALLEL_MAKE="-j 4"` to avoid OOM on GCC build.
-- **Alif E7 BSP vars**: Use `DISTRO="apss-tiny"` (official). With `DISTRO="poky"`, must set `ALIF_KERNEL_TREE`, `TFA_TREE`, etc. manually in `local.conf`. Prefer the official `alif_linux-apss-build-setup` orchestrator which handles all of this.
-
-### Alif E7 AppKit
-- **Use devkit-ex-b0, NOT scarthgap**: `MACHINE=appkit-e7` on `meta-alif-ensemble` branch `devkit-ex-b0`. Scarthgap has NO `appkit-e7.conf` — only `appkit-e8.conf` which targets different hardware. TF-A from scarthgap crashes on E7 AppKit.
-- **Official build system**: Use `alifsemi/alif_linux-apss-build-setup` orchestrator. It pulls OE zeus (Yocto 3.0), kernel 5.4.25 (`alif_linux` branch `devkit-b0-5.4.y`), and TF-A `devkit-ex-b0`. Newer `linux_alif` (v6.12-dev) has NO appkit-e7 DTS.
-- **TF-A vars differ by branch**: `devkit-ex-b0` uses `HYPRAM_EN`, `TRUSTED_SRAM1=0x08000000`, `ENABLE_PIE=1`. Scarthgap uses `AP_HYPERRAM_EN`, `ALIF_TRUSTED_SRAM_BASE=0x027DE000`, no PIE.
-- **Rootfs address**: E7 AppKit rootfs at `0x80300000` (NOT `0x80380000` which is E8). MRAM layout: TF-A@0x80002000, DTB@0x80010000, kernel@0x80020000, rootfs@0x80300000.
-- **4MB SRAM, not 8MB**: The E7 has 4MB SRAM (0x02000000-0x023FFFFF). The scarthgap DTB declares ~8MB causing OOM panic. Correct DTB required.
-- **Always use `jlink_flash`, NEVER `flash` (SE-UART) for image updates**: J-Link is 9x faster (~78s vs ~19min). Only use SE-UART `flash()` for initial ATOC setup or if J-Link is unavailable.
-- **Power cycle after flash**: JLink reset doesn't trigger SE boot sequence. Must unplug/replug PRG_USB after SETOOLS flash for A32 to boot.
-- **SETOOLS baud rate**: SE-UART runs at 57600, set in `isp_config_data.cfg`. Wrong baud causes "Malformed packet" errors.
-- **Console on UART2**: J15 jumpers select UART. Use UART2 position. `earlycon=uart8250,mmio32,0x4901a000,115200n8`.
-
-### Operational
 - **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
 
 ## CRITICAL: MCP-First Policy
 
-**ALWAYS use MCP tools for operations they support. NEVER shell out to CLI equivalents (addr2line, west, idf.py, nrfjprog, JLinkExe, etc.).**
-
-If an MCP tool fails:
-1. **STOP and tell the user.** Explain which tool failed and why.
-2. **Fix the MCP server or expand its functionality** — do NOT work around it with raw CLI commands. Every workaround is a missed opportunity to standardize device interactions.
-3. **Do NOT silently fall back** to raw CLI commands.
+**ALWAYS use MCP tools. NEVER shell out to CLI equivalents.** Hooks enforce this — blocked commands will tell you which MCP tool to use instead. If an MCP tool fails, STOP and tell the user — fix the MCP server, don't work around it.
 
 ## CRITICAL: Learn and Retain
 
@@ -106,25 +50,9 @@ Tool signatures are in each server's own CLAUDE.md (`claude-mcps/<server>/CLAUDE
 
 Board details available via `knowledge.board_info("board_name")` or `knowledge.list_boards()`.
 
-## Typical Workflows
+## Workflows
 
-### Zephyr (Build-Flash-Test)
-1. `zephyr-build.build(app, board, pristine=true)`
-2. `embedded-probe.connect(probe_selector="auto", target_chip="...")`
-3. `embedded-probe.validate_boot(session_id, file_path, success_pattern="Booting Zephyr")`
-4. `embedded-probe.rtt_read(session_id)`
-
-### ESP-IDF
-1. `esp-idf-build.set_target(project, target)` → `build(project)` → `flash(project, port)` → `monitor(project, port, duration_seconds=10)`
-
-### Crash Debug
-1. Build, connect, flash `.hex`, reset with `halt_after_reset=false`, attach RTT
-2. Read RTT until `#CD:END#` (concatenate chunks)
-3. `embedded-probe.analyze_coredump(log_text, elf_path)` → crash PC, function, call chain
-
-### Unit Tests
-1. `zephyr-build.run_tests(board="qemu_cortex_m3")` — all lib tests
-2. `zephyr-build.test_results(test_id=...)` — structured pass/fail
+Use `/bft <app> <board>` (build-flash-test), `/hw-verify <app> <board>` (hardware verification), or `/embedded` (full guidelines including crash debug).
 
 ## Plans
 
