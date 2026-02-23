@@ -9,7 +9,14 @@
         "--workspace",
         ".",
         "--apps-dir",
-        "firmware/apps"
+        "firmware/apps",
+        "--docker",
+        "--docker-container",
+        "zephyr-build",
+        "--docker-image",
+        "zephyr-builder",
+        "--sdk-path",
+        "/home/openclaw/zephyr-sdk-0.17.0"
       ]
     },
     "esp-idf-build": {
