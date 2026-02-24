@@ -13,11 +13,6 @@
 
 Cross-cutting lessons (Tier 1 — always loaded). Board/platform-specific gotchas auto-inject via `.claude/rules/` (Tier 2). Full corpus via `/recall` or `knowledge.search()` (Tier 3).
 
-- **Board qualifiers**: `/` in CMake (`nrf52840dk/nrf52840`), `_` in overlay filenames (`nrf52840dk_nrf52840.overlay`).
-- **native_sim**: Linux-only. Use `qemu_cortex_m3` for unit tests on macOS.
-- **BLE GATT callbacks**: Must not block. Defer WiFi connect, NVS writes, factory reset to `k_work`/work queue.
-- **RTT buffer conflict**: `LOG_BACKEND_RTT` and `SHELL_BACKEND_RTT` both default to buffer 0. Set `SHELL_BACKEND_RTT_BUFFER=1`.
-- **Build dirs are per-board**: Each app builds to `apps/<name>/build/<board_sanitized>/`. Multiple boards coexist.
 - **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
 
 ## CRITICAL: MCP-First Policy

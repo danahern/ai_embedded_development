@@ -1,5 +1,5 @@
-id: k-5a99d26d-e0d5-4015-ae13-4c993a7c183d
-title: 'TF-A OSPI flash programmer: MRAM staging with magic word trigger'
+id: k-f44cd4f4-0e8e-475c-b155-04c7c0924acb
+title: 'TF-A OSPI flash programmer: MRAM staging with status register polling'
 body: |-
   The Alif E7 AppKit TF-A includes an OSPI NOR flash programmer that copies data from MRAM to OSPI on boot. This enables programming the OSPI flash without JLink (which can't access OSPI due to M55_HP LOCKUP).
 
@@ -8,20 +8,20 @@ body: |-
 
   Usage flow:
   1. Write kernel to MRAM at 0x80020000 via SE-UART
-  2. Write header to MRAM at 0x8000E000 via SE-UART
+  2. Write header to MRAM at 0x8000E000 via SE-UART (use isp_write_hdr.py)
   3. Power cycle → TF-A sees magic → erases + programs OSPI → clears magic → re-inits XIP → boots
   4. Subsequent boots: no magic → skip programming → boot from OSPI XIP
 
-  Performance: 34 sectors erase (~17s with 500ms fixed delays) + 8511 pages program (~17s with 2ms delays) ≈ 34s total for 2.2MB kernel.
+  Performance: ~2.2MB kernel programs in ~15s (erase ~10s + program ~4s) using status register polling.
 
   Key implementation details:
-  - All flash operations in DDR Octal mode with DFS=16
-  - Page program command: 0x12 (OPI mode), NOT 0x84 (SPI mode)
-  - Fixed delays instead of status register polling (DFS=8 read broken in DDR mode)
-  - Software Reset + full re-init after programming for reliable XIP
+  - Must call ospi_init() after ospi_xip_exit() before any SPI commands (restores rx_sample_dly=4)
+  - Status register polling (0x05, WIP bit 0) — NOT Flag Status Register (0x70, Micron-only)
+  - DFS=8 for reads (status register), DFS=16 for writes (erase/program)
+  - Software Reset + full re-init after programming for reliable XIP re-entry
   - Build: FLASH_EN=1 AES_EN=0 PRELOADED_BL33_BASE=0xC0100000
 
-  The alif-flash MCP server's flash() function skips OSPI_HDR config entries — use isp_write_hdr.py as workaround.
+  The alif-flash MCP server supports OSPI_HDR config entries via generic key handling in flash_from_config().
 category: pattern
 severity: important
 applies_to:
@@ -29,9 +29,7 @@ applies_to:
   - devkit_e7
   chips:
   - alif_e7
-  tools:
-  - alif-flash
-  - se-uart
+  tools: []
   subsystems:
   - ospi
   - flash
@@ -42,9 +40,9 @@ file_patterns:
 - '**/ospi_flash/**'
 status: unvalidated
 validated_by: []
-deprecated: true
+deprecated: false
 superseded_by: null
-created: 2026-02-23
+created: 2026-02-24
 updated: 2026-02-24
 author: claude
 source_session: null
@@ -54,3 +52,4 @@ tags:
 - tfa
 - flash-programming
 - alif-e7
+- status-register

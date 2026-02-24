@@ -1,0 +1,92 @@
+id: k-9d6f81b6-da92-4c69-a101-2592cc20265a
+title: 'Alif E7 TF-A build: exact flags and toolchain for bl32.bin'
+body: |-
+  The Alif E7 TF-A (alif_arm-tf) requires very specific build flags. Getting any wrong causes cryptic errors.
+
+  ## Toolchain
+  - Use `arm-linux-gnueabihf-` (NOT `arm-none-eabi-`). The Alif Makefile has `-fpic -shared` and other Linux-linker flags that break with bare-metal toolchain.
+  - Available in `alif-e7-sdk:latest` docker image (container name: `tfa-build`)
+
+  ## Critical Flag: march32-directive
+  The Cortex-A32 is ARMv8-A in AArch32 mode, NOT ARMv7-A. Must override:
+  ```
+  "march32-directive=-march=armv8-a -mfpu=neon"
+  ```
+  Without this:
+  - `-march=armv7-a` (default) → `udiv` instruction not supported in assembly
+  - `arm-none-eabi-gcc` → VFP register mismatch, LPAE errors, `.dynamic` section missing
+
+  ## Full Build Command (docker)
+  ```bash
+  docker exec tfa-build bash -c 'cd /workspace && make -j$(nproc) \
+    PLAT=devkit_e7 ARCH=aarch32 SPD=none AARCH32_SP=sp_min \
+    CROSS_COMPILE=arm-linux-gnueabihf- \
+    RESET_TO_SP_MIN=1 \
+    ARM_LINUX_KERNEL_AS_BL33=1 \
+    ARM_TRUSTED_SRAM_BASE=0x08000000 \
+    PRELOADED_BL33_BASE=0xC0100000 \
+    ARM_PRELOADED_DTB_BASE=0x80010000 \
+    RAM_PRELOADED_DTB_BASE=0x02390000 \
+    ENABLE_STACK_PROTECTOR=strong \
+    ENABLE_PIE=1 \
+    BL32_IN_XIP_MEM=1 \
+    BL32_XIP_BASE=0x80002000 \
+    UART=2 HYPRAM_EN=1 FLASH_EN=1 AES_EN=0 MODEM_SRAM=0 \
+    DEBUG=1 \
+    "march32-directive=-march=armv8-a -mfpu=neon" \
+    bl32'
+  ```
+
+  ## Common Mistakes
+  - `MODEM_SRAM=1` → adds `RAM_PRELOADED_DTB_BASE` requirement, different memory map
+  - `ARM_ARCH_MAJOR=7 ARM_CORTEX_A32=yes` → doesn't auto-set LPAE support (A32 not in armv7-a-cpus.mk list)
+  - Missing `RESET_TO_SP_MIN=1` → different boot flow
+  - Missing `ENABLE_PIE=1` → linker `.dynamic` section errors with `-fpic -shared` in Makefile
+  - Missing `bl32` target → tries to build all BL stages, not just sp_min
+  - `UART=4` → wrong UART for DevKit E7 console (use UART=2)
+
+  ## Docker Container Setup
+  ```bash
+  # Start via linux-build MCP:
+  linux-build.start_container(image="alif-e7-sdk:latest", name="tfa-build",
+                              workspace_dir="/path/to/alif_arm-tf")
+  # Or manually:
+  docker run -d --name tfa-build -v /path/to/alif_arm-tf:/workspace alif-e7-sdk:latest \
+    bash -c 'mkdir -p /workspace && tail -f /dev/null'
+  ```
+
+  ## Output
+  - Binary: `build/devkit_e7/debug/bl32.bin` (~30KB)
+  - ELF: `build/devkit_e7/debug/bl32/bl32.elf`
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - arm-linux-gnueabihf-gcc
+  - docker
+  subsystems:
+  - tfa
+  - ospi
+file_patterns:
+- '**/alif_arm-tf/**'
+- '**/norflash_ospi_setup.c'
+- '**/devkit_e7/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- tfa
+- build
+- alif-e7
+- cortex-a32
+- toolchain
+- docker

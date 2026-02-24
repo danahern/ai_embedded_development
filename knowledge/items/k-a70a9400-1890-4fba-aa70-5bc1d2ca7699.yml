@@ -1,0 +1,56 @@
+id: k-a70a9400-1890-4fba-aa70-5bc1d2ca7699
+title: 'DWC SSI: must call ospi_init() after ospi_xip_exit() to restore command-mode register state'
+body: |-
+  After calling `ospi_xip_exit()` on the Alif E7 DWC SSI OSPI controller, ALL SPI commands fail (Write Enable, status register reads, erase, program — everything returns zeros or has no effect).
+
+  **Root cause:** `ospi_xip_enter()` sets `rx_sample_dly = 0` for RXDS-based XIP timing. `ospi_xip_exit()` does NOT restore it. The `ospi_setup_write()` and `ospi_setup_read()` functions don't set `rx_sample_dly` either. With `rx_sample_dly=0`, the controller samples data at the wrong time, corrupting all communication.
+
+  **Fix:** Call `ospi_init(ospi_cfg)` immediately after `ospi_xip_exit()`. This restores:
+  - `rx_sample_dly = 4` (command-mode sampling)
+  - `txd_drive_edge = 1`
+  - SPI clock via `spi_set_clk()`
+
+  ```c
+  ospi_xip_exit(ospi_cfg, ISSI_DDR_OCTAL_IO_FAST_READ, ISSI_DDR_OCTAL_IO_FAST_READ);
+  ospi_init(ospi_cfg);  /* REQUIRED: restore command-mode register state */
+  ```
+
+  The flash stays in DDR Octal mode (non-volatile config) — `ospi_init()` only resets the controller, not the flash. The `ddr_en` flag in `ospi_cfg` persists.
+
+  **Symptoms without the fix:** Write Enable doesn't set WEL (status reg stays 0x00), erase never starts (WIP stays 0), all reads return 0x00. Both DFS=8 and DFS=16 operations fail.
+
+  **Also discovered:** ISSI IS25WX256 does NOT implement Flag Status Register (0x70) — that's a Micron command. Use Status Register (0x05) with WIP bit (bit 0) for erase/program completion polling.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - ospi
+  - dwc-ssi
+  subsystems:
+  - ospi
+  - flash
+  - xip
+file_patterns:
+- '**/ospi_flash/**'
+- '**/ospi_drv.*'
+- '**/norflash_ospi*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- ospi
+- xip
+- rx_sample_dly
+- dwc-ssi
+- issi
+- alif-e7
+- status-register

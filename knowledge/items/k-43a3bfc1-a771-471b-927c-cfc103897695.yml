@@ -1,0 +1,45 @@
+id: k-43a3bfc1-a771-471b-927c-cfc103897695
+title: Always use J-Link (jlink_flash) for Alif E7 flashing, SE-UART as fallback only
+body: |-
+  When flashing images to Alif E7 MRAM, ALWAYS use `jlink_flash()` (J-Link loadbin). Only fall back to `flash()` (SE-UART ISP) if jlink_flash fails.
+
+  - **jlink_flash**: ~44 KB/s, all 4 images in ~78 seconds, single TFA image in <1s
+  - **flash** (SE-UART): ~5 KB/s, all 4 images in ~19 minutes, single TFA image in ~7s
+
+  J-Link is 9x faster.
+
+  **Only use SE-UART `flash()` when:**
+  1. Initial ATOC setup (first-ever flash on a blank board) — J-Link can't write the ATOC
+  2. J-Link is physically unavailable or not connected
+  3. `jlink_flash()` fails and you need a fallback
+category: operational
+severity: important
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems:
+  - flash
+  - mram
+file_patterns:
+- '**/alif_flash/**'
+- '**/alif-flash/**'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- jlink
+- se-uart
+- flash
+- alif-e7
+- performance
