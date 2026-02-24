@@ -1,0 +1,55 @@
+id: k-79045de3-3bf2-4aff-b793-339ffce7443c
+title: OSPI flash requires M55_HP debug stub in ATOC for JLink FLM execution
+body: |-
+  JLink OSPI flash programming on Alif E7 requires an M55_HP debug stub in the SE ATOC config. Without it, JLink cannot halt M55_HP to load and execute the FLM flash algorithm (Ensemble_IS25WX256.FLM).
+
+  **Why**: The SE controls boot. In a Linux-only ATOC (TFA + DTB), M55_HP is never booted — there's no running core for JLink to halt. The FLM needs a halted M55_HP core with working ITCM to execute erase/program operations.
+
+  **ATOC config** (`linux-boot-e7-ospi.json`):
+  ```json
+  "M55_HP_STUB": {
+      "binary": "m55_stub_hp.bin",
+      "loadAddress": "0x50000000",
+      "cpu_id": "M55_HP",
+      "flags": ["load", "boot"],
+      "signed": true
+  }
+  ```
+
+  - `loadAddress: 0x50000000` = M55_HP ITCM alias in global address map (maps to 0x00000000 in core-local view)
+  - `m55_stub_hp.bin` (4480 bytes) spins waiting for debugger
+  - JLink halts M55_HP → loads FLM into ITCM (WorkRAM 0x00000000) → executes flash algorithm
+  - No ITCM conflict: JLink takes full control after halt, overwrites stub with FLM
+
+  **Two-step workflow**:
+  1. SE-UART: Flash ATOC with M55_HP stub + TFA + DTB (one-time)
+  2. JLink: Flash kernel + rootfs to OSPI (repeatable, ~7 KB/s)
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+  - atoc
+file_patterns:
+- '**/linux-boot-e7-ospi*.json'
+- '**/jlink.py'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- ospi
+- m55-hp
+- debug-stub
+- atoc
+- flm

@@ -1,0 +1,43 @@
+id: k-efc5b703-2b0a-4084-be21-871497d4517b
+title: 'Alif E7 OSPI flash address layout: rootfs@0xC0000000, kernel@0xC0800000'
+body: |-
+  The correct OSPI NOR flash (IS25WX512M) address layout for Alif E7 Linux boot:
+
+  - **Rootfs** (cramfs-xip): `0xC0000000` (OSPI base, ~6.3MB)
+  - **Kernel** (xipImage-ospi): `0xC0800000` (8MB offset, ~2.8MB)
+
+  These addresses are baked into `bl32-ospi.bin` via `PRELOADED_BL33_BASE=0xC0800000` at TF-A build time. The kernel jumps to 0xC0800000 at boot. The DTB has `root=mtd:physmap-flash.0` pointing to the rootfs at the OSPI base.
+
+  **Common mistake**: Using MRAM-style offsets (kernel@0xC0100000, rootfs@0xC0300000) causes overlap — the 2.8MB kernel at 1MB offset extends to 0xC03BC644, overwriting rootfs at 3MB offset.
+
+  Reference config: `tools/setools/build/config/ospi-full-jlink.json`
+
+  OSPI programming via JLink is ~7 KB/s (vs ~44 KB/s for MRAM) due to erase cycles through the FLM flash algorithm.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/linux-boot-e7-ospi*.json'
+- '**/jlink.py'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- ospi
+- flash
+- address-layout
+- xip
+- alif-e7

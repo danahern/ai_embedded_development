@@ -1,0 +1,45 @@
+id: k-02a0eabf-68b3-4281-9735-26db9a405ce4
+title: JLink V9.20 breaks JLinkScriptFile path resolution from Devices.xml
+body: |-
+  JLink V9.20 no longer resolves JLinkScriptFile paths specified in Devices.xml correctly. A bare filename like `AlifE7.JLinkScript` in the `<ChipInfo>` element fails with "Failed to open DLL" because V9.20 doesn't look in the same directory as the Devices.xml.
+
+  **Fix**: Remove `JLinkScriptFile` attribute from Devices.xml entirely. Instead, pass `-JLinkScriptFile /full/path/to/AlifE7.JLinkScript` on the JLinkExe command line.
+
+  In jlink.py:
+  ```python
+  JLINK_SCRIPT_FILE = os.path.join(JLINK_DEVICES_DIR, "AlifE7.JLinkScript")
+  # In _run_jlink():
+  if os.path.exists(JLINK_SCRIPT_FILE):
+      cmd.extend(["-JLinkScriptFile", JLINK_SCRIPT_FILE])
+  ```
+
+  **Why it matters**: Without the JLinkScript, loadbin performs an implicit reset which kills AP[3] (M55_HP) — the SE controls boot and resetting via SWD destroys the debug access port. The script overrides ResetTarget() to skip reset.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - segger
+  subsystems: []
+file_patterns:
+- '**/jlink.py'
+- '**/Devices.xml'
+- '**/*.JLinkScript'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- jlink
+- segger
+- jlinkscript
+- v9.20
+- regression
