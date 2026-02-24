@@ -10,3 +10,11 @@
 [submodule "firmware"]
 	path = firmware
 	url = git@github.com:danahern/firmware.git
+[submodule "alif_arm-tf"]
+	path = alif_arm-tf
+	url = git@github.com:danahern/alif_arm-tf.git
+	branch = devkit-ex-b0
+[submodule "alif_linux"]
+	path = alif_linux
+	url = git@github.com:danahern/alif_linux.git
+	branch = devkit-b0-5.4.y
