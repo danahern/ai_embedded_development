@@ -1,0 +1,50 @@
+id: k-da5a14d9-a91b-4e6a-b0bc-11d18038e258
+title: 'Alif E7 M55_HP: ALLNS and NSC=0 kill JLink debug completely'
+body: |-
+  On Alif E7 M55_HP, certain SAU configurations permanently break JLink/SWD debug access until power cycle:
+
+  **Configurations that kill debug:**
+  - SAU_CTRL ALLNS=1 (bit 1 set): CPU goes to PC=0x0, can't halt, can't read memory
+  - Single SAU region covering all memory (0x00000000-0xFFFFFFFF) with NSC=0: same as ALLNS
+
+  **Configurations that preserve debug:**
+  - SAU disabled (SAU_CTRL=0): all memory Secure, debug works
+  - SAU enabled with split regions: TCM (0x00000000-0x3FFFFFFF) has no SAU region = Secure, peripherals (0x40000000+) in NS region. Debug works because TCM stays Secure.
+  - SAU region with NSC=1 (Non-Secure Callable): debug works but memory is still Secure (NSC ≠ NS)
+
+  **Recovery from killed debug:** Must power cycle the board. JLink reset alone doesn't recover.
+
+  **Practical rule:** Never make TCM Non-Secure on Alif E7 M55_HP if you need JLink debug.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  subsystems:
+  - sau
+  - trustzone
+  - debug
+  - m55
+file_patterns:
+- '**/startup.S'
+- '**/startup*.s'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-25
+updated: 2026-02-25
+author: claude
+source_session: null
+tags:
+- sau
+- allns
+- nsc
+- debug
+- jlink
+- m55-hp
+- trustzone

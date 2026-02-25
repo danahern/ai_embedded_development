@@ -1,0 +1,55 @@
+id: k-489939de-438d-44c3-9a87-a5a7f6d1d1cd
+title: 'Alif E7 M55_HP: DSB/ISB stall after ITGU, DTGU, and SAU register writes'
+body: |-
+  On Alif E7 M55_HP, Data Synchronization Barrier (DSB) and Instruction Synchronization Barrier (ISB) instructions stall indefinitely after writes to:
+  - ITGU_LUT registers (0xE001E050)
+  - SAU_CTRL register (0xE000EDD0)
+  - DTGU registers at 0xE001F000 (writes to DTGU hang the CPU entirely)
+
+  **Symptom:** CPU halts at the DSB instruction (e.g., PC=0x107E). Single-stepping past it works but takes the CPU to the next DSB which also stalls.
+
+  **Workaround:** Replace DSB/ISB with NOP slides (4x NOP). The barrier semantics are not needed for correctness in this bare-metal context since there's no pipeline speculation or cache to flush.
+
+  **DTGU is worse:** Writes to DTGU (0xE001F000) don't just stall — they hang the CPU completely (not recoverable even with single-step). Avoid DTGU writes entirely on Alif E7.
+
+  **Example:**
+  ```asm
+  /* Instead of: dsb sy / isb */
+  nop
+  nop
+  nop
+  nop
+  ```
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - itgu
+  - dtgu
+  - sau
+  - m55
+file_patterns:
+- '**/startup.S'
+- '**/startup*.s'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-25
+updated: 2026-02-25
+author: claude
+source_session: null
+tags:
+- dsb
+- isb
+- stall
+- itgu
+- dtgu
+- sau
+- m55-hp
+- barrier

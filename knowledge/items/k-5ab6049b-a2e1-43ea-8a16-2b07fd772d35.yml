@@ -1,0 +1,72 @@
+id: k-5ab6049b-a2e1-43ea-8a16-2b07fd772d35
+title: 'Alif E7 M55_HP: JLink DHCSR resume vs restart for bare-metal debugging'
+body: |-
+  When debugging bare-metal firmware on Alif E7 M55_HP via JLink/pylink:
+
+  **`jlink.restart()` = full core reset:**
+  - Triggers SE to reload firmware from MRAM to ITCM
+  - Overwrites any JLink ITCM modifications
+  - Runs startup from beginning
+  - Use when you want a clean restart with SE-flashed firmware
+
+  **DHCSR resume = continue from current PC:**
+  - Write 0xA05F0001 to DHCSR (0xE000EDF0): DBGKEY + C_DEBUGEN, clears C_HALT
+  - CPU continues from current PC without reset
+  - Preserves all memory state including JLink-loaded code
+  - Use when testing JLink-loaded firmware modifications
+
+  **Example with pylink:**
+  ```python
+  import pylink
+  jlink = pylink.JLink()
+  jlink.open(serial_no=1223000022)
+  jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
+  jlink.connect('AE722F80F55D5_HP', speed=4000)
+
+  # Halt
+  jlink.halt()
+  pc = jlink.register_read(15)
+
+  # Resume (don't use jlink.restart())
+  jlink.memory_write32(0xE000EDF0, [0xA05F0001])
+
+  # Check if running
+  import time; time.sleep(0.5)
+  jlink.halt()
+  new_pc = jlink.register_read(15)
+  ```
+
+  **pylink location:** Available in alif-flash venv at `/Users/danahern/code/claude/work/claude-mcps/alif-flash/.venv/bin/python`
+
+  **probe-rs limitation:** Custom target YAML only has AE722F80F55D5LS variant (AP 3). M55_HP needs `AE722F80F55D5_HP` device name — use pylink instead.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  - pylink
+  subsystems:
+  - debug
+  - m55
+file_patterns:
+- '**/startup.S'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-25
+updated: 2026-02-25
+author: claude
+source_session: null
+tags:
+- dhcsr
+- resume
+- restart
+- pylink
+- jlink
+- m55-hp
+- debug

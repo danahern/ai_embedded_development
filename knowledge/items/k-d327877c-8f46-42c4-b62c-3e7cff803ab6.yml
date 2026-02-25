@@ -1,0 +1,48 @@
+id: k-d327877c-8f46-42c4-b62c-3e7cff803ab6
+title: 'Alif E7 OSPI flash programming via JLink: ~7 KB/s, 30 min for 8.7MB'
+body: |-
+  OSPI NOR flash (IS25WX512M) programming via JLink loadbin through the Ensemble_IS25WX256.FLM flash algorithm is significantly slower than MRAM due to erase cycles.
+
+  **Measured performance** (full kernel + rootfs flash):
+  - Total data: 8,840,772 bytes (2.8MB kernel + 5.9MB rootfs)
+  - Total time: 1815 seconds (~30 minutes)
+  - Program speed: **7 KB/s** (reported by JLink)
+  - Breakdown: Prepare 0.2s, Compare 6.5s, Erase 161.7s, Program 823.6s, Verify 823.1s
+
+  **Comparison with MRAM:**
+  - MRAM loadbin: ~44 KB/s (no erase needed, direct write)
+  - OSPI loadbin: ~7 KB/s (6x slower due to FLM erase/program cycles)
+
+  **Timeout**: Use 600s+ timeout for OSPI operations. The default 120s timeout will fail for any file over ~800KB.
+
+  **Optimization**: JLink compares flash contents first ("Comparing flash") and only erases/programs sectors that differ. Unchanged sectors are skipped. Re-flashing the same image is fast (compare-only).
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - segger
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/jlink.py'
+- '**/linux-boot-e7-ospi*.json'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-24
+updated: 2026-02-24
+author: claude
+source_session: null
+tags:
+- ospi
+- flash
+- performance
+- jlink
+- timing

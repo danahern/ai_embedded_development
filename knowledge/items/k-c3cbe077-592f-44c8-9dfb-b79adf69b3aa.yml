@@ -1,0 +1,50 @@
+id: k-c3cbe077-592f-44c8-9dfb-b79adf69b3aa
+title: 'Alif E7 M55_HP: OSPI controller BusFault from CPU — EXPMST bridge issue, not TrustZone'
+body: |-
+  M55_HP CPU access to the OSPI controller (0x83002000) causes IMPRECISERR BusFault (CFSR=0x400) regardless of SAU/TrustZone configuration. Tested with:
+  - No SAU (all Secure) — BusFault
+  - ALLNS (all Non-Secure) — BusFault (also kills debug)
+  - Split SAU (peripherals NS, TCM Secure) — BusFault
+
+  **But debug DAP reads OSPI registers fine.** Reading spi_ver_id via JLink debug returns 0x3130332A. Other peripherals at similar addresses (AES1 at 0x83003000, LPGPIO at 0x42002000) are also readable via debug DAP.
+
+  **Root cause hypothesis:** M55_HP connects to the system bus through the EXPMST0 bus master bridge (control reg at 0x4902F000). The debug DAP has direct AXI bus access, bypassing EXPMST. The EXPMST bridge may not be configured to forward M55_HP CPU accesses to AXI addresses in the 0x8xxx_xxxx range.
+
+  **TF-A reference:** `devkit_e7_plat.c` sets `EXPMST0_CTRL_REG |= 0xC0000000` but this may only enable the bridge for specific address ranges or may only affect the A32 core.
+
+  **Next steps:** Investigate EXPMST0 configuration registers, check if there's an address enable/remap register, or check Alif hardware documentation for M55_HP bus connectivity to AXI peripherals.
+
+  **Note:** The TF-A OSPI programmer (running on A32 in EL3 Secure) can access OSPI fine. This confirms the peripheral works — only M55_HP CPU access is blocked.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - jlink
+  subsystems:
+  - ospi
+  - expmst
+  - m55
+  - busfault
+file_patterns:
+- '**/ospi_drv.*'
+- '**/ospi_flash.*'
+- '**/startup.S'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-25
+updated: 2026-02-25
+author: claude
+source_session: null
+tags:
+- ospi
+- busfault
+- expmst
+- m55-hp
+- impreciserr
+- axi-bus
