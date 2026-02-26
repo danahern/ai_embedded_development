@@ -1,0 +1,57 @@
+id: k-f8eaa6e9-baff-4bee-affc-1019be6049a1
+title: Alif E7 TF-A build flags for devkit_e7 OSPI boot
+body: |-
+  Building TF-A BL32 (sp_min) for Alif E7 devkit requires many flags not obvious from the Makefile. Found by analyzing Yocto machine config (devkit-e7.conf.orig).
+
+  Working build command:
+  ```
+  CROSS_COMPILE=arm-none-eabi- make PLAT=devkit_e7 ARCH=aarch32 AARCH32_SP=sp_min \
+    RESET_TO_SP_MIN=1 ARM_LINUX_KERNEL_AS_BL33=1 ARM_TRUSTED_SRAM_BASE=0x08000000 \
+    PRELOADED_BL33_BASE=0xC0800000 ARM_PRELOADED_DTB_BASE=0x80010000 \
+    RAM_PRELOADED_DTB_BASE=0x02390000 ENABLE_PIE=1 BL32_IN_XIP_MEM=1 \
+    BL32_XIP_BASE=0x80002000 UART=2 HYPRAM_EN=1 FLASH_EN=1 AES_EN=0 \
+    'AES_ENC_KEY=' MODEM_SRAM=0 DEBUG=1 bl32
+  ```
+
+  Critical flags that cause build failures if missing:
+  - ARCH=aarch32 — host is aarch64, must be explicit
+  - AARCH32_SP=sp_min — controls inclusion of sp_min.mk (linker script)
+  - BL32_IN_XIP_MEM=1 + BL32_XIP_BASE=0x80002000 — for MRAM XIP execution
+  - MODEM_SRAM=0 — MUST be 0 (not 1), controls MHU0_PAYLOAD_ADDR
+  - FLASH_EN=1 — enables OSPI NOR flash init
+
+  OSPI boot-specific:
+  - PRELOADED_BL33_BASE=0xC0800000 — kernel in OSPI XIP space
+  - ARM_PRELOADED_DTB_BASE=0x80010000 — DTB in MRAM
+
+  For arm-none-eabi-gcc (bare-metal toolchain): may need -mfloat-abi=soft added to Makefile. The Yocto build uses arm-linux-gnueabihf which doesn't need this.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - arm-none-eabi-gcc
+  - make
+  subsystems:
+  - tfa
+  - build
+file_patterns:
+- '**/alif_arm-tf/Makefile'
+- '**/devkit-e7.conf*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- tfa
+- build-flags
+- ospi
+- sp_min
+- aarch32

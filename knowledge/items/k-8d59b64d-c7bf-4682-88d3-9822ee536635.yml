@@ -1,0 +1,52 @@
+id: k-8d59b64d-c7bf-4682-88d3-9822ee536635
+title: 'USB PHY power gating: SE AIPM GET/SET run profile pattern'
+body: |-
+  The Alif E7 SE power-gates the USB PHY by default. To enable USB for Linux gadget mode, TF-A (BL32) must call the SE's AIPM (Application I/O Power Management) service.
+
+  Pattern (from bare-metal CMSIS DFP):
+  1. GET current run profile (SERVICE_POWER_GET_RUN_REQ_ID = 311)
+  2. Read resp_phy_pwr_gating field
+  3. OR in USB_PHY_MASK (bit 1 = 0x02)
+  4. SET modified profile (SERVICE_POWER_SET_RUN_REQ_ID = 312)
+
+  Key implementation details:
+  - GET and SET structs (aipm_get/set_run_profile_svc_t) have identical field layouts at same memory offsets
+  - Both use MHU0 mailbox at PLAT_SDK700_MHU0_SEND
+  - Must call service_se_sync() (heartbeat) before AIPM services
+  - Need SYNC_DELAY (100ms) wait after sending SET/GET requests
+  - Call site: sp_min_main.c, after init_nor_flash() and before console_flush()
+  - Non-fatal on failure — WARN and continue (Linux still boots, just no USB)
+
+  Protocol structs defined in services_lib_protocol.h:
+  - aipm_get_run_profile_svc_t: 72 bytes (header + 15 resp_ fields + error_code)
+  - aipm_set_run_profile_svc_t: 72 bytes (header + 15 send_ fields + error_code)
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+  - tfa
+  - aipm
+  - se-service
+file_patterns:
+- '**/se_service/services.c'
+- '**/sp_min_main.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- usb-phy
+- power-gating
+- aipm
+- tfa
+- mhu

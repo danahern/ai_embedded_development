@@ -1,0 +1,49 @@
+id: k-b1cc810f-3f3d-4e5e-af5f-ed60ace16275
+title: SE-UART BURN_MRAM requires physical power cycle, not J-Link reset
+body: |-
+  The Alif E7 SE (Secure Enclave) ISP protocol's BURN_MRAM command returns 0xFF (rejected) after a J-Link software reset of the A32 core. J-Link reset only resets the Cortex-A32, NOT the SE processor.
+
+  To successfully write MRAM via SE-UART ISP:
+  1. Physical power cycle (unplug/replug PRG_USB cable) is REQUIRED
+  2. The SE enters ISP-writable mode only during fresh boot after power cycle
+  3. SET_MAINTENANCE also returns 0xFF after J-Link reset (not supported in this state)
+  4. ENQUIRY returns only 9 bytes (maintenance flag at byte[9] is missing)
+  5. START_ISP and STOP_ISP still ACK after J-Link reset, but write commands don't
+
+  For J-Link loadbin approach:
+  - J-Link uses M55_HP core (AP[3]) for MRAM access
+  - If ATOC doesn't include M55_HP firmware, AP[3] is not available after power cycle
+  - Only works if ATOC has M55_HP entry (e.g., OSPI RTT programmer ATOC)
+
+  Recommendation: Use SE-UART flash() with physical power cycle for MRAM updates when J-Link M55_HP isn't available.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems:
+  - se-uart
+  - isp
+  - mram
+file_patterns:
+- '**/alif-flash/**'
+- '**/setools/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- mram
+- flash
+- power-cycle
+- se-uart
+- jlink
