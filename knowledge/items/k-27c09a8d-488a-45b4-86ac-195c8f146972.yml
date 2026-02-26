@@ -1,0 +1,47 @@
+id: k-27c09a8d-488a-45b4-86ac-195c8f146972
+title: Linux physmap-flash rounds MTD partition size to power-of-2 — use 0x800000 not 0x700000
+body: |-
+  The Linux `physmap-core.c` driver rounds MTD partition sizes DOWN to the nearest power of 2 via `BIT(get_bitmask_order(size) - 1)`. This means a 7MB (0x700000) partition rounds to 4MB (0x400000), which is too small for a 6.3MB cramfs-xip rootfs.
+
+  **Fix**: Always use power-of-2 sizes for KERNEL_MTD_LEN in local.conf. Use 0x800000 (8MB) instead of 0x700000 (7MB).
+
+  **Verified**: With KERNEL_MTD_LEN=0x700000, cramfs mount failed ("wrong magic"). With 0x800000, cramfs-xip mounted successfully and Linux booted from OSPI.
+
+  **Layout with 0x800000**:
+  - OSPI base: 0xC0000000
+  - Rootfs: 0xC0000000 — 0xC0800000 (8MB)
+  - Kernel XIP: 0xC0800000+ (starts after rootfs)
+
+  The TF-A ospi-config.inc must also match: `XIP_KERNEL_LOAD_ADDR=0xC0800000`.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - ensemble-e7
+  tools: []
+  subsystems:
+  - kernel
+  - ospi
+  - mtd
+  - cramfs
+file_patterns:
+- '**/local.conf'
+- '**/ospi-config.inc'
+- '**/physmap*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- physmap
+- power-of-2
+- mtd
+- cramfs
+- ospi
+- alif-e7

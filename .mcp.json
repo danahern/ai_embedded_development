@@ -65,7 +65,9 @@
         "-m",
         "alif_flash",
         "--setools-dir",
-        "./tools/setools"
+        "./tools/setools",
+        "--log-file",
+        "/tmp/alif-flash.log"
       ],
       "cwd": "./claude-mcps/alif-flash"
     }

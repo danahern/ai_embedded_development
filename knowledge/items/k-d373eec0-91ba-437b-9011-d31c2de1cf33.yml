@@ -1,0 +1,47 @@
+id: k-d373eec0-91ba-437b-9011-d31c2de1cf33
+title: Alif Yocto Docker uses volume not bind mount — host local.conf changes don't propagate
+body: |-
+  The Alif APSS build orchestrator (`alif_linux-apss-build-setup`) creates a Docker container (`alif-apss-build`) with a named volume (`alif-apss-data`), NOT a bind mount. This means:
+
+  1. Editing `yocto-build/build-alif-e7/conf/local.conf` on the host has NO effect inside the container
+  2. Must edit inside container: `docker exec alif-apss-build bash -c 'source layers/openembedded-core/oe-init-build-env build-alif-e7 && ...'`
+  3. Config files written to the host are for git tracking / documentation only
+
+  **Key paths inside container**:
+  - OE init: `/home/apssbuilder/apss-build-setup/layers/openembedded-core/oe-init-build-env` (NOT `poky/oe-init-build-env`)
+  - Build dir: `/home/apssbuilder/apss-build-setup/build-alif-e7/`
+  - local.conf: `build-alif-e7/conf/local.conf`
+  - Container name: `alif-apss-build` (NOT `alif-apss-builder`)
+
+  **Tip**: To sync host → container, use `docker cp` or `docker exec bash -c 'cat > ...'`. For meta-eai recipe files owned by root, run as root: `docker exec alif-apss-build bash -c 'cat > /path/to/file && chown apssbuilder:apssbuilder /path/to/file'`.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips: []
+  tools:
+  - docker
+  - bitbake
+  subsystems:
+  - yocto
+  - docker
+  - build-system
+file_patterns:
+- '**/build-alif-e7/conf/**'
+- '**/local.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- docker
+- volume
+- bind-mount
+- local-conf
+- alif-e7
+- yocto

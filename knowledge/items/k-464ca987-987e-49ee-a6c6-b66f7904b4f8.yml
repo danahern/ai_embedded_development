@@ -1,0 +1,46 @@
+id: k-464ca987-987e-49ee-a6c6-b66f7904b4f8
+title: 'Alif AppKit E7: J21 shunt required for USB device port power (VDD_3V3 USB)'
+body: |-
+  The Alif AppKit E7 board has a shunt header J21 labeled "VDD_3V3 USB Current Measurement". This shunt provides 3.3V power to the USB PHY subsystem (BGA pin W8).
+
+  **Without J21 installed**: USB device port (J1, micro-USB) has no PHY power. DWC3 driver loads and creates UDC (`48200000.usb-dual`) but:
+  - UDC state shows "not attached" (`cat /sys/class/udc/48200000.usb-dual/state`)
+  - Pull-up resistors not driven — host cannot detect device
+  - `adb devices` shows nothing, `ioreg -p IOUSB` on Mac shows no device
+  - DWC3 ref clock warning ("Failed to get clk 'ref': -2") appears but is non-fatal
+
+  **Fix**: Install jumper/shunt on J21. The board schematic (220-00307-D1) sheet 1 lists J21 as a required shunt.
+
+  **Other required shunts from schematic**: J21 (VDD_3V3 USB), plus various others for power rails. Check schematic sheet 1 "Required Shunts" section.
+
+  **Note**: J1 (USB Device, micro-USB) is the gadget port. J2 (FTDI SE-UART, USB-C) is the debug/programming port. Both are on the same board edge.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - ensemble-e7
+  tools: []
+  subsystems:
+  - usb
+  - hardware
+file_patterns:
+- '**/usb-ecm*'
+- '**/usb-gadget*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- j21
+- shunt
+- usb
+- vdd_3v3
+- appkit
+- alif-e7
+- hardware
