@@ -1,0 +1,53 @@
+id: k-6e476f88-3f55-472f-857a-b55488c30e3b
+title: Linux physmap driver rounds MTD size to power-of-2 — KERNEL_MTD_LEN must be power-of-2
+body: |-
+  The Linux physmap-flash driver (physmap-core.c) rounds the map size DOWN to the nearest power of 2:
+
+  ```c
+  info->win_order = get_bitmask_order(resource_size(res)) - 1;
+  info->maps[i].size = BIT(info->win_order);
+  ```
+
+  This means a 7MB (0x700000) resource becomes a 4MB (0x400000) MTD device. The resource log message shows the full size but the actual MTD is smaller.
+
+  **Symptom:** cramfs-xip mount fails with "unable to get direct memory access" because mtd_point() rejects requests beyond the (rounded) MTD size, even though the memory region is larger.
+
+  **Fix:** `KERNEL_MTD_LEN` in Yocto local.conf MUST be a power of 2:
+  - 0x200000 (2MB), 0x400000 (4MB), 0x800000 (8MB), 0x1000000 (16MB)
+  - NOT 0x300000, 0x500000, 0x600000, 0x700000, etc.
+
+  **Example:** For a 6.3MB rootfs, use KERNEL_MTD_LEN=0x800000 (8MB), not 0x700000 (7MB).
+
+  **Affected kernel:** Linux 5.4.25 (Alif devkit-e7). May apply to other versions — the physmap driver uses this pattern for GPIO-based bank addressing but it affects all physmap devices.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools: []
+  subsystems:
+  - mtd
+  - cramfs
+  - ospi
+  - physmap
+file_patterns:
+- '**/local.conf'
+- '**/ospi-config.inc'
+- '**/physmap-core.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- physmap
+- power-of-2
+- mtd
+- cramfs-xip
+- kernel-mtd-len
+- ospi-boot
