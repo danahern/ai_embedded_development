@@ -1,0 +1,61 @@
+id: k-9b281e73-ddfa-43de-829c-d7590833d3a2
+title: Alif E7 USB PHY requires SE AIPM service call to ungate power
+body: |-
+  The Alif E7 Secure Enclave (SE) independently power-gates the USB PHY via the AIPM (Application I/O Power Management) run profile. The `phy_pwr_gating` field bit 1 (`USB_PHY_MASK = 1 << 1`) controls USB PHY power. By default, it's gated (off).
+
+  **Symptom:** Linux USB gadget activates ("ADB + CDC-ECM gadget active on 48200000.usb-dual"), DWC3 driver binds, configfs gadget created — but USB device port doesn't enumerate on host. UDC state = "not attached". PHY not driving D+ pull-up.
+
+  **Root cause:** SE keeps USB PHY powered off. DWC3 registers look correct from software side but PHY hardware can't drive the bus.
+
+  **Fix:** TF-A (BL32/SP_MIN) must call the SE AIPM service before jumping to Linux:
+  1. GET current run profile: `SERVICE_POWER_GET_RUN_REQ_ID` (310) via MHU0
+  2. Read `resp_phy_pwr_gating` from response
+  3. OR in `USB_PHY_MASK` (bit 1)
+  4. SET modified profile: `SERVICE_POWER_SET_RUN_REQ_ID` (311) via MHU0
+  CAUTION: Some local headers had GET=311/SET=312 (off-by-one). Verified correct: GET=310, SET=311 (services_lib_ids.h starts STOP_MODE at 300).
+
+  GET and SET structs (`aipm_get_run_profile_svc_t`, `aipm_set_run_profile_svc_t`) have identical memory layouts — the payload buffer can be reused in-place.
+
+  **Reference:** Bare-metal CMSIS-DFP `demo_usb_device_app.c` shows the GET-then-SET pattern. TF-A implementation added to `services.c` as `service_enable_usb_phy()`.
+
+  **Files modified:**
+  - `alif_arm-tf/plat/arm/board/devkit_e7/se_service/services.c` — new function
+  - `alif_arm-tf/bl32/sp_min/sp_min_main.c` — call before BL33 jump
+  - `alif_arm-tf/Makefile` — added `-mfloat-abi=soft` for cross-compilation
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  - appkit-e7
+  chips:
+  - ensemble-e7
+  tools:
+  - alif-flash
+  subsystems:
+  - usb
+  - phy
+  - aipm
+  - tfa
+  - mhu
+file_patterns:
+- '**/se_service/**'
+- '**/sp_min/**'
+- '**/services.c'
+- '**/services_lib_protocol.h'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- alif-e7
+- usb-phy
+- aipm
+- power-gating
+- tfa
+- mhu
+- dwc3

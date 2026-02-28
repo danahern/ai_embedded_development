@@ -1,0 +1,54 @@
+id: k-b4a4b26f-1b0a-4084-98af-ebe61ad74f1f
+title: NEVER use jlink_flash to update individual MRAM images — breaks ATOC validation
+body: |-
+  The Alif E7 SE validates MRAM contents at boot using the ATOC (Application Table of Contents) package. The ATOC includes checksums/sizes for each image (bl32, DTB, etc.).
+
+  **The failure mode:** Writing a single image (e.g., bl32) to MRAM via J-Link (`jlink_flash`) changes the binary but does NOT update the ATOC. On next boot, the SE detects ATOC mismatch and enters ISP mode. The board is then bricked:
+  - J-Link can't connect (all CPU cores powered off in ISP mode — "Could not find core in Coresight setup")
+  - SE-UART BURN_MRAM rejected (DevKit E7 SE firmware returns 0xFF for SET_MAINTENANCE — command not supported)
+  - OpenOCD/pyocd can't access real MRAM through powered-down APs
+
+  **Recovery requires physical power cycle** (unplug/replug PRG_USB), then full reflash via `alif-flash.flash()` which regenerates ATOC and writes everything atomically.
+
+  **Correct workflow for updating bl32 or any MRAM image:**
+  1. Update the ATOC config JSON to reference the new binary
+  2. `alif-flash.gen_toc(config=...)` — regenerates AppTocPackage.bin with correct checksums
+  3. `alif-flash.flash(config=..., maintenance=true, wait_for_replug=true)` — writes ATOC + all images
+
+  **jlink_flash is safe for:** OSPI writes (kernel, rootfs) which don't go through ATOC validation. It's also safe when the board is already running (M55_HP core accessible), but NEVER for MRAM images that the SE validates at boot.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  - appkit-e7
+  chips:
+  - ensemble-e7
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - mram
+  - atoc
+  - se-uart
+  - isp
+file_patterns:
+- '**/setools/**'
+- '**/alif-flash/**'
+- '**/jlink*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-26
+updated: 2026-02-26
+author: claude
+source_session: null
+tags:
+- alif-e7
+- mram
+- atoc
+- jlink
+- bricked
+- recovery
+- se-uart

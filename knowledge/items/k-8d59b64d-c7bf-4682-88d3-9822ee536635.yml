@@ -4,10 +4,11 @@ body: |-
   The Alif E7 SE power-gates the USB PHY by default. To enable USB for Linux gadget mode, TF-A (BL32) must call the SE's AIPM (Application I/O Power Management) service.
 
   Pattern (from bare-metal CMSIS DFP):
-  1. GET current run profile (SERVICE_POWER_GET_RUN_REQ_ID = 311)
+  1. GET current run profile (SERVICE_POWER_GET_RUN_REQ_ID = 310)
   2. Read resp_phy_pwr_gating field
   3. OR in USB_PHY_MASK (bit 1 = 0x02)
-  4. SET modified profile (SERVICE_POWER_SET_RUN_REQ_ID = 312)
+  4. SET modified profile (SERVICE_POWER_SET_RUN_REQ_ID = 311)
+  NOTE: Some local headers had GET=311/SET=312 (off-by-one bug). Correct values verified against services_lib_ids.h: STOP_MODE starts at 300, GET_RUN=310, SET_RUN=311.
 
   Key implementation details:
   - GET and SET structs (aipm_get/set_run_profile_svc_t) have identical field layouts at same memory offsets
