@@ -1,0 +1,317 @@
+From 29cda014de15609714d5fef2d75d3fd40e37b3c4 Mon Sep 17 00:00:00 2001
+From: Dan Ahern <danahern@gmail.com>
+Date: Mon, 23 Feb 2026 08:11:18 -0800
+Subject: [PATCH 1/2] Add OSPI NOR flash programmer to TF-A for Alif E7
+
+TF-A can now program the OSPI NOR flash (ISSI IS25WX256) from MRAM
+staging data. A magic word at 0x8000E000 triggers erase/program on
+boot; normal boots skip programming. Includes 64KB sector erase,
+256-byte page program, status polling, and XIP re-entry.
+
+Also adds SRAM debug markers readable from M55 JLink for boot
+diagnostics, and maps OSPI1 XIP region (0xC0000000, 64MB) when
+FLASH_EN=1.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ bl32/sp_min/sp_min_main.c                     |  24 +++
+ plat/arm/board/corstone700/corstone700_plat.c |   3 +
+ .../board/devkit_e7/include/platform_def.h    |   9 ++
+ plat/arm/board/devkit_e7/ospi_flash/dwc_spi.h |   2 +
+ .../ospi_flash/norflash_ospi_setup.c          | 149 ++++++++++++++++++
+ plat/arm/common/sp_min/arm_sp_min_setup.c     |   2 +-
+ 6 files changed, 188 insertions(+), 1 deletion(-)
+
+diff --git a/bl32/sp_min/sp_min_main.c b/bl32/sp_min/sp_min_main.c
+index 448a052..ad36bb1 100644
+--- a/bl32/sp_min/sp_min_main.c
++++ b/bl32/sp_min/sp_min_main.c
+@@ -166,14 +166,31 @@ uintptr_t get_arm_std_svc_args(unsigned int svc_mask)
+  * The SP_MIN main function. Do the platform and PSCI Library setup. Also
+  * initialize the runtime service framework.
+  *****************************************************************************/
++/* Debug markers at SRAM 0x02001000 — readable from M55 JLink.
++ * Must flush D-cache since SRAM is mapped cacheable (MT_MEMORY). */
++#define DBG_MARKER(val) do { \
++	*(volatile uint32_t *)0x02001000 = (val); \
++	clean_dcache_range(0x02001000, 4); \
++} while (0)
++#define DBG_MARKER2(val) do { \
++	*(volatile uint32_t *)0x02001004 = (val); \
++	clean_dcache_range(0x02001004, 4); \
++} while (0)
++
+ void sp_min_main(void)
+ {
++	DBG_MARKER(0x11111111);  /* Entered sp_min_main */
++
+ 	NOTICE("SP_MIN: %s\n", version_string);
+ 	NOTICE("SP_MIN: %s\n", build_message);
+ 
++	DBG_MARKER(0x22222222);  /* After NOTICE prints */
++
+ 	/* Perform the SP_MIN platform setup */
+ 	sp_min_platform_setup();
+ 
++	DBG_MARKER(0x33333333);  /* After platform_setup */
++
+ 	/* Initialize the runtime services e.g. psci */
+ 	INFO("SP_MIN: Initializing runtime services\n");
+ 	runtime_svc_init();
+@@ -190,13 +207,20 @@ void sp_min_main(void)
+ 	 */
+ 	sp_min_plat_runtime_setup();
+ 
++	DBG_MARKER(0x44444444);  /* Before init_nor_flash */
++
+ #if FLASH_EN
+ 	if (init_nor_flash()) {
++		DBG_MARKER(0xDEAD0001);  /* init_nor_flash FAILED */
+ 		ERROR("%s: OSPI1 NOR flash initialization failed\n",
+ 			__func__);
+ 		panic();
+ 	}
++	DBG_MARKER(0x55555555);  /* After init_nor_flash OK */
++	/* Read first word from OSPI XIP and store as marker2 */
++	DBG_MARKER2(*(volatile uint32_t *)0xC0000000);
+ #endif
++	DBG_MARKER(0x66666666);  /* Before console_flush / jump to BL33 */
+ 	console_flush();
+ }
+ 
+diff --git a/plat/arm/board/corstone700/corstone700_plat.c b/plat/arm/board/corstone700/corstone700_plat.c
+index 5e36f45..d4597ed 100644
+--- a/plat/arm/board/corstone700/corstone700_plat.c
++++ b/plat/arm/board/corstone700/corstone700_plat.c
+@@ -29,6 +29,9 @@ const mmap_region_t plat_arm_mmap[] = {
+ 	SE_MHU0_RECV_DEVICE,
+ 	MHU0_PAYLOAD_MAP,
+ 	LPGPIO_MAP_DEVICE,
++#if FLASH_EN
++	OSPI1_XIP_MAP,
++#endif
+ 	{0}
+ };
+ 
+diff --git a/plat/arm/board/devkit_e7/include/platform_def.h b/plat/arm/board/devkit_e7/include/platform_def.h
+index 3714fed..35c5072 100644
+--- a/plat/arm/board/devkit_e7/include/platform_def.h
++++ b/plat/arm/board/devkit_e7/include/platform_def.h
+@@ -170,6 +170,15 @@
+ 					MT_MEMORY | MT_RW | MT_SECURE)
+ #endif
+ 
++#if FLASH_EN
++#define OSPI1_XIP_ADDR			(0xC0000000)
++#define OSPI1_XIP_SIZE			(0x04000000)
++#define OSPI1_XIP_MAP			MAP_REGION_FLAT(		\
++						OSPI1_XIP_ADDR,		\
++						OSPI1_XIP_SIZE,		\
++						MT_MEMORY | MT_RO | MT_NS)
++#endif
++
+ #define AES0_BASE_ADDR			(0x83001000)
+ #define AES0_SIZE			(0x1000)
+ #define AES0_MAP_DEVICE			MAP_REGION_FLAT(		\
+diff --git a/plat/arm/board/devkit_e7/ospi_flash/dwc_spi.h b/plat/arm/board/devkit_e7/ospi_flash/dwc_spi.h
+index 5d236c2..27688a7 100644
+--- a/plat/arm/board/devkit_e7/ospi_flash/dwc_spi.h
++++ b/plat/arm/board/devkit_e7/ospi_flash/dwc_spi.h
+@@ -21,6 +21,8 @@
+ #define ISSI_READ_PROTECTION_MANAGEMENT_REG	0x2B
+ #define ISSI_WRITE_VOLATILE_CONFIG_REG		0x81
+ #define ISSI_DDR_OCTAL_IO_FAST_READ		0xFD
++#define ISSI_4BYTE_PAGE_PROGRAM			0x12
++#define ISSI_4BYTE_SECTOR_ERASE			0xDC
+ 
+ #define DEFAULT_WAIT_CYCLES_ISSI		0x10
+ 
+diff --git a/plat/arm/board/devkit_e7/ospi_flash/norflash_ospi_setup.c b/plat/arm/board/devkit_e7/ospi_flash/norflash_ospi_setup.c
+index 12a037b..47cf4a2 100644
+--- a/plat/arm/board/devkit_e7/ospi_flash/norflash_ospi_setup.c
++++ b/plat/arm/board/devkit_e7/ospi_flash/norflash_ospi_setup.c
+@@ -224,9 +224,153 @@ static int setup_flash_xip(void)
+ 	if (flash_xip_init(ospi_cfg)) {
+ 		return -1;
+ 	}
++
++#if !AES_EN
++	/* SE enables AES decrypt during boot — clear it after XIP setup
++	 * for unencrypted flash. Must be AFTER ospi_xip_enable(). */
++	ospi_cfg->aes_regs->aes_control &= ~AES_CONTROL_DECRYPT_EN;
++#endif
++
+ 	return 0;
+ }
+ 
++#if FLASH_EN
++/* OSPI flash programming support - program from MRAM staging area */
++
++#define OSPI_PROG_MAGIC		0x4F535049	/* "OSPI" */
++#define OSPI_PROG_FLAG_ADDR	0x8000E000	/* Must be past BL32 XIP end (~0x8000A000) */
++#define OSPI_SECTOR_SIZE	0x10000		/* 64KB */
++#define OSPI_PAGE_SIZE		250		/* Keep under 256-entry TX FIFO with cmd+addr overhead */
++#define OSPI_WIP_BIT		0x01
++#define OSPI_ERASE_TIMEOUT	2000000		/* ~2s in poll loops */
++#define OSPI_PROG_TIMEOUT	50000		/* ~5ms in poll loops */
++
++struct ospi_prog_hdr {
++	uint32_t magic;
++	uint32_t dest_addr;
++	uint32_t length;
++	uint32_t src_addr;
++};
++
++static uint8_t issi_read_status(ospi_flash_cfg_t *ospi_cfg)
++{
++	uint8_t rBuff[256] = {0};
++
++	ospi_setup_read(ospi_cfg, ADDR_LENGTH_32_BITS, 1, 8);
++	ospi_push(ospi_cfg, ISSI_READ_STATUS_REG);
++	ospi_recv(ospi_cfg, 0x00, rBuff);
++	return rBuff[0];
++}
++
++static int issi_wait_ready(ospi_flash_cfg_t *ospi_cfg, uint32_t timeout)
++{
++	while (timeout--) {
++		if (!(issi_read_status(ospi_cfg) & OSPI_WIP_BIT))
++			return 0;
++	}
++	return -1;
++}
++
++static int issi_sector_erase(ospi_flash_cfg_t *ospi_cfg, uint32_t addr)
++{
++	ospi_write_en(ospi_cfg);
++	ospi_setup_write(ospi_cfg, ADDR_LENGTH_32_BITS);
++	ospi_push(ospi_cfg, ISSI_4BYTE_SECTOR_ERASE);
++	ospi_push(ospi_cfg, (addr >> 24) & 0xFF);
++	ospi_push(ospi_cfg, (addr >> 16) & 0xFF);
++	ospi_push(ospi_cfg, (addr >> 8) & 0xFF);
++	ospi_send(ospi_cfg, addr & 0xFF);
++
++	return issi_wait_ready(ospi_cfg, OSPI_ERASE_TIMEOUT);
++}
++
++static int issi_page_program(ospi_flash_cfg_t *ospi_cfg, uint32_t addr,
++			     const uint8_t *data, uint32_t len)
++{
++	uint32_t i;
++
++	if (len == 0 || len > OSPI_PAGE_SIZE)
++		return -1;
++
++	ospi_write_en(ospi_cfg);
++	ospi_setup_write(ospi_cfg, ADDR_LENGTH_32_BITS);
++	ospi_push(ospi_cfg, ISSI_4BYTE_PAGE_PROGRAM);
++	ospi_push(ospi_cfg, (addr >> 24) & 0xFF);
++	ospi_push(ospi_cfg, (addr >> 16) & 0xFF);
++	ospi_push(ospi_cfg, (addr >> 8) & 0xFF);
++	ospi_push(ospi_cfg, addr & 0xFF);
++
++	for (i = 0; i < len - 1; i++)
++		ospi_push(ospi_cfg, data[i]);
++
++	ospi_send(ospi_cfg, data[len - 1]);
++
++	return issi_wait_ready(ospi_cfg, OSPI_PROG_TIMEOUT);
++}
++
++static void ospi_program_from_mram(void)
++{
++	volatile struct ospi_prog_hdr *hdr =
++		(volatile struct ospi_prog_hdr *)OSPI_PROG_FLAG_ADDR;
++	ospi_flash_cfg_t *ospi_cfg = &ospi_flash_config;
++	uint32_t dest, src, remaining, chunk, sectors, i;
++
++	if (hdr->magic != OSPI_PROG_MAGIC)
++		return;
++
++	dest = hdr->dest_addr;
++	src = hdr->src_addr;
++	remaining = hdr->length;
++
++	NOTICE("OSPI PROG: %u bytes from 0x%x to 0x%x\n",
++	       remaining, src, dest);
++
++	/* Exit XIP mode for erase/program operations */
++	ospi_xip_exit(ospi_cfg, ISSI_DDR_OCTAL_IO_FAST_READ,
++		      ISSI_DDR_OCTAL_IO_FAST_READ);
++
++	/* Erase sectors */
++	sectors = (remaining + OSPI_SECTOR_SIZE - 1) / OSPI_SECTOR_SIZE;
++	for (i = 0; i < sectors; i++) {
++		NOTICE("OSPI PROG: erase sector %u/%u @ 0x%x\n",
++		       i + 1, sectors, dest + i * OSPI_SECTOR_SIZE);
++		if (issi_sector_erase(ospi_cfg, dest + i * OSPI_SECTOR_SIZE)) {
++			ERROR("OSPI PROG: erase timeout at 0x%x\n",
++			      dest + i * OSPI_SECTOR_SIZE);
++			goto reenter_xip;
++		}
++	}
++
++	/* Program pages */
++	i = 0;
++	while (remaining > 0) {
++		chunk = (remaining > OSPI_PAGE_SIZE) ? OSPI_PAGE_SIZE : remaining;
++
++		if (issi_page_program(ospi_cfg, dest, (const uint8_t *)src, chunk)) {
++			ERROR("OSPI PROG: program timeout at 0x%x\n", dest);
++			goto reenter_xip;
++		}
++
++		dest += chunk;
++		src += chunk;
++		remaining -= chunk;
++		i++;
++		if ((i % 1000) == 0)
++			NOTICE("OSPI PROG: %u pages written\n", i);
++	}
++
++	NOTICE("OSPI PROG: complete, %u pages written\n", i);
++
++	/* Clear magic to prevent re-programming on next boot */
++	hdr->magic = 0;
++
++reenter_xip:
++	/* Re-enter XIP mode */
++	ospi_xip_enter(ospi_cfg, ISSI_DDR_OCTAL_IO_FAST_READ,
++		       ISSI_DDR_OCTAL_IO_FAST_READ);
++}
++#endif /* FLASH_EN */
++
+ /* Init Flash and set to XiP Mode */
+ int init_nor_flash(void)
+ {
+@@ -246,6 +390,11 @@ int init_nor_flash(void)
+ 		ERROR("Unable to set OSPI flash in XiP mode\n");
+ 		return -1;
+ 	}
++
++#if FLASH_EN
++	ospi_program_from_mram();
++#endif
++
+ 	INFO("Configured OSPI NOR Flash successfully\n");
+ 	return 0;
+ }
+diff --git a/plat/arm/common/sp_min/arm_sp_min_setup.c b/plat/arm/common/sp_min/arm_sp_min_setup.c
+index 2e33857..834728e 100644
+--- a/plat/arm/common/sp_min/arm_sp_min_setup.c
++++ b/plat/arm/common/sp_min/arm_sp_min_setup.c
+@@ -64,10 +64,10 @@ entry_point_info_t *sp_min_plat_get_bl33_ep_info(void)
+ void arm_sp_min_early_platform_setup(void *from_bl2, uintptr_t tos_fw_config,
+ 			uintptr_t hw_config, void *plat_params_from_bl2)
+ {
+-
+ #ifdef PLAT_DEVKIT_E7
+ 	configure_devkit_uart_pinmux_padconf();
+ #endif
++
+ 	/* Initialize the console to provide early debug support */
+ 	arm_console_boot_init();
+ 
+-- 
+2.51.0
+

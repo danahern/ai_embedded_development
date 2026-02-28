@@ -1,0 +1,78 @@
+id: k-38aee6d5-7c48-4719-bc67-0a374abb753f
+title: Yocto MX_FLASH_EN causes xipImage + rootfs byte swap (--reverse-bytes=2)
+body: |-
+  ## Problem
+
+  When building for `appkit-e8` with `OSPI_BOOT=1`, the Yocto build applies `--reverse-bytes=2` (objcopy) to the xipImage, reversing bytes within each 16-bit halfword. A separate `mx.bbclass` also byte-swaps the cramfs-xip rootfs. This is controlled by `MX_FLASH_EN` which defaults to "1" for appkit-e* machines via `ospi-config.inc`.
+
+  The byte swap is intended for Macronix (MX) flash chips with a specific XIP byte ordering. The Alif E7 DevKit uses an ISSI IS25WX512 flash, which does NOT need this swap. Flashing byte-swapped images to OSPI causes immediate kernel crash (invalid instructions) and rootfs mount failure.
+
+  ## Symptom
+
+  - Kernel crashes immediately after TF-A hands off (PC lands in exception vector 0xFFBEFFEC)
+  - No UART output at all (earlycon never executes)
+  - JLink memory read at 0xC0800000 shows byte-swapped ARM instructions
+  - Debug markers in SRAM show TF-A completed (0x66666666) but Linux never starts
+
+  ## Detection
+
+  Compare first 4 bytes of xipImage with known-good:
+  - Correct: `01 90 8F E2` → ARM: `add r0, pc, #0x190` (valid entry)
+  - Swapped: `90 01 E2 8F` → ARM: `svchi` (garbage)
+
+  ## Fix
+
+  Add to `local.conf` inside Yocto container:
+  ```
+  MX_FLASH_EN = "0"
+  ```
+
+  Or manually un-swap with:
+  ```python
+  data = open('xipImage-ospi', 'rb').read()
+  out = bytearray(len(data))
+  for i in range(0, len(data)-1, 2):
+      out[i] = data[i+1]
+      out[i+1] = data[i]
+  open('xipImage-fixed.bin', 'wb').write(out)
+  ```
+
+  ## Where the swap happens
+
+  - Kernel: `meta-alif-ensemble/recipes-kernel/linux/linux-alif.inc` → `do_mx_rev16()` task
+  - Rootfs: `meta-alif/classes/mx.bbclass` → `mx_rev16_rootfs()` function
+  - Config: `meta-alif-ensemble/conf/machine/include/ospi-config.inc` sets `MX_FLASH_EN ?= "1"` for appkit-e* machines
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - alif-e7
+  tools:
+  - yocto
+  - bitbake
+  subsystems:
+  - yocto
+  - ospi
+  - boot
+file_patterns:
+- '**/local.conf'
+- '**/linux-alif.inc'
+- '**/mx.bbclass'
+- '**/ospi-config.inc'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- yocto
+- ospi
+- byte-swap
+- xipImage
+- mx-flash
+- boot-failure

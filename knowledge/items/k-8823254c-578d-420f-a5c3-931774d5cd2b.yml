@@ -1,0 +1,44 @@
+id: k-8823254c-578d-420f-a5c3-931774d5cd2b
+title: ospi_program MCP tool is BROKEN — do not use, use jlink_flash instead
+body: |-
+  The `ospi_program` MCP tool (alif-flash) does not work. It hangs indefinitely or runs at ~2 KB/s (slower than SE-UART).
+
+  **Root cause:** The M55_HP RTT firmware cannot access the OSPI controller. M55_HP CPU access to 0x83002000 causes IMPRECISERR BusFault (CFSR=0x400) because the EXPMST0 bus bridge does not forward M55_HP accesses to AXI addresses in the 0x8xxx_xxxx range. See knowledge item k-c3cbe077.
+
+  **The ~500 KB/s speed claim was never validated on hardware.** It was a theoretical estimate based on RTT bandwidth. The firmware was built and unit-tested with mocks, but never successfully programmed flash on real hardware.
+
+  **Use instead:** `jlink_flash` with FLM (~7 KB/s for OSPI, ~44 KB/s for MRAM). Requires M55_HP debug stub in ATOC config.
+
+  **To fix:** Would need to resolve EXPMST0 bridge configuration so M55_HP CPU can access OSPI controller registers. Alternatively, could redesign to run the programmer on A32 (which has OSPI access via EL3 Secure).
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - devkit_e7
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems:
+  - ospi
+  - m55
+  - expmst
+  - rtt
+file_patterns:
+- '**/ospi_rtt.py'
+- '**/ospi-programmer/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- ospi_program
+- broken
+- jlink_flash
+- expmst
+- busfault

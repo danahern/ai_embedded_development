@@ -1,0 +1,54 @@
+id: k-c51b28d6-884b-4329-8917-85f070905d35
+title: PRELOADED_BL33_BASE must match OSPI memory layout — stale address causes silent kernel crash
+body: |-
+  The TF-A build parameter PRELOADED_BL33_BASE determines where TF-A jumps to start the kernel (BL33). For OSPI boot on the Alif E7, this MUST match the actual kernel location in the OSPI flash layout.
+
+  **OSPI memory layout:**
+  - 0xC0000000: rootfs (cramfs-xip, ~1.8MB)
+  - 0xC0800000: kernel (xipImage, ~3.0MB)
+
+  **Correct value:** `PRELOADED_BL33_BASE=0xC0800000`
+
+  **What goes wrong:** If this value is stale (e.g., 0xC0100000 from an old MRAM-only config), TF-A jumps into the rootfs cramfs data instead of the kernel. The CPU tries to execute filesystem data as instructions and crashes to the exception handler (0xFFBEFFEC). The crash looks identical to a bad kernel image, making it very hard to diagnose.
+
+  **Prevention:**
+  1. After building TF-A, verify: `xxd bl32-ospi.bin | grep "0080c0"` (little-endian for 0xC0800000) to confirm the address is embedded correctly
+  2. When the OSPI layout changes (rootfs size, partition offsets), update PRELOADED_BL33_BASE in the TF-A build command
+  3. If kernel crashes immediately on boot, check the BL33 jump address BEFORE debugging the kernel itself
+
+  **Debugging shortcut:** Flash a known-good kernel to the same address. If it also crashes, the problem is in TF-A (wrong jump address), not in the kernel.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - ak-e7-aiml
+  chips:
+  - alif-e7
+  tools:
+  - arm-tf
+  - setools
+  subsystems:
+  - tfa
+  - ospi
+  - boot
+file_patterns:
+- '**/arm-tf/**'
+- '**/alif_arm-tf/**'
+- '**/*bl3*'
+- '**/*tfa*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- tfa
+- bl33
+- ospi
+- boot
+- preloaded-bl33-base
+- memory-layout
+- kernel-crash
