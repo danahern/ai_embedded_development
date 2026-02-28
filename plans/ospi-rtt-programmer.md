@@ -1,10 +1,12 @@
 # RTT-Based OSPI Flash Programmer for Alif E7
 
-**Status**: In-Progress
+**Status**: Blocked
 
 ## Summary
 
-Custom M55_HP bare-metal firmware + Python host module for high-speed OSPI NOR flash programming via SEGGER RTT. Replaces FLM-based JLink OSPI programming (~7 KB/s) with direct OSPI controller access (~500 KB/s expected, 70x speedup).
+Custom M55_HP bare-metal firmware + Python host module for OSPI NOR flash programming via SEGGER RTT. Intended to replace FLM-based JLink OSPI programming (~7 KB/s) with direct OSPI controller access (~500 KB/s expected).
+
+**BLOCKED:** M55_HP CPU cannot access the OSPI controller — BusFault (EXPMST bridge issue). The ~500 KB/s speed was never validated. On hardware, the tool hangs indefinitely. See knowledge item k-c3cbe077.
 
 ## Components
 
@@ -18,15 +20,13 @@ Custom M55_HP bare-metal firmware + Python host module for high-speed OSPI NOR f
 | MCP tool (ospi_program) | Done | `claude-mcps/alif-flash/src/alif_flash/server.py` |
 | ATOC config | Done | `firmware/linux/alif-e7/setools/linux-boot-e7-ospi-rtt.json` |
 | Host-side tests | Done (37 tests) | `claude-mcps/alif-flash/tests/test_ospi_rtt.py` |
-| Hardware validation | Pending | Requires physical board |
+| Hardware validation | **BLOCKED** | M55_HP BusFault on OSPI access |
 
-## Remaining
+## Blocked On
 
-- Build firmware and load via ATOC onto hardware
-- Verify RTT communication via embedded-probe MCP
-- Test OSPI flash init + READ_ID on hardware
-- End-to-end: erase + program + verify cycle
-- Performance benchmarking
+M55_HP CPU access to OSPI controller (0x83002000) causes IMPRECISERR BusFault.
+Root cause: EXPMST0 bus bridge not configured to forward M55_HP accesses to 0x8xxx_xxxx.
+Need to investigate EXPMST0 configuration registers or find alternative approach.
 
 ## Key Decisions
 
