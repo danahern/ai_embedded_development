@@ -20,5 +20,5 @@
 	branch = devkit-b0-5.4.y
 [submodule "linux_alif"]
 	path = linux_alif
-	url = https://github.com/alifsemi/linux_alif.git
+	url = git@github.com:danahern/linux_alif.git
 	branch = v6.12-dev
