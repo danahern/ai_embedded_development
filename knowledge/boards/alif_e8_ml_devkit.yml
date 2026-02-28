@@ -1,0 +1,35 @@
+board: alif_e8_ml_devkit
+chip: ensemble-e8
+family: ensemble
+arch: arm-cortex-a+arm-cortex-m
+vendor: alif
+
+flash_method: setools
+flash_tool: setools
+probe: j-link
+connect_under_reset: false
+target_chip: ensemble-e8
+
+connection:
+  prg_usb: "TBD — confirm connector type"
+  se_uart: "TBD — confirm serial port assignment"
+  console_uart: "TBD — confirm UART assignment"
+
+notes: |
+  Alif Ensemble E8 ML DevKit. Same silicon as E8 DevKit with ML-focused peripherals.
+  Specific differences from standard E8 DevKit TBD — investigate during hardware bringup.
+  May include additional sensors, camera interfaces, or NPU-optimized memory layout.
+  Yocto machine config: TBD (may use appkit-e8 or dedicated ML config).
+
+memory:
+  mram:
+    size_kb: 5760
+    base: 0x80000000
+    note: "TBD — confirm same as E8 DevKit"
+  sram:
+    size_kb: 4096
+    base: 0x02000000
+    note: "TBD"
+
+peripherals: [uart, spi, i2c, i3c, usb, adc, mhu, hwsem]
+features: [dual-core-a32, dual-core-m55, ethos-u55-npu, xip-boot, ospi, mram, tfa-boot]

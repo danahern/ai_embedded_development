@@ -1,0 +1,42 @@
+id: k-cba0778a-b0cb-47ff-a8e5-a69a33b678b0
+title: Official Alif TF-A has no USB PHY patches — must port from E7 fork
+body: |-
+  The official Alif TF-A branch (`alif_lts-v2.10.8`) has NO USB PHY support. Our E7 fork added:
+  1. `service_enable_usb_phy()` — VBAT power rail control for USB PHY
+  2. PHY POR register writes (UTMI+ initialization)
+  3. `-mfloat-abi=soft` compiler flag (prevents NEON/VFP crashes in TF-A)
+  4. CGU clock enable for USB (CLK_ENA bit 22)
+
+  Since E8 uses the same TF-A platform (`devkit_e7`), these patches apply identically. The AIPM GET_RUN call for USB PHY still hangs on E7 (disabled with `#if 0`) — investigate on E8 as well.
+
+  Relevant files: `alif_arm-tf/plat/alif/devkit_e7/bl32_plat_setup.c`, Makefile flags.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e8_devkit
+  - alif_e7_devkit
+  chips:
+  - ensemble-e8
+  - ensemble-e7
+  tools: []
+  subsystems:
+  - tfa
+  - usb
+file_patterns:
+- '**/alif_arm-tf/**'
+- '**/bl32*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- alif
+- tfa
+- usb
+- phy
+- aipm

@@ -1,0 +1,42 @@
+id: k-21063c59-7175-4796-b46c-3e146847ec99
+title: 'E8 SETOOLS: same installation, different device config naming'
+body: |-
+  The same `tools/setools/` installation supports both E7 and E8. No separate `setools-e8/` needed.
+
+  Key differences:
+  - Device config: `app-device-config-e8.json` (E8) vs `app-device-config.json` (E7)
+  - ATOC config: `linux-boot-e8.json` references `app-device-config-e8.json`
+  - SE firmware packages: `SP-AE822FA0E5597BS0` and `SP-AE822FA0E5597LS0` (both already in SETOOLS)
+  - `tools-config` interactive mode: select E8 part via menu (piped input: `printf '1\n1\n1\n5\n'`)
+  - The `-p` flag does NOT accept full part names (crashes with KeyError)
+
+  The E8 device config was created by copying E7's and changing `metadata.device` to `AE822FA0E5597LS0`. gen_toc accepted it and generated a valid ATOC package.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif_e8_devkit
+  chips:
+  - ensemble-e8
+  tools:
+  - alif-flash
+  - setools
+  subsystems: []
+file_patterns:
+- '**/setools/**'
+- '**/linux-boot-e8*'
+- '**/app-device-config-e8*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- alif
+- e8
+- setools
+- atoc
+- flash

@@ -1,0 +1,36 @@
+id: k-fb5161be-f92f-459f-b591-a3cc3cb7759c
+title: Alif E8 kernel is in different repo than E7
+body: |-
+  E7 kernel: `alifsemi/alif_linux` (branch `devkit-b0-5.4.y`, kernel 5.4.x)
+  E8 kernel: `alifsemi/linux_alif` (branch `v6.12-dev`, kernel 6.12.6)
+
+  Note the repo names are swapped (`alif_linux` vs `linux_alif`). This is NOT a typo — they are genuinely different repositories. The E8 repo has E8 device trees (devkit-e8.dts, appkit-e8.dts) and defconfigs (devkit_e8_defconfig). The E7 repo does NOT have a v6.12-dev branch.
+
+  Submodules in workspace: `alif_linux/` (E7) and `linux_alif/` (E8).
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e8_devkit
+  - alif_e8_ml_devkit
+  chips:
+  - ensemble-e8
+  tools: []
+  subsystems:
+  - linux
+  - yocto
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- alif
+- e8
+- kernel
+- repo
+- submodule

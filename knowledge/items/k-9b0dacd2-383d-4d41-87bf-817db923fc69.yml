@@ -1,0 +1,45 @@
+id: k-9b0dacd2-383d-4d41-87bf-817db923fc69
+title: SETOOLS global-cfg.db causes E7/E8 cross-contamination — gen_toc must write it per device
+body: |-
+  The SETOOLS `utils/global-cfg.db` file stores global device selection state (written by `tools-config`). When it points to the wrong device, `app-gen-toc` generates an ATOC with wrong clock/pin configuration. This caused garbled UART on E7 when global-cfg.db was set to E8 (different clock tree).
+
+  **Root cause**: Running `tools-config` to select E8 part changed global-cfg.db, then E7 gen_toc picked up E8 device config.
+
+  **Fix**: The alif-flash MCP `gen_toc()` now:
+  1. Writes the correct `global-cfg.db` content from `devices.py` before every `app-gen-toc` run
+  2. Verifies the gen_toc output contains the expected device part number
+  3. Fails with DEVICE MISMATCH error if wrong device detected
+
+  **Prevention**: Never run `tools-config` manually. Always use the MCP `gen_toc(device="alif-e7")` or `gen_toc(device="alif-e8")` which handles isolation automatically.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_devkit
+  - alif_e8_devkit
+  chips:
+  - ensemble-e7
+  - ensemble-e8
+  tools:
+  - alif-flash
+  - setools
+  subsystems: []
+file_patterns:
+- '**/global-cfg*'
+- '**/gen_toc*'
+- '**/isp.py'
+- '**/devices.py'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- alif
+- setools
+- gen_toc
+- global-cfg
+- cross-contamination
