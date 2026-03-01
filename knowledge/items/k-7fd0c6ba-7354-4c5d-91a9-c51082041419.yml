@@ -1,0 +1,38 @@
+id: k-7fd0c6ba-7354-4c5d-91a9-c51082041419
+title: 'Alif E7 OSPI flash speed: 6.2 KB/s via JLink FLM (confirmed)'
+body: |-
+  JLink OSPI flash programming via Ensemble_IS25WX256.FLM flash loader runs at ~6.2 KB/s. Confirmed with 10.2 MB rootfs+kernel flash in 1624s (27 min). MRAM is ~44 KB/s by comparison.
+
+  Key data point: 10.2 MB OSPI flash = 27 minutes. Plan accordingly for large images. The xipImage (8.2 MB) dominates — consider whether kernel can stay in MRAM to avoid the OSPI bottleneck.
+
+  The alif-flash MCP now returns speed_kbps and per-file size_bytes in jlink_flash results for tracking.
+category: hardware
+severity: informational
+applies_to:
+  boards:
+  - alif_e7_devkit
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - ospi
+  - flash
+file_patterns:
+- '**/jlink.py'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- ospi
+- jlink
+- flash-speed
+- benchmark
+- alif-e7
