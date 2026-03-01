@@ -67,6 +67,26 @@ All high-priority stale items were fixed in this session. Remaining:
 
 **Prevention:** Add CLAUDE.md consistency check to `/wrap-up` skill — when `.mcp.json` or any CLAUDE.md changes, prompt review of affected cross-references.
 
+## Agent & Context File Audit
+
+Extended audit covering agents, skills, rules, hooks, and settings.
+
+### Critical Fixes (Done)
+
+1. **settings.local.json** — `alif-flash` and `uart` missing from `enabledMcpjsonServers` (FIXED)
+2. **kernel-reviewer agent** — no `mcpServers` field, couldn't access any MCP tools (FIXED: added knowledge, linux-build)
+3. **build-toolchain-expert agent** — missing `alif-flash`, `embedded-probe`, `elf-analysis` from mcpServers despite referencing them (FIXED)
+4. **start.md & wrap-up.md** — referenced stale `zephyr-apps/` submodule instead of `firmware/`, `alif_arm-tf/`, `linux_alif/` (FIXED)
+5. **bft.md** — Alif boards mapped to SSH/ADB deploy (not yet working) instead of `jlink_flash` (FIXED)
+6. **embedded.md** — stale `zephyr-apps/` path in ELF example (FIXED)
+7. **alif-e7-hardware.md rules** — stale MRAM-only layout, wrong DTB filename; updated to OSPI boot layout (FIXED)
+
+### Systemic Patterns
+
+- **Submodule/path drift**: When `firmware/` replaced `zephyr-apps/`, skills weren't updated
+- **MCP enablement gap**: New servers registered but not added to `enabledMcpjsonServers`
+- **Agent MCP access mismatch**: Agent body describes tools the frontmatter doesn't grant access to
+
 ## Actions Taken
 
 - [x] Fixed workspace CLAUDE.md: alif-flash description, typo
@@ -74,7 +94,14 @@ All high-priority stale items were fixed in this session. Remaining:
 - [x] Fixed linux-build CLAUDE.md: default image, Yocto example, key details
 - [x] Fixed claude-mcps/CLAUDE.md: added missing servers and build instructions
 - [x] Fixed zephyr-build CLAUDE.md: stale zephyr-apps/ reference
-- [x] Regenerated operational.md rules to fix truncation
+- [x] Fixed operational.md rules truncation
+- [x] Fixed settings.local.json: added alif-flash and uart to enabled servers
+- [x] Fixed kernel-reviewer agent: added mcpServers
+- [x] Fixed build-toolchain-expert agent: expanded mcpServers, noted Alif cross-compiler prefix
+- [x] Fixed start.md and wrap-up.md: updated submodule lists
+- [x] Fixed bft.md: Alif flash method → jlink_flash, added Alif section
+- [x] Fixed embedded.md: stale zephyr-apps/ path
+- [x] Fixed alif-e7-hardware.md: updated to OSPI boot layout
 
 ## Deferred Actions
 
@@ -82,3 +109,6 @@ All high-priority stale items were fixed in this session. Remaining:
 - [ ] Expand claude-config/CLAUDE.md with agent/skill documentation
 - [ ] Update device_shell CLAUDE.md with manifest.yml auto-discovery pattern
 - [ ] Add CLAUDE.md consistency check to wrap-up skill
+- [ ] Clean stale settings.local.json allow-rules (dead shell fragments, version-pinned JLink path)
+- [ ] Fix hardware.md rules truncation (run regenerate_rules and verify)
+- [ ] Narrow pattern.md rules file_patterns (too broad, injects into agent/CLAUDE.md edits)

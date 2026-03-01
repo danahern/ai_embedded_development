@@ -23,14 +23,16 @@ The onboard JLink VCOM port (`usbmodem*`) **only produces output during an activ
 - **Onboard JLink** (VCOM + debug): Serial `001219307699`
 - **J-Trace PRO** (external): Serial `001223000022`
 
-## E7 MRAM Layout
+## E7 Flash Layout (OSPI boot — active config)
 
-| Component | File | Address |
-|-----------|------|---------|
-| TF-A | bl32.bin | 0x80002000 |
-| DTB | appkit-e7.dtb | 0x80010000 |
-| Kernel | xipImage | 0x80020000 |
-| Rootfs | cramfs-xip.img | 0x80300000 |
+| Component | File | Address | Medium |
+|-----------|------|---------|--------|
+| TF-A | bl32.bin | 0x80002000 | MRAM |
+| DTB | appkit-e7-ospi.dtb | 0x80010000 | MRAM |
+| Rootfs | rootfs-ospi.bin | 0xC0000000 | OSPI NOR |
+| Kernel | xipImage | 0xC0800000 | OSPI NOR |
+
+OSPI images flashed via `alif-flash.jlink_flash()` with OSPI FLM flash loader.
 
 ## E7 Kernel
 
