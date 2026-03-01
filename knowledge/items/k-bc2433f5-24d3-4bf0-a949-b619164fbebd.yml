@@ -1,0 +1,28 @@
+id: k-bc2433f5-24d3-4bf0-a949-b619164fbebd
+title: 'USB configfs composite: create ALL functions before linking to config'
+body: 'When building a USB composite gadget via configfs, create ALL function directories (ecm.usb0, ffs.adb, etc.) BEFORE linking any of them to the configuration (ln -sf to configs/c.1/). Linking a function to config partially locks the gadget structure, causing ''Resource busy'' errors when trying to create additional functions afterward. Order: (1) mkdir all functions, (2) ln -sf all to config, (3) mount FunctionFS, (4) start adbd, (5) wait for ep1, (6) bind UDC.'
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - devkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- usb
+- configfs
+- composite-gadget
+- alif-e7
+- linux

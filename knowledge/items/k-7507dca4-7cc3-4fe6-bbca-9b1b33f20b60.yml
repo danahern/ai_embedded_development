@@ -1,0 +1,29 @@
+id: k-7507dca4-7cc3-4fe6-bbca-9b1b33f20b60
+title: 'USB FunctionFS: configfs vs legacy g_ffs kernel config'
+body: 'For FunctionFS with configfs composite gadgets, use CONFIG_USB_CONFIGFS_F_FS=y (not CONFIG_USB_FUNCTIONFS=y). The legacy CONFIG_USB_FUNCTIONFS enables g_ffs which auto-binds the UDC and steals it from the composite gadget. Symptoms: ''g_ffs gadget.0: g_ffs ready'' in dmesg, ''Resource busy'' when creating ffs.adb function. Fix: CONFIG_USB_CONFIGFS_F_FS=y and ''# CONFIG_USB_FUNCTIONFS is not set'' in kernel config fragment.'
+category: pattern
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- usb
+- functionfs
+- configfs
+- kernel-config
+- alif-e7
+- linux
