@@ -1,5 +1,5 @@
 ---
-paths: ["**/*_cred*.c", "**/*cred*.c", "**/*settings*.c", "**/*wifi*.c", "**/CLAUDE.md", "**/eai_osal/**", "**/lib/eai_*/CLAUDE.md", "**/lib/eai_*/include/**", "**/lib/eai_*/src/**", "**/settings*.c", "**/wifi_prov*.c", "**/workqueue*", "*/tools/build_tools.rs", "*/tools/templates.rs", ".claude/agents/*.md", "addons/*.yml", "claude-config/agents/*.md", "firmware/lib/*/src/*.c", "tasks/prd.json", "tasks/progress.md"]
+paths: ["**/*_cred*.c", "**/*cred*.c", "**/*settings*.c", "**/*wifi*.c", "**/eai_osal/**", "**/lib/eai_*/include/**", "**/lib/eai_*/src/**", "**/settings*.c", "**/wifi_prov*.c", "**/workqueue*", "addons/*.yml", "firmware/lib/*/src/*.c"]
 ---
 # Pattern Learnings
 
