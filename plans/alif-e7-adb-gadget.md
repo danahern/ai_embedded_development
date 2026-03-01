@@ -1,8 +1,10 @@
 # Alif E7: R/W Filesystem + USB Gadget + ADB
 
-Status: In-Progress
+Status: In-Progress (partially superseded)
 Created: 2026-02-17
-Updated: 2026-02-22
+Updated: 2026-02-28
+
+**2026-02-28 note**: CDC-ECM USB networking achieved on devkit-e8 via Yocto Scarthgap (separate path from this plan's OE Zeus E7 approach). Board reachable at 192.168.55.2. ADB goal deferred in favor of SSH over CDC-ECM. Original E7 MRAM kernel flash issue remains unresolved.
 
 ## Problem
 

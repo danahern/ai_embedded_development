@@ -42,6 +42,8 @@ Tool signatures are in each server's own CLAUDE.md (`claude-mcps/<server>/CLAUDE
 - **saleae-logic** — Logic analyzer capture and protocol decoding
 - **hw-test-runner** — BLE GATT, WiFi provisioning, TCP throughput testing
 - **alif-flash** — Alif E7 MRAM flash via SE-UART ISP protocol
+- **uart** — Bidirectional UART, session-based serial console interaction
+- **openocd-debug** — OpenOCD debugging via TCL protocol
 
 Board details available via `knowledge.board_info("board_name")` or `knowledge.list_boards()`.
 

@@ -53,7 +53,7 @@
       "command": "./claude-mcps/linux-build/target/release/linux-build",
       "args": [
         "--docker-image",
-        "stm32mp1-sdk"
+        "alif-e7-sdk:latest"
       ]
     },
     "openocd-debug": {
