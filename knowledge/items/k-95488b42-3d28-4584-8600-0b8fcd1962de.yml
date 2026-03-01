@@ -1,0 +1,85 @@
+id: k-95488b42-3d28-4584-8600-0b8fcd1962de
+title: 'Alif E7 TF-A build: verified working flags (ENABLE_PIE + HYPRAM_EN required)'
+body: |-
+  ## Verified Working Build Command (2026-02-28)
+
+  ```bash
+  make -j$(nproc) PLAT=devkit_e7 ARCH=aarch32 AARCH32_SP=sp_min \
+    CROSS_COMPILE=arm-linux-gnueabihf- \
+    ARM_LINUX_KERNEL_AS_BL33=1 \
+    ARM_TRUSTED_SRAM_BASE=0x08000000 \
+    PRELOADED_BL33_BASE=0xC0800000 \
+    ARM_PRELOADED_DTB_BASE=0x80010000 \
+    RAM_PRELOADED_DTB_BASE=0x02390000 \
+    ENABLE_PIE=1 \
+    ENABLE_STACK_PROTECTOR=strong \
+    BL32_IN_XIP_MEM=1 \
+    BL32_XIP_BASE=0x80002000 \
+    UART=2 \
+    HYPRAM_EN=1 \
+    FLASH_EN=1 \
+    AES_EN=0 \
+    MODEM_SRAM=0 \
+    DEBUG=1 \
+    bl32
+  ```
+
+  Produces ~30KB bl32.bin that boots Linux from OSPI XIP.
+
+  ## Critical Flags
+
+  ### 1. ENABLE_PIE=1 — REQUIRED
+  Adds `-fpie` to TF_CFLAGS and `--pie --no-dynamic-linker` to TF_LDFLAGS. Without this, the binary links incorrectly and Linux never starts (TF-A runs fine but kernel jump fails silently).
+
+  ### 2. HYPRAM_EN=1 — REQUIRED
+  Enables HyperRAM (OSPI0) initialization and memory mapping. Without it, `init_ospi_hyperram()` is never called and `MAP_HYPERRAM` is excluded from page tables.
+
+  ### 3. DO NOT remove -fpic -shared from Makefile CPPFLAGS (line 240)
+  These are Alif SDK flags that work WITH ENABLE_PIE=1. They produce .dynamic/.got/.got.plt sections that the linker script handles. Removing them causes the linker script `SIZEOF(.dynamic)` to fail.
+
+  ### 4. DO NOT modify sp_min.ld.S DATA_SIZE
+  The stock linker script has: `__DATA_SIZE__ = SIZEOF(.data) + SIZEOF(.dynamic) + SIZEOF(.got) + SIZEOF(.got.plt);`
+  This is correct when built with ENABLE_PIE=1 + -fpic -shared. Do not simplify to just SIZEOF(.data).
+
+  ### 5. Must pass ARM_TRUSTED_SRAM_BASE, BL32_XIP_BASE, BL32_IN_XIP_MEM explicitly
+  The Makefile `add_define` macro emits `-DFOO` (value=1) if not set on command line, overriding the #ifndef defaults in arm_def.h.
+
+  ### 6. -mfloat-abi=soft (already committed to Makefile lines 189/192)
+  Required for gnueabihf cross-compiler. TF-A doesn't init FPU/CPACR.
+
+  ### 7. Do NOT pass ARM_ARCH_MAJOR=7
+  Cortex-A32 is ARMv8-A. Default ARM_ARCH_MAJOR=8 is correct.
+
+  ## Failure Mode Without ENABLE_PIE + HYPRAM_EN
+  TF-A boots normally (prints all messages, inits OSPI NOR flash) but Linux kernel at 0xC0800000 never starts. Binary is ~5KB smaller (~24KB vs ~30KB). Missing strings: "OSPI Version", "HyperRAM configured successfully".
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - build
+file_patterns:
+- '**/alif_arm-tf/Makefile'
+- '**/sp_min.ld.S'
+- '**/sp_min_main.c'
+- '**/platform_def.h'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- tfa
+- build
+- arm-tf
+- cortex-a32
+- enable-pie
+- hypram

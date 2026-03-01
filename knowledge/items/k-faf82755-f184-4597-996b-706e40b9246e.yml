@@ -1,0 +1,74 @@
+id: k-faf82755-f184-4597-996b-706e40b9246e
+title: 'Alif E7 TF-A build: correct flags and common pitfalls'
+body: |-
+  ## Working Build Command
+
+  ```bash
+  make PLAT=devkit_e7 ARCH=aarch32 AARCH32_SP=sp_min \
+    ARM_LINUX_KERNEL_AS_BL33=1 \
+    PRELOADED_BL33_BASE=0xC0800000 \
+    ARM_PRELOADED_DTB_BASE=0x80010000 \
+    RAM_PRELOADED_DTB_BASE=0x02390000 \
+    ARM_TRUSTED_SRAM_BASE=0x08000000 \
+    BL32_XIP_BASE=0x80002000 \
+    BL32_IN_XIP_MEM=1 \
+    UART=2 FLASH_EN=0 HYPRAM_EN=0 MODEM_SRAM=0 \
+    DEBUG=1 CROSS_COMPILE=arm-linux-gnueabihf- bl32
+  ```
+
+  ## Critical Flags
+
+  ### 1. Must pass ARM_TRUSTED_SRAM_BASE, BL32_XIP_BASE, BL32_IN_XIP_MEM with values
+
+  The Makefile (lines 674, 691, 692) does `add_define` for these variables. If not set on the command line, `add_define` emits `-DFOO` (no value), which GCC treats as `-DFOO=1`. This causes:
+  - ARM_TRUSTED_SRAM_BASE=1 instead of 0x08000000 → wrong SRAM addresses
+  - BL32_XIP_BASE=1 instead of 0x80002000 → linker "not aligned on page boundary" error
+
+  ### 2. Do NOT pass ARM_ARCH_MAJOR=7
+
+  Cortex-A32 is ARMv8-A running in AArch32 mode. Default ARM_ARCH_MAJOR=8 is correct. Setting 7 causes xlat_tables to use 4-byte entries, and any address above 2GB (OSPI at 0xC0000000, CLKCTL at 0x4903F000) triggers shift-count-overflow.
+
+  ### 3. ARM_LINUX_KERNEL_AS_BL33=1 is required
+
+  Without it, ARM_PRELOADED_DTB_BASE is never add_define'd by arm_common.mk, causing undeclared variable error.
+
+  ### 4. -mfloat-abi=soft is required (already in Makefile)
+
+  The gnueabihf cross-compiler defaults to hard-float. Without -mfloat-abi=soft, build fails with "selected architecture lacks an FPU" because TF-A never initializes the FPU/CPACR.
+
+  ### 5. Linker script .dynamic fix
+
+  The stock sp_min.ld.S references SIZEOF(.dynamic) + SIZEOF(.got) + SIZEOF(.got.plt) in BL32_IN_XIP_MEM mode. Without -fpic/-shared (removed from CPPFLAGS as they're wrong for bare-metal), these sections don't exist. Fix: change to just SIZEOF(.data).
+
+  ### 6. Remove -fpic -shared from CPPFLAGS (line 240)
+
+  These flags are wrong for bare-metal firmware. They create PIC code with GOT/dynamic sections that the linker script doesn't handle.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - build
+file_patterns:
+- '**/alif_arm-tf/Makefile'
+- '**/sp_min_main.c'
+- '**/platform_def.h'
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-02-28
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- tfa
+- build
+- arm-tf
+- cortex-a32
+- xlat-tables

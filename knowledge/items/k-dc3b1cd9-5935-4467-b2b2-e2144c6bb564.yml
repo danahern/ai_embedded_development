@@ -1,0 +1,32 @@
+id: k-dc3b1cd9-5935-4467-b2b2-e2144c6bb564
+title: 'Alif E7: SE-UART flash and JLink operations trigger board reset — no manual power cycle needed'
+body: |-
+  Manual power cycle (unplug/replug PRG_USB) is NOT required after flashing. Both SE-UART flash (`alif-flash.flash`) and JLink operations (`alif-flash.jlink_flash`) trigger board resets automatically. The board reboots on its own after flash completes.
+
+  Previously documented as "power cycle required" but the reset happens as part of the flash protocol (SE-UART sends RESET_DEVICE at end of maintenance mode, JLink resets the target after programming).
+
+  This means flash → watch UART2 output is the correct workflow, no manual intervention needed.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- alif
+- flash
+- reset
+- workflow

@@ -1,0 +1,61 @@
+id: k-430c6af7-3638-4498-b717-bc64d35b0b97
+title: 'Alif E7 USB working: TF-A CGU+PERIPH clock enables fix DWC3 probe'
+body: |-
+  ## Problem
+  DWC3 driver fails with "this is not a DesignWare USB3 DRD Core" — reads GSNPSID register as garbage because USB clocks are not enabled.
+
+  ## Solution
+  Enable USB clocks in TF-A `sp_min_main.c` before jumping to Linux:
+
+  ```c
+  /* CGU CLK_ENA (0x1A602014): bits 21-23 = USB clocks */
+  val = *cgu_clk_ena;
+  val |= (7U << 21);
+  *cgu_clk_ena = val;
+
+  /* PERIPH_CLK_ENA (0x4903F00C): USB peripheral clock gates */
+  val = *periph_clk_ena;
+  val |= 0x11111113U;
+  *periph_clk_ena = val;
+  ```
+
+  ## Result
+  - DWC3 probes successfully (GSNPSID = 0x5533330B)
+  - UDC registered (48200000.usb-dual)
+  - USB gadget enumerates on Mac host at 480 Mb/s (High Speed)
+  - g_serial or CDC-ECM gadget activates
+
+  ## Important Notes
+  - The SE AIPM approach (`service_enable_usb_phy()`) does NOT work — causes boot hang. Direct register writes are the correct approach.
+  - `clk_ignore_unused` in kernel bootargs prevents Linux from disabling these clocks.
+  - PERIPH_CLK_ENA = 0x11111113 does NOT gate OSPI clocks (was a concern, tested safe).
+  - Commit 56dfb6fd in alif_arm-tf fork.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - usb
+  - dwc3
+file_patterns:
+- '**/sp_min_main.c'
+- '**/platform_def.h'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- usb
+- dwc3
+- clocks
+- tfa
+- gadget

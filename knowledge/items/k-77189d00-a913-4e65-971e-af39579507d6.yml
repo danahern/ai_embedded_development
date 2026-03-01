@@ -1,0 +1,57 @@
+id: k-77189d00-a913-4e65-971e-af39579507d6
+title: 'Alif E7 DTB fixes: pinctrl compatible, DWC3 clocks, earlycon baud'
+body: |-
+  ## Three DTB fixes needed for Linux on Alif E7 OSPI boot
+
+  ### 1. earlycon baud rate (CRITICAL)
+  `earlycon=uart8250,mmio32,0x4901a000,115200n8` reconfigures UART divisor using wrong clock (1.8MHz default vs 100MHz actual). Produces 6.25Mbaud — invisible to terminal.
+
+  **Fix:** Remove baud from earlycon: `earlycon=uart8250,mmio32,0x4901a000`
+
+  ### 2. pinctrl compatible mismatch
+  DTB has `alif,pinctrl-devkit` but kernel driver matches `alif,ensemble-pinctrl`. Without matching pinctrl provider, 8250_dw silently defers (-EPROBE_DEFER) and ttyS0 never appears.
+
+  **Fix:** `fdtput -t s <dtb> /apb@1A600000/pinctrl@1A603000 compatible "alif,ensemble-pinctrl"`
+
+  ### 3. DWC3 missing clocks
+  `dwc3-ensemble.c` driver needs two clocks: `usb_clk` and `dwc_clk`. DTB `dwc3-drd` node had neither.
+
+  **Fix:** `fdtput -t x <dtb> /ahb@48000000/dwc3-drd clocks 0x15 0x15` and `fdtput -t s <dtb> /ahb@48000000/dwc3-drd clock-names "usb_clk" "dwc_clk"` (both pointing to existing usb_clk fixed-clock phandle)
+
+  ### Additional: clk_ignore_unused
+  Add `clk_ignore_unused` to bootargs to prevent kernel from disabling SE-configured clocks.
+
+  ### Note on DWC3 core
+  After these fixes, the ensemble wrapper probes but inner DWC3 core fails: "this is not a DesignWare USB3 DRD Core" (GSNPSID check). Likely needs USB PHY stabilization delay after power_control() — the driver does PHY power-on but may read registers before PHY is ready.
+
+  The ensemble driver (`dwc3-ensemble.c`) handles USB PHY power itself via direct register writes to VBAT_PWR_CTRL (0x1A609008) and USB_CTRL2 (0x4903F0AC). No need for TF-A AIPM SE service call.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  - appkit-e8
+  chips:
+  - AE722F80F55D5LS
+  tools: []
+  subsystems:
+  - dtb
+  - pinctrl
+  - uart
+  - usb
+  - dwc3
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- dtb-fix
+- pinctrl
+- dwc3
+- earlycon
+- ospi-boot

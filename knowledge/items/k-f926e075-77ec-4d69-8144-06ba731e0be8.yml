@@ -1,0 +1,48 @@
+id: k-f926e075-77ec-4d69-8144-06ba731e0be8
+title: 'TF-A silent boot failure: binary runs but never jumps to kernel'
+body: |-
+  ## Symptom
+  TF-A boots normally, prints all messages including "Configured OSPI NOR Flash successfully", but Linux kernel never starts. No error, no crash — just silence after TF-A finishes. TF-A output may appear twice (double boot from watchdog reset).
+
+  ## Root Cause
+  Missing `ENABLE_PIE=1` and/or `HYPRAM_EN=1` build flags. The binary is ~5KB smaller than a working build (~24KB vs ~30KB).
+
+  ## How to Diagnose
+  1. Compare binary size: working = ~30KB, broken = ~24KB
+  2. Run `strings` on both binaries:
+     - Working has: "OSPI Version = %x", "HyperRAM configured successfully"
+     - Broken missing these strings
+  3. Check build command for `ENABLE_PIE=1` and `HYPRAM_EN=1`
+
+  ## Why It's Silent
+  Without ENABLE_PIE, the PIE linking is broken — the binary runs from MRAM XIP but the NS-world jump to kernel at OSPI 0xC0800000 fails. TF-A itself works fine because it doesn't depend on correct PIE relocation for its own execution, only for the handoff to BL33.
+
+  ## Key Lesson
+  Never modify the Alif SDK's Makefile CPPFLAGS (-fpic -shared) or linker script (.dynamic/.got sections) — these work together with ENABLE_PIE=1. The Alif SDK flags look wrong for bare-metal but they're correct for this specific PIE XIP use case.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - boot
+file_patterns:
+- '**/alif_arm-tf/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- tfa
+- boot-failure
+- enable-pie
+- silent-failure
+- diagnosis

@@ -1,0 +1,57 @@
+id: k-8769a291-f813-483d-aa17-5552f3550b87
+title: 'Alif E7 earlycon: do NOT specify baud rate in kernel bootargs'
+body: |-
+  ## Problem
+
+  When earlycon is configured with baud rate: `earlycon=uart8250,mmio32,0x4901a000,115200n8`, no output appears on UART2.
+
+  ## Root Cause
+
+  The 8250 earlycon driver (`8250_early.c`) calls `init_port()` when `device->baud != 0`. This reconfigures the UART divisor using `port->uartclk` which defaults to `BASE_BAUD * 16 = 1,843,200 Hz`. The actual UART clock on Alif E7 is 100 MHz.
+
+  With the wrong uartclk: `divisor = DIV_ROUND_CLOSEST(1843200, 16*115200) = 1`
+  Actual baud = `100000000 / (16*1) = 6.25 Mbaud` — invisible to any terminal.
+
+  ## Fix
+
+  Remove the baud rate from the earlycon argument:
+  ```
+  earlycon=uart8250,mmio32,0x4901a000
+  ```
+
+  Without baud specified, `init_port()` is NOT called, so earlycon only masks interrupts and preserves TF-A's UART configuration (which already has the correct divisor for 115200 baud at 100MHz).
+
+  ## How to Apply
+
+  ```bash
+  fdtput -t s appkit-e7-ospi.dtb /chosen bootargs \
+    "earlycon=uart8250,mmio32,0x4901a000 console=ttyS0,115200n8 ..."
+  ```
+
+  The `console=ttyS0,115200n8` can still specify baud — that's handled by the full 8250_dw driver which uses the correct clock from device tree.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - linux-kernel
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- earlycon
+- uart
+- kernel
+- console
+- bootargs

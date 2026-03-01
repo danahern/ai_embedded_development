@@ -1,0 +1,68 @@
+id: k-8cbf2b07-f4ac-4a76-b4c7-787a931e1550
+title: earlycon baud rate breaks UART on Alif E7 (100MHz UART clock vs 1.8MHz default)
+body: |-
+  ## Problem
+
+  Specifying baud rate in earlycon bootargs causes complete loss of kernel console output on Alif E7/E8.
+
+  ## Root Cause
+
+  When `earlycon=uart8250,mmio32,0x4901a000,115200n8` includes a baud rate, the kernel's `early_serial8250_setup()` calls `init_port()` which reconfigures the UART divisor using `port->uartclk = BASE_BAUD * 16 = 1,843,200 Hz`. The actual UART clock on Alif E7 is 100 MHz (set by SE device config).
+
+  Divisor calculation: `DIV_ROUND_CLOSEST(1843200, 16 * 115200) = 1`
+  Actual baud: `100000000 / (16 * 1) = 6,250,000` (6.25 Mbaud — invisible to terminal at 115200)
+
+  TF-A correctly configures the UART divisor to 54 (`100000000 / (16 * 115200)`), but earlycon overwrites it with 1.
+
+  ## Fix
+
+  Remove baud rate from earlycon parameter: `earlycon=uart8250,mmio32,0x4901a000`
+
+  Without baud, earlycon skips `init_port()` and just masks interrupts, preserving TF-A's correct UART configuration.
+
+  Alternative: specify clock explicitly: `earlycon=uart8250,mmio32,0x4901a000,115200n8,100000000` (5th parameter is uartclk in Hz)
+
+  ## Key Code
+
+  `drivers/tty/serial/8250/8250_early.c`:
+  - `init_port()` — writes UART_DLL/DLM divisor registers when baud > 0
+  - `early_serial8250_setup()` — calls `init_port()` only when `device->baud != 0`
+
+  `drivers/tty/serial/earlycon.c`:
+  - `register_earlycon()` — defaults `port->uartclk = BASE_BAUD * 16` if not set
+  - Parse: `earlycon=type,iotype,addr,baud,uartclk` (comma-separated after addr)
+
+  ## Applies To
+
+  Any board where UART clock != 1.8432 MHz (standard 8250 clock). Most SoCs use higher clocks (e.g., 48MHz, 100MHz).
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  - appkit-e8
+  chips:
+  - AE722F80F55D5LS
+  tools: []
+  subsystems:
+  - uart
+  - earlycon
+  - console
+file_patterns:
+- '*.dtb'
+- '*.dts'
+- '*bootargs*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- earlycon
+- uart
+- baud-rate
+- kernel-console
+- boot

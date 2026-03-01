@@ -77,10 +77,10 @@ file_patterns:
 - '**/devkit_e7/**'
 status: unvalidated
 validated_by: []
-deprecated: false
-superseded_by: null
+deprecated: true
+superseded_by: k-95488b42-3d28-4584-8600-0b8fcd1962de
 created: 2026-02-24
-updated: 2026-02-24
+updated: 2026-03-01
 author: claude
 source_session: null
 tags:

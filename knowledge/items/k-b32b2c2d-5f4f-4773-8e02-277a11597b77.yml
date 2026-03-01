@@ -1,0 +1,66 @@
+id: k-b32b2c2d-5f4f-4773-8e02-277a11597b77
+title: Alif E7 DWC3 USB requires CGU CLK_ENA + PERIPH_CLK_ENA before driver probe
+body: |-
+  ## Problem
+
+  DWC3 USB controller on Alif E7 fails with "this is not a DesignWare USB3 DRD Core" because GSNPSID register (0x4820C120) reads 0x00000000 when USB clocks are not enabled.
+
+  ## Root Cause
+
+  Two clock registers must be enabled BEFORE the DWC3 kernel driver probes:
+
+  1. **CGU CLK_ENA** (0x1A602014): bits 21-23 must be set for USB clocks
+  2. **PERIPH_CLK_ENA** (0x4903F00C): must be 0x11111113 for USB peripheral clock gates
+
+  Neither is enabled by the SE device config or the DWC3 ensemble kernel driver. The driver handles VBAT_PWR_CTRL (0x1A609008) and USB_CTRL2 (0x4903F0AC) but NOT the clock gates.
+
+  ## Fix
+
+  Enable both registers in TF-A sp_min_main.c before jumping to Linux:
+  ```c
+  volatile uint32_t *cgu_clk_ena = (volatile uint32_t *)0x1A602014;
+  volatile uint32_t *periph_clk_ena = (volatile uint32_t *)0x4903F00C;
+  *cgu_clk_ena |= (7U << 21);       /* bits 21-23: USB clocks */
+  *periph_clk_ena |= 0x11111113U;   /* USB peripheral clock gates */
+  ```
+
+  ## Verification
+
+  After enabling clocks: `devmem 0x4820C120` → 0x5533330B (DWC3 alive)
+  Without clocks: reads 0x00000000 (controller invisible)
+
+  ## DTB Requirements
+
+  The dwc3-drd node also needs two clocks:
+  ```bash
+  fdtput -t i appkit-e7-ospi.dtb /soc/ahb/dwc3-drd clocks 0x15 0x15
+  fdtput -t s appkit-e7-ospi.dtb /soc/ahb/dwc3-drd clock-names usb_clk dwc_clk
+  ```
+
+  Both can point to the same usb_clk fixed-clock node (phandle 0x15). fdtput cannot create new nodes with valid phandles — the DTB phandle lookup table isn't updated by fdtput.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+  - clock
+  - tfa
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- dwc3
+- usb
+- clock-gating
+- tfa

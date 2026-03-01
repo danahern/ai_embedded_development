@@ -1,0 +1,48 @@
+id: k-71f3fbe0-e6cc-4fde-9361-910bc7632863
+title: Alif E7 pinctrl compatible mismatch causes silent EPROBE_DEFER
+body: |-
+  ## Problem
+
+  The Alif device tree has `compatible = "alif,pinctrl-devkit"` on the pinctrl node, but the kernel driver (`pinctrl-ensemble.c`) matches `compatible = "alif,ensemble-pinctrl"`.
+
+  This causes silent -EPROBE_DEFER for any device that has a `pinctrl-0` reference (e.g., UART2, DWC3). The device never probes and there's no error message in dmesg — just silence.
+
+  ## Fix
+
+  Change the DTB pinctrl compatible:
+  ```bash
+  fdtput -t s appkit-e7-ospi.dtb /soc/ahb/pinctrl compatible "alif,ensemble-pinctrl"
+  ```
+
+  After this fix, 8250_dw probes ttyS0 and other pinctrl-dependent devices work.
+
+  ## Symptoms
+
+  - `8250_dw` doesn't probe ttyS0 (no `/dev/ttyS0`)
+  - No error messages in dmesg about UART or pinctrl
+  - earlycon works (it doesn't use pinctrl) but full driver doesn't
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - pinctrl
+  - linux-kernel
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-02-28
+updated: 2026-02-28
+author: claude
+source_session: null
+tags:
+- pinctrl
+- dtb
+- device-tree
+- eprobe-defer
