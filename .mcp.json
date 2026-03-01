@@ -70,6 +70,16 @@
         "/tmp/alif-flash.log"
       ],
       "cwd": "./claude-mcps/alif-flash"
+    },
+    "uart": {
+      "command": "./claude-mcps/uart-mcp/.venv/bin/python",
+      "args": [
+        "-m",
+        "uart_mcp",
+        "--log-file",
+        "/tmp/uart-mcp.log"
+      ],
+      "cwd": "./claude-mcps/uart-mcp"
     }
   }
 }
