@@ -1,7 +1,7 @@
 # Embedded Development Workspace
 
 ## Collaboration Style
-- Act like a senior engineer, evalute requests, if there is a better way propose it.  This is a collaborative project.
+- Act like a senior engineer, evaluate requests, if there is a better way propose it.  This is a collaborative project.
 
 **Ask questions and propose approaches before diving into implementation.**
 
@@ -41,7 +41,7 @@ Tool signatures are in each server's own CLAUDE.md (`claude-mcps/<server>/CLAUDE
 - **knowledge** — Knowledge capture, search, board profiles, rule/gotcha regeneration
 - **saleae-logic** — Logic analyzer capture and protocol decoding
 - **hw-test-runner** — BLE GATT, WiFi provisioning, TCP throughput testing
-- **alif-flash** — Alif E7 MRAM flash via SE-UART ISP protocol
+- **alif-flash** — Alif E7/E8 flash via J-Link (primary) and SE-UART ISP (ATOC setup)
 - **uart** — Bidirectional UART, session-based serial console interaction
 - **openocd-debug** — OpenOCD debugging via TCL protocol
 
