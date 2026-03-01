@@ -1,0 +1,40 @@
+id: k-459b757c-efc6-4dee-9b43-2ab87a0be873
+title: Yocto work-shared kernel-meta cache persists across cleanall
+body: |-
+  Yocto's kernel recipe uses a shared source directory at `tmp/work-shared/<machine>/kernel-source/`. The `.kernel-meta/` subdirectory caches config fragments, and is NOT cleaned by `bitbake linux-alif -c cleanall`.
+
+  **Symptom:** Editing a .cfg file in a meta-layer (e.g., removing CONFIG_USB_G_SERIAL=y from usb.cfg) has no effect even after cleanall + rebuild. The merge_config_build.log still shows the old fragment content.
+
+  **Fix:** Manually delete the kernel-meta cache:
+  ```
+  rm -rf tmp/work-shared/*/kernel-source/.kernel-meta
+  bitbake linux-alif -c cleanall
+  bitbake alif-tiny-image
+  ```
+
+  **Verification:** Check `tmp/work-shared/<machine>/kernel-source/.kernel-meta/cfg/merge_config_build.log` to see which fragments were merged and their contents.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - yocto
+file_patterns:
+- '**/*.bbappend'
+- '**/*.cfg'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- yocto
+- kernel
+- cache
+- kernel-meta
+- work-shared

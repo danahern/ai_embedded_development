@@ -1,0 +1,49 @@
+id: k-360a78cf-5998-4582-9459-6c8fd171f5a4
+title: CDC-ECM USB gadget working on Alif E7 via configfs
+body: |-
+  CDC-ECM USB Ethernet gadget works on Alif E7 via configfs. The gadget creates a USB network interface (usb0 on device, en13 on Mac) for Ethernet-over-USB.
+
+  **Working configuration:**
+  - Kernel: CONFIG_USB_CONFIGFS=y, CONFIG_USB_CONFIGFS_ECM=y, CONFIG_USB_F_ECM=y, CONFIG_USB_LIBCOMPOSITE=y
+  - CONFIG_USB_G_SERIAL must be DISABLED (=n) — it auto-binds UDC before configfs gadget can claim it
+  - usb-ecm.sh creates configfs gadget at /sys/kernel/config/usb_gadget/g1
+  - UDC: 48200000.usb-dual (DWC3 gadget controller)
+  - Device MAC: 02:00:86:e7:00:01, Host MAC: 02:00:86:e7:00:02
+  - Device IP: 192.168.55.2, Host IP: 192.168.55.1
+
+  **Mac side:** Shows as "Alif E7 Dev Board" on USB bus, creates en13 interface with MAC 02:00:86:e7:00:02. Assign IP: `sudo ifconfig en13 192.168.55.1/24 up`.
+
+  **Prerequisites (TF-A):** USB clocks must be enabled before Linux boots — CGU CLK_ENA bits 21-23 and PERIPH_CLK_ENA = 0x11111113 (done in sp_min_main.c).
+
+  **Board detection:** /proc/device-tree/model is "appkit-e7" (lowercase). Use `grep -qi "alif\|ensemble\|appkit-e\|devkit-e"` — case-insensitive, matches multiple Alif board names.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+  - networking
+  - gadget
+file_patterns:
+- '**/usb-ecm*'
+- '**/usb-gadget*'
+- '**/sp_min_main.c'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- usb
+- cdc-ecm
+- configfs
+- gadget
+- ethernet
+- dwc3

@@ -1,0 +1,36 @@
+id: k-345f812c-8b6b-4351-9cef-d5c2a85ff8fe
+title: 'usb-ecm.sh board detection: /proc/device-tree/model is lowercase on Alif E7'
+body: |-
+  The Alif E7 device tree model string is "appkit-e7" (all lowercase). Scripts checking for board identity must use case-insensitive matching.
+
+  **Bug found:** `grep -q "Alif" /proc/device-tree/model` fails because the model is "appkit-e7", not "Alif ...". The script fell through to the STM32MP1 fallback which had invalid MAC addresses (02:00:86:mp:00:01 — "mp" is not valid hex), causing the entire gadget setup to fail silently.
+
+  **Fix:** Use `grep -qi "alif\|ensemble\|appkit-e\|devkit-e" /proc/device-tree/model` — case-insensitive with multiple patterns matching various Alif board names.
+
+  **Also:** Ensure ALL fallback MAC addresses use valid hex bytes. The generic fallback now uses 02:00:86:00:00:01/02.
+
+  **HEREDOC shebang bug:** When writing scripts to Docker containers via bash HEREDOC, `#!/bin/sh` can get corrupted to `#\!/bin/sh` if not properly quoted. This causes "ash: applet not found" on busybox systems. Always verify shebang with `head -1` after writing.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/usb-ecm*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- usb-ecm
+- board-detection
+- device-tree
+- mac-address
+- shebang

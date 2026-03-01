@@ -1,0 +1,45 @@
+id: k-c9f9df77-e274-4be5-9c4c-f3b80ab58934
+title: Yocto kernel CONFIG_USB_G_SERIAL cannot be disabled via config fragment alone
+body: |-
+  In Yocto 5.0 (Scarthgap) with KCONFIG_MODE="--alldefconfig", setting `# CONFIG_USB_G_SERIAL is not set` in a config fragment does NOT reliably disable it. The alldefconfig mode re-enables tristate options when all dependencies are met.
+
+  **Root cause:** The kernel-yocto bbclass runs merge_config.sh which merges fragments, then runs `make alldefconfig` (or similar) which sets all satisfiable tristates to y. CONFIG_USB_G_SERIAL depends only on TTY (always enabled), so it gets re-enabled.
+
+  **Fragment ordering also matters:** merge_config.sh applies fragments in order. If base recipe's usb.cfg (with G_SERIAL=y) is merged AFTER bbappend's fragment (with G_SERIAL not set), the base wins. Check .kernel-meta/cfg/merge_config_build.log for fragment order.
+
+  **What DOESN'T work:**
+  - `# CONFIG_USB_G_SERIAL is not set` in config fragment — alldefconfig overrides
+  - `do_configure:append` with sed — EXPORT_FUNCTIONS and task ordering issues prevent execution
+  - `do_compile:prepend` with sed + olddefconfig — olddefconfig may re-enable
+
+  **What WORKS:** Remove CONFIG_USB_G_SERIAL=y directly from the source config fragment (e.g., meta-alif-ensemble usb.cfg). Also must delete .kernel-meta cache: `rm -rf tmp/work-shared/*/kernel-source/.kernel-meta` — otherwise stale fragments persist across cleanall.
+
+  **Cleanup required:** `bitbake linux-alif -c cleanall` alone is NOT sufficient — the work-shared kernel-meta directory is separate and must be manually deleted.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - yocto
+  - kernel-config
+file_patterns:
+- '**/*.bbappend'
+- '**/*.cfg'
+- '**/linux-alif*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- yocto
+- kernel
+- kconfig
+- usb
+- config-fragment
+- alldefconfig
