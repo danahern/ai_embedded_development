@@ -14,6 +14,7 @@
 Cross-cutting lessons (Tier 1 — always loaded). Board/platform-specific gotchas auto-inject via `.claude/rules/` (Tier 2). Full corpus via `/recall` or `knowledge.search()` (Tier 3).
 
 - **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
+- **Yocto Docker: kernel config changes need `kernel_rebuild`** — Use the `kernel_rebuild` MCP tool (not `yocto_build`) when changing `.cfg` fragments. It runs `configure -f && compile -f && deploy -f` in the correct order. Plain `cleansstate` + `compile -f` silently fails because kbuild `.o` timestamps in `work-shared/` survive and defeat Make. See `.claude/rules/yocto-docker.md`.
 
 ## CRITICAL: MCP-First Policy
 
