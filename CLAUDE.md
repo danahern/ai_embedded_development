@@ -15,6 +15,9 @@ Cross-cutting lessons (Tier 1 — always loaded). Board/platform-specific gotcha
 
 - **MCP server testing**: MCP servers MUST have unit tests for core logic (ID generation, parsing, encoding). Silent bugs are destructive.
 - **Yocto Docker: kernel config changes need `kernel_rebuild`** — Use the `kernel_rebuild` MCP tool (not `yocto_build`) when changing `.cfg` fragments. It runs `configure -f && compile -f && deploy -f` in the correct order. Plain `cleansstate` + `compile -f` silently fails because kbuild `.o` timestamps in `work-shared/` survive and defeat Make. See `.claude/rules/yocto-docker.md`.
+- **Agent escalation threshold: 3 failures = STOP** — After 3 consecutive unexpected failures in a session, do NOT attempt a 4th fix. Run the structured escalation investigation: (1) restate the goal, (2) enumerate assumptions, (3) identify which assumptions are inferred vs. verified by experiment, (4) find the minimal test to falsify the critical assumption. See `.claude/rules/agent-process.md`.
+- **User process signals override "we're close"** — When the user suggests investigating fundamentals instead of pushing forward, do it without debate. User meta-level assessment of session health is authoritative. "We're close" is optimism bias, not a probability estimate.
+- **Pre-flight before expensive operations** — Any operation >10 minutes requires a pre-flight check. For flash: verify artifact filenames, verify the flash path has been confirmed to survive a power cycle. For kernel builds: verify files are inside the container, use `kernel_rebuild`. Never skip this. See `.claude/rules/agent-process.md`.
 
 ## CRITICAL: MCP-First Policy
 

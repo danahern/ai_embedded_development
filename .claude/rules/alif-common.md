@@ -15,18 +15,20 @@ Packet format: `[length, cmd, data..., checksum]`. All bytes including checksum 
 
 ## Flashing Tool Selection (CRITICAL)
 
-**`jlink_flash` (fast, ~44 KB/s MRAM):**
-- Use for ALL image updates (TF-A, DTB, kernel, rootfs) at existing MRAM addresses
-- Uses `loadbin` on M55_HP — MRAM is directly memory-mapped and writable
-- Must power cycle after to trigger SE boot
+**NEVER use `jlink_flash` for persistent image updates.** The SE reprograms ALL ATOC-managed images (kernel, rootfs, DTB, bl32) from its internal storage on every power cycle. J-Link writes to OSPI and MRAM verify successfully but are silently overwritten before the A32 starts. This is the SE's normal security model, not a bug.
 
-**SE-UART `flash()` (slow, ~5 KB/s):**
-- ONLY use when ATOC itself must change (new components, different addresses, initial setup)
-- Writes AppTocPackage.bin + all images via ISP protocol
+**SE-UART `flash()` — use for ALL persistent image updates:**
+- Call `alif-flash.gen_toc(config=...)` then `alif-flash.flash(config=..., maintenance=true)`
+- Writes to SE's internal storage; SE programs MRAM/OSPI from this copy on each boot
+- ~5 KB/s for MRAM images directly; OSPI images use TF-A MRAM-staging programmer (~42 KB/s)
+- Required when adding new ATOC entries or changing addresses
 
-**NEVER use SE-UART for routine image updates. It is 9x slower than jlink_flash.**
+**`jlink_flash` — only for temporary debugging:**
+- Useful for reading back memory, testing transient changes, or writing to non-ATOC regions
+- Writes do NOT survive a power cycle for any ATOC-managed address
+- Speed: ~44 KB/s MRAM, ~6 KB/s OSPI (but irrelevant — writes are overwritten)
 
-**OSPI NOR Flash** (0xC0000000+): SE-UART does NOT support OSPI. Use J-Link with FLM flash algorithm.
+**OSPI NOR Flash** (0xC0000000+): Use TF-A MRAM-staging programmer (see plan `alif-e7-ospi-boot/`).
 
 ## ATOC / gen_toc
 

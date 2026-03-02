@@ -1,0 +1,60 @@
+id: k-9e1d2148-d0b1-417d-b75a-1750167e9348
+title: 'Alif E7: Complete SE-UART OSPI flash workflow (stage → gen_toc → flash → power cycle → verify)'
+body: |-
+  ## Complete SE-UART OSPI Flash Workflow
+
+  The ONLY reliable path for persistent OSPI/MRAM image updates on Alif E7. J-Link writes are silently overwritten by the SE on every power cycle (see k-3b471ccd).
+
+  ### Steps
+
+  1. **Stage artifacts** — Run `stage-ospi.sh` to copy Yocto build outputs (xipImage, cramfs-xip.img, bl32.bin, appkit-e7.dtb) into `build/images/` with the filenames expected by the flash config JSON.
+
+  2. **Generate ATOC package** — `alif-flash.gen_toc(config="build/config/linux-boot-e7-ospi.json")`. This creates `build/images/AppTocPackage.bin` containing the SE firmware manifest + all images.
+
+  3. **Flash via SE-UART** — `alif-flash.flash(config="linux-boot-e7-ospi.json", maintenance=true)`. The `maintenance=true` flag enters maintenance mode automatically before flashing. Speed: ~5 KB/s. For a full OSPI image set (~8MB), expect ~25 minutes.
+
+  4. **Power cycle** — Physically unplug and replug the PRG_USB cable. The SE reprograms all ATOC-managed images from its internal storage on boot.
+
+  5. **Verify boot** — Monitor UART2 console (`/dev/cu.usbserial-AO009AHE` at 115200 baud) to confirm Linux boots successfully. Look for kernel version string and login prompt.
+
+  ### Key Details
+
+  - SE-UART port: `/dev/cu.usbserial-A10LOVM2` (ISP commands, SE boot log)
+  - UART2 port: `/dev/cu.usbserial-AO009AHE` (A32/Linux console)
+  - Flash config must include a DEVICE entry with the correct part number
+  - The `global-cfg.db` in build/config must match the target (E7 vs E8)
+  - OSPI addresses: rootfs@0xC0000000, kernel@0xC0800000
+
+  ### Why Not J-Link?
+
+  J-Link writes to MRAM (0x80000000–0x80600000) and OSPI (0xC0000000+) appear to succeed and verify OK, but the SE overwrites them from its internal ATOC storage on every power cycle. This was confirmed via 3 independent post-power-cycle tests (2026-03-02). J-Link is only useful for temporary debugging reads/writes that don't need to survive reboot.
+
+  Consolidates: k-f44cd4f4 (SE-UART flow), k-5a99d26d (deprecated), k-502e0e95 (OSPI programmer).
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns:
+- '**/alif-flash/**'
+- '**/alif_flash/**'
+- '**/linux-boot-e7*.json'
+- '**/stage-ospi.sh'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- ospi
+- se-uart
+- flash-workflow
+- alif-e7

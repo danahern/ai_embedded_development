@@ -172,6 +172,12 @@ Modify `firmware/linux/yocto/meta-eai/recipes-core/overlayfs-dev/files/overlayfs
 
 Build, flash, and run experiments 1-5 on hardware.
 
+**CRITICAL: SE-UART required for flashing.** J-Link writes to OSPI and MRAM are overwritten by the SE on every power cycle. ALL image updates must use the SE-UART ATOC path:
+1. Run `alif-flash.gen_toc(config="linux-boot-e7-ospi.json")` to regenerate the ATOC package
+2. Run `alif-flash.flash(config="linux-boot-e7-ospi.json", maintenance=true)` for MRAM images (TF-A, DTB)
+3. For OSPI images (kernel, rootfs): use TF-A MRAM-staging programmer (see `plans/alif-e7-ospi-boot/plan.md`)
+4. Do NOT use `jlink_flash` for kernel or rootfs — changes will silently not take effect after power cycle
+
 ## Files to Modify
 
 | File | Change |

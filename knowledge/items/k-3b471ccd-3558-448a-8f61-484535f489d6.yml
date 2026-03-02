@@ -1,0 +1,68 @@
+id: k-3b471ccd-3558-448a-8f61-484535f489d6
+title: 'Alif E7: J-Link writes to OSPI and MRAM are overwritten by SE on every boot'
+body: |-
+  ## Discovery
+
+  The Secure Enclave (SE) reprograms ALL ATOC-managed images from its internal storage on every power cycle. This includes:
+  - **MRAM images**: DTB (0x80010000), bl32 (0x80002000)
+  - **OSPI images**: kernel (0xC0800000), rootfs (0xC0000000)
+
+  J-Link writes to these addresses succeed and verify, but are **silently overwritten** on the next boot. The flash tool reports success because verification reads back correctly — but the data doesn't survive a power cycle.
+
+  ## Evidence
+
+  - fdtput modified DTB with phram bootargs, J-Link flashed to MRAM 0x80010000, verified OK. After power cycle: old bootargs.
+  - Kernel rebuilt with JFFS2 (3.75MB vs 3.68MB old), J-Link flashed to OSPI 0xC0800000, verified OK. After power cycle: no JFFS2, kernel size matches old.
+  - Rootfs with updated init script, J-Link flashed to OSPI 0xC0000000, verified OK. After power cycle: old init script running.
+  - Multiple flash cycles confirmed this pattern.
+
+  ## Correct Approach
+
+  Use **SE-UART (ATOC)** to program images: `alif-flash.gen_toc` + `alif-flash.flash`. This writes to the SE's internal storage, which the SE uses to reprogram MRAM/OSPI on each boot.
+
+  The `jlink_flash` tool is only useful for:
+  - Temporary writes that don't need to survive reboot (e.g., debugging)
+  - Reading back memory for inspection
+  - Possibly non-ATOC regions (if any exist)
+
+  ## Impact
+
+  This wasted 5+ flash cycles (~3+ hours) during the persistent overlayfs implementation. Every J-Link flash appeared successful but changes never took effect after power cycle.
+
+  ## Prevention
+
+  - NEVER use `jlink_flash` to update boot images (kernel, rootfs, DTB, bl32)
+  - ALWAYS use SE-UART ATOC path for persistent image updates
+  - The `jlink_flash` MCP tool and `linux-boot-e7-ospi-jlink.json` config should be deprecated or clearly marked as non-persistent
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools:
+  - alif-flash
+  - jlink
+  subsystems: []
+file_patterns:
+- '**/setools/**'
+- '**/jlink*'
+- '**/alif-e7/**'
+status: validated
+validated_by:
+- danahern
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- alif-e7
+- jlink
+- flash
+- se-uart
+- atoc
+- ospi
+- mram
+- gotcha

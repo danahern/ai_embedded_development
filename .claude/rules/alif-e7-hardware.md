@@ -32,7 +32,7 @@ The onboard JLink VCOM port (`usbmodem*`) **only produces output during an activ
 | Rootfs | rootfs-ospi.bin | 0xC0000000 | OSPI NOR |
 | Kernel | xipImage-ospi | 0xC0800000 | OSPI NOR |
 
-OSPI images flashed via `alif-flash.jlink_flash()` with OSPI FLM flash loader.
+OSPI images programmed via SE-UART ATOC path (`alif-flash.gen_toc` + `alif-flash.flash`). J-Link FLM writes to OSPI do NOT survive a power cycle — the SE overwrites from its internal storage on every boot.
 
 ## OSPI Artifact Staging (CRITICAL)
 
@@ -42,7 +42,7 @@ Flash configs reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-osp
 firmware/linux/alif-e7/stage-ospi.sh        # copies from yocto-build container → images/
 ```
 
-Without this step, `jlink_flash` silently flashes stale files.
+Without this step, flash tools will use stale files with no warning.
 
 ## E7 Kernel
 

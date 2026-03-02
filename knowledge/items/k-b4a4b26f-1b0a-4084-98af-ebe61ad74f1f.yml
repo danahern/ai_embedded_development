@@ -15,7 +15,7 @@ body: |-
   2. `alif-flash.gen_toc(config=...)` — regenerates AppTocPackage.bin with correct checksums
   3. `alif-flash.flash(config=..., maintenance=true, wait_for_replug=true)` — writes ATOC + all images
 
-  **jlink_flash is safe for:** OSPI writes (kernel, rootfs) which don't go through ATOC validation. It's also safe when the board is already running (M55_HP core accessible), but NEVER for MRAM images that the SE validates at boot.
+  **CORRECTION (2026-03-02):** The original body stated "jlink_flash is safe for OSPI writes (kernel, rootfs) which don't go through ATOC validation." This was INCORRECT. OSPI images (kernel at 0xC0800000, rootfs at 0xC0000000) ARE managed by the SE ATOC. The SE reprograms ALL ATOC-managed images from its internal storage on every boot. J-Link OSPI writes verify successfully but are silently overwritten on the next power cycle. See k-3b471ccd for the complete root cause analysis.
 category: operational
 severity: critical
 applies_to:
@@ -38,10 +38,10 @@ file_patterns:
 - '**/jlink*'
 status: unvalidated
 validated_by: []
-deprecated: false
-superseded_by: null
+deprecated: true
+superseded_by: k-3b471ccd-3558-448a-8f61-484535f489d6
 created: 2026-02-26
-updated: 2026-02-26
+updated: 2026-03-02
 author: claude
 source_session: null
 tags:
