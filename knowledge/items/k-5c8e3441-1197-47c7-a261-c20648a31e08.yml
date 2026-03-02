@@ -1,0 +1,48 @@
+id: k-5c8e3441-1197-47c7-a261-c20648a31e08
+title: 'meta-eai bind mount: host edits propagate automatically to yocto-build container'
+body: |-
+  The yocto-build container now has meta-eai as a bind mount overlaying the named volume path. Host edits to `firmware/linux/yocto/meta-eai/` are immediately visible inside the container at `/home/builder/yocto/meta-eai/`. No docker cp or verification needed.
+
+  Container creation command:
+  ```bash
+  docker run -dit --name yocto-build \
+    -v yocto-data:/home/builder/yocto \
+    -v /Users/danahern/code/claude/work/yocto-build:/home/builder/artifacts \
+    -v /Users/danahern/code/claude/work/firmware/linux/yocto/meta-eai:/home/builder/yocto/meta-eai \
+    yocto-builder \
+    bash -c "sleep infinity"
+  ```
+
+  Note: Do NOT use `mkdir -p /artifacts` in the entrypoint — it fails with permission denied (container runs as non-root builder user). The artifacts dir is created by the bind mount.
+
+  The case-sensitivity concern (macOS FS) is not an issue for meta-eai because it only contains our recipe files — no case conflicts. Case-sensitive paths (poky, meta-openembedded, kernel source) remain in the named volume.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools:
+  - docker
+  - yocto
+  subsystems:
+  - yocto
+  - docker
+file_patterns:
+- '**/meta-eai/**'
+- '**/yocto/**/*.bbappend'
+- '**/yocto/**/*.cfg'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- meta-eai
+- bind-mount
+- docker
+- yocto
+- container

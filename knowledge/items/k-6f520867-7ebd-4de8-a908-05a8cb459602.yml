@@ -1,0 +1,52 @@
+id: k-6f520867-7ebd-4de8-a908-05a8cb459602
+title: 'kernel_rebuild MCP tool: correct sequence for kernel config fragment changes'
+body: |-
+  The `kernel_rebuild` tool in linux-build MCP runs the correct forced rebuild sequence: `configure -f → compile -f → deploy -f`. This is needed because:
+
+  1. `cleansstate` does NOT delete build artifacts in `work-shared/devkit-e8/kernel-source/`
+  2. `compile -f` alone runs Make with stale .o files whose timestamps are newer than .config
+  3. Make sees nothing to do and skips recompilation — binary is NOT rebuilt
+  4. `configure -f` MUST run first to regenerate `include/config/auto.conf`, which forces kbuild to see new config options
+
+  Usage:
+  ```
+  linux-build.kernel_rebuild(
+    container="yocto-build",
+    image="alif-tiny-image",
+    verify_configs=["CONFIG_JFFS2_FS=y"]
+  )
+  ```
+
+  For recipe-only changes (bbappend, bb files), use `yocto_build` instead — no forced reconfig needed.
+
+  Background mode available via `background=true`, status checked with `yocto_build_status`.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools:
+  - linux-build
+  - yocto
+  - bitbake
+  subsystems:
+  - yocto
+  - kernel
+file_patterns:
+- '**/yocto/**/*.cfg'
+- '**/linux_build_tools.rs'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- kernel-rebuild
+- yocto
+- kbuild
+- configure
+- bitbake

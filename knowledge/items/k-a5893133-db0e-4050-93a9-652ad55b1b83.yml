@@ -1,0 +1,101 @@
+id: k-a5893133-db0e-4050-93a9-652ad55b1b83
+title: Yocto kernel cleansstate does NOT clean work-shared — must use clean to fully rebuild
+body: |-
+  ## Problem
+
+  `bitbake linux-alif -c cleansstate` removes the sstate cache entries for the kernel recipe BUT does NOT delete the kernel source tree or build directory in `work-shared/`. The `do_compile -f` force flag then re-runs `kernel_do_compile()` in `${B}` (which is `WORKDIR/build`, NOT `work-shared`), but the kernel Make system treats existing `.o` files as up-to-date because their timestamps postdate the `.config` changes made by `do_compile:prepend`.
+
+  ## Root Cause: The Alif `do_compile:prepend` Modifies `.config` Without Touching Source Files
+
+  In `/Users/danahern/code/claude/work/yocto-build/meta-alif-ensemble/recipes-kernel/linux/linux-alif.inc`:
+
+  ```bash
+  do_compile:prepend () {
+      if [ -e "${B}/.config" ]; then
+          sed -i "s:^CONFIG_XIP_PHYS_ADDR=.*:..." ${B}/.config
+          sed -i "s:^CONFIG_MTD_PHYSMAP_START=.*:..." ${B}/.config
+          ...
+      fi
+  }
+  ```
+
+  This modifies `.config` in-place during each compile. But Linux Make's incremental build only relinks the kernel if *source files* change, not just `.config`. When `CONFIG_JFFS2_FS=y` is added to `.config`, Make does NOT automatically recompile because:
+  1. No `.c` file changed — only `.config` changed
+  2. kbuild tracks `include/config/auto.conf` but this only invalidates files that `#include` the affected config header
+  3. The existing `xipImage` binary was built before — its `.o` files all have timestamps newer than the modified `.config`
+
+  ## Why `bitbake -c compile -f` Doesn't Fix It
+
+  The `-f` forces Bitbake to re-run `do_compile`, but Bitbake just calls `kernel_do_compile` → `oe_runmake xipImage`. Make then sees that `xipImage` already exists and that all `.o` files are newer than their source `.c` files. Make exits without recompiling.
+
+  Linux kbuild's dependency tracking for CONFIG options is via `include/config/*.h` (auto.conf.cmd), but this only applies to C files that `#include <linux/config.h>` or use `IS_ENABLED()`. For options that newly enable entire subsystems (like JFFS2), the drivers weren't compiled before — their `.o` files don't exist. Make SHOULD rebuild them, but only if the config header files were regenerated.
+
+  ## The Real Problem: `do_configure` Was Not Re-run
+
+  The sequence needed is:
+  1. `do_kernel_configme` — regenerates `.config` from fragments (runs `merge_config.sh`)
+  2. `do_configure` — runs `make olddefconfig` which regenerates `include/config/auto.conf`
+  3. `do_compile` — Make sees changed headers, recompiles affected files
+
+  When `bitbake -c compile -f` is used, it skips `do_configure`. The `include/config/auto.conf` file still reflects the OLD config state. Make never knows JFFS2 needs to be compiled.
+
+  ## Correct Commands for Forced Kernel Rebuild After Config Change
+
+  ```bash
+  # Option 1: Invalidate through configure (preferred — reruns config pipeline)
+  bitbake linux-alif -c configure -f && bitbake linux-alif -c compile -f && bitbake linux-alif -c deploy -f && bitbake alif-tiny-image
+
+  # Option 2: Delete the build directory entirely (nuclear, always works)
+  # Inside container:
+  rm -rf /home/builder/yocto/build-alif-e7/tmp/work-shared/devkit-e8/kernel-source/
+  bitbake linux-alif
+
+  # Option 3: Cleansstate + clean (removes sstate AND work dir stamps)
+  bitbake linux-alif -c cleansstate && bitbake linux-alif -c clean && bitbake linux-alif
+  ```
+
+  ## Why `cleansstate` Alone Failed
+
+  `cleansstate` removes the SSTATE tarballs and invalidates the Bitbake stamp files for the kernel tasks. But it does NOT delete the actual build artifacts in `work-shared/`. After `cleansstate`, when `bitbake linux-alif` runs again, Bitbake sees no sstate hit → runs each task → but `do_compile` runs Make with existing `.o` files still present → Make skips recompilation.
+
+  ## Prevention
+
+  When adding a NEW kernel config fragment (new `.cfg` file to SRC_URI), always:
+  1. Verify the file is inside the container (Docker cp + verify)
+  2. Run `bitbake linux-alif -c configure -f` first to force config regen
+  3. Then compile and deploy normally
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  - alif-e8
+  chips: []
+  tools:
+  - linux-build
+  - yocto
+  subsystems:
+  - kernel
+  - yocto
+file_patterns:
+- '**/meta-eai/**/*.cfg'
+- '**/yocto/**/*.bbappend'
+- '**/meta-alif*/**/*.bb'
+- '**/meta-alif*/**/*.inc'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- yocto
+- kernel
+- cleansstate
+- do_compile
+- do_configure
+- rebuild
+- gotcha
+- kconfig

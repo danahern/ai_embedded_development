@@ -1,0 +1,40 @@
+id: k-eb1e30d6-7142-487c-aa6b-eb0a25e82579
+title: 'OSPI flash staging: filename mismatch between Yocto output and flash config'
+body: |-
+  Flash configs (linux-boot-e7-ospi-jlink.json) reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-ospi.bin`), but Yocto outputs `xipImage` and `alif-tiny-image-devkit-e8.rootfs.cramfs-xip`. Without a staging step to copy+rename, `jlink_flash` silently uses stale files from images/.
+
+  Fix: Run `firmware/linux/alif-e7/stage-ospi.sh` after every Yocto build. It copies from the yocto-build container to images/ with the correct -ospi filenames.
+
+  The jlink.flash_from_config() resolves images relative to config: `os.path.join(os.path.dirname(config_path), '..', 'images')`. For configs in setools/, this resolves to `firmware/linux/alif-e7/images/`.
+
+  Multiple flash cycles were wasted flashing Feb 28 stale files while the Mar 1 builds sat in images/ under different names.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools:
+  - alif-flash
+  - jlink
+  subsystems:
+  - yocto
+  - flash
+file_patterns:
+- '**/linux-boot-e7-ospi*.json'
+- '**/stage-ospi.sh'
+- '**/alif-e7/images/*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-02
+author: claude
+source_session: null
+tags:
+- ospi
+- staging
+- jlink-flash
+- filename-mismatch
+- yocto

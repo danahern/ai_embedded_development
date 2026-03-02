@@ -1,0 +1,31 @@
+id: k-71814b51-5c09-43fe-bb78-5d08cef87524
+title: 'Yocto Docker: MUST verify files inside container before building'
+body: "## Problem\n\nThe Yocto build runs inside the `yocto-build` Docker container. The `meta-eai` layer inside the container is a COPY, not a bind mount. Editing files on the host (`firmware/linux/yocto/meta-eai/...`) does NOT propagate to the container.\n\n## Consequence\n\nTwo full build+flash cycles were wasted (~60+ minutes) because:\n1. Created `jffs2.cfg` and edited `linux-alif_%.bbappend` on the host\n2. Ran `yocto_build` — it succeeded but used the OLD files from inside the container\n3. Flashed and tested — changes weren't there\n4. Cleared kernel-meta cache and rebuilt — still used old files\n5. Only discovered on third attempt by checking files inside the container\n\n## Prevention — MANDATORY pre-build checklist\n\nBefore ANY `yocto_build`, ALWAYS:\n\n1. **Copy changed files into container** via `docker cp` or `linux-build.run_command`\n2. **Verify files inside container** — `run_command` to cat the files and confirm they match host\n3. Only THEN start the build\n\n## Commands\n\n```sh\n# Copy host file into container\ndocker cp <host-path> yocto-build:<container-path>\n\n# Verify inside container\nlinux-build.run_command(container=\"yocto-build\", command=\"cat /home/builder/yocto/meta-eai/...\")\n```\n\n## Paths\n\n- Host: `firmware/linux/yocto/meta-eai/` \n- Container: `/home/builder/yocto/meta-eai/`\n\n## Long-term fix\n\nSet up bind mounts for `meta-eai` so host edits propagate automatically (see `plans/alif-e7-bind-mounts.md`). Until then, the manual docker cp + verify step is required."
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips: []
+  tools:
+  - linux-build
+  - yocto
+  subsystems: []
+file_patterns:
+- '**/meta-eai/**'
+- '**/yocto/**/*.cfg'
+- '**/yocto/**/*.bbappend'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-01
+updated: 2026-03-01
+author: claude
+source_session: null
+tags:
+- yocto
+- docker
+- meta-eai
+- build
+- gotcha
