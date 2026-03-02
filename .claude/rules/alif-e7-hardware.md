@@ -30,9 +30,19 @@ The onboard JLink VCOM port (`usbmodem*`) **only produces output during an activ
 | TF-A | bl32.bin | 0x80002000 | MRAM |
 | DTB | appkit-e7-ospi.dtb | 0x80010000 | MRAM |
 | Rootfs | rootfs-ospi.bin | 0xC0000000 | OSPI NOR |
-| Kernel | xipImage | 0xC0800000 | OSPI NOR |
+| Kernel | xipImage-ospi | 0xC0800000 | OSPI NOR |
 
 OSPI images flashed via `alif-flash.jlink_flash()` with OSPI FLM flash loader.
+
+## OSPI Artifact Staging (CRITICAL)
+
+Flash configs reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-ospi.bin`), but Yocto outputs `xipImage` and `*.cramfs-xip`. **Always run `stage-ospi.sh` after a Yocto build to copy+rename artifacts.**
+
+```bash
+firmware/linux/alif-e7/stage-ospi.sh        # copies from yocto-build container → images/
+```
+
+Without this step, `jlink_flash` silently flashes stale files.
 
 ## E7 Kernel
 
