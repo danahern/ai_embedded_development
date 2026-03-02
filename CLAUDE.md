@@ -53,7 +53,7 @@ Board details available via `knowledge.board_info("board_name")` or `knowledge.l
 
 ## Workflows
 
-Use `/bft <app> <board>` (build-flash-test), `/hw-verify <app> <board>` (hardware verification), or `/embedded` (full guidelines including crash debug).
+Use `/bft <app> <board>` (build-flash-test), `/hw-verify <app> <board>` (hardware verification), `/embedded` (full guidelines including crash debug), or `/deliberate <question>` (multi-agent debate for complex decisions).
 
 ## Plans
 
@@ -95,3 +95,4 @@ Capture with `/learn` or `/wrap-up`. Regenerate derived files with `knowledge.re
 - `/embedded` — Full embedded development guidelines (memory, style, Zephyr patterns)
 - `/bft <app> <board>` — Build, flash, validate boot, read output — single command inner loop
 - `/hw-verify <app> <board>` — Guided hardware verification checklist
+- `/deliberate <question>` — Multi-agent debate for complex decisions
