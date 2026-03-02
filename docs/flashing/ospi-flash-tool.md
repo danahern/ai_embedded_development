@@ -38,7 +38,7 @@ Config: `RTSS-PC-tool-burner.json`
 alif-flash.gen_toc(config="RTSS-PC-tool-burner.json")
 alif-flash.maintenance(jlink_reset=true)
 alif-flash.flash(config="RTSS-PC-tool-burner.json")
-# Power cycle
+# Reset board (J-Link NSRST or power cycle)
 ```
 
 ### Step 2: Switch to UART2

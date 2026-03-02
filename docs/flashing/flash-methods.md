@@ -39,7 +39,7 @@ The Secure Enclave ISP protocol writes the ATOC package and images to MRAM. This
 alif-flash.maintenance(jlink_reset=true)        # Enter maintenance mode
 alif-flash.gen_toc(config="linux-boot-e7.json")  # Generate ATOC package
 alif-flash.flash(config="linux-boot-e7.json")    # Write to MRAM
-# Power cycle board
+# Reset board (J-Link NSRST or power cycle)
 ```
 
 ### Characteristics
@@ -75,7 +75,7 @@ J-Link connects to M55_HP via SWD and writes directly to memory-mapped regions. 
 
 ```
 alif-flash.jlink_flash(config="linux-boot-e7.json", verify=true)
-# Power cycle board
+# Reset board (J-Link NSRST or power cycle)
 ```
 
 ### Critical Gotchas
@@ -83,8 +83,8 @@ alif-flash.jlink_flash(config="linux-boot-e7.json", verify=true)
 1. **NOT persistent** — SE reprograms ALL ATOC-managed images from its internal storage on every boot. J-Link writes succeed and verify OK, but are silently overwritten on reboot.
 2. **JLinkScript mandatory** — without it, `loadbin` resets the SoC, killing AP[3] and making M55_HP inaccessible.
 3. **File extension rejection** — JLinkExe rejects non-`.bin` files. Must copy `.dtb`/`.img` to `.bin` extension.
-4. **Power cycle before first connect** — AP[3] must be alive (SE boot completed).
-5. **Power cycle after flash** — J-Link reset does NOT trigger SE boot.
+4. **Reset before first connect** — AP[3] must be alive (SE boot completed). J-Link NSRST or power cycle works.
+5. **Reset after flash** — J-Link NSRST (via `reset_via_jlink()` or `ClrRESET`/`SetRESET`) triggers full SE re-boot with ATOC re-read. Physical power cycle also works but is not required.
 6. **"Failed to halt CPU" is harmless** — M55_HP is running SE firmware, can't be halted, but writes succeed.
 
 ### Characteristics
@@ -144,7 +144,7 @@ TF-A's `init_nor_flash()` checks for a magic header at MRAM 0x8000E000 and progr
 
 1. Stage image data in MRAM via SE-UART
 2. Write magic header (`0x4F535049` = "OSPI") at 0x8000E000 with dest address, length, src address
-3. Power cycle — TF-A detects header, exits OSPI XIP, erases sectors, programs pages
+3. Reset board (J-Link NSRST or power cycle) — TF-A detects header, exits OSPI XIP, erases sectors, programs pages
 4. TF-A clears magic to prevent re-programming on next boot
 5. TF-A re-enters XIP mode and boots kernel from OSPI
 

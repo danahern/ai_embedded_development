@@ -14,6 +14,7 @@ Comprehensive reference for flashing and debugging the Alif Ensemble E7/E8 SoC f
 | [OSPI Controller](ospi-controller.md) | DWC SSI registers, ISSI IS25WX256 commands, XIP mode, driver API, programming sequences |
 | [OSPI Flash Tool](ospi-flash-tool.md) | UART-based OSPI programming protocol, burner firmware, baud negotiation, file transfer |
 | [E7 vs E8 Differences](e7-vs-e8.md) | OSPI IP changes, memory map shifts, clock differences, flashing implications |
+| [Reset Mechanisms](reset-mechanisms.md) | All reset paths (POR_N, NSRST, software), J-Link commands, SE boot behavior, schematic routing |
 
 ## Quick Reference: Which Method to Use
 

@@ -110,7 +110,7 @@ int ResetTarget(void) {
 }
 ```
 
-**Why:** Any SWD reset kills the SE boot sequence — AP[3] disappears, memory access fails. Only recovery is physical power cycle.
+**Why:** Any SWD reset kills the SE boot sequence — AP[3] disappears, memory access fails. Recovery requires waiting for SE to complete re-boot (~2-3s) or a physical power cycle.
 
 **Must be passed explicitly** (JLink V9.20 doesn't resolve paths from Devices.xml):
 ```bash
@@ -153,7 +153,7 @@ Erase before write recommended (clears stale MTD data). Sector size: 64 KB.
 3. **M55_HP fails when sleeping** — SWD access fails if firmware is sleeping/done
 4. **File extension rejection** — `loadbin` rejects `.dtb`, `.img` — must rename to `.bin`
 5. **"Failed to halt CPU"** — harmless, writes succeed
-6. **Power cycle required** — before first connect and after flashing
+6. **Reset required after flashing** — J-Link NSRST (`ClrRESET`/`SetRESET` or `reset_via_jlink()`) triggers full SE re-boot with ATOC re-read. Physical power cycle also works but is not required.
 7. **ATOC overwrites** — J-Link writes to ATOC-managed regions are overwritten on reboot
 8. **connect-under-reset fails** — disrupts SE boot same as normal reset
 9. **Ensemble.FLM fails** — `GetSectorInfo` error on JLink V8.70; not needed for MRAM (direct writes work)
