@@ -84,7 +84,7 @@ Capture with `/learn` or `/wrap-up`. Regenerate derived files with `knowledge.re
 
 ## Workspace Structure
 
-`firmware/` (Zephyr/ESP-IDF apps + shared libs), `claude-mcps/` (MCP servers, submodule), `claude-config/` (skills/agents, submodule), `knowledge/` (items + board profiles), `test-tools/` (Python BLE/power utils), `plans/` + `retrospective/`. West-managed deps: `zephyr/`, `bootloader/`, `modules/`, `tools/` (gitignored).
+`firmware/` (Zephyr/ESP-IDF apps + shared libs), `claude-mcps/` (MCP servers, submodule), `claude-config/` (skills/agents, submodule), `knowledge/` (items + board profiles), `builds/` (build & flash log), `test-tools/` (Python BLE/power utils), `plans/` + `retrospective/`. West-managed deps: `zephyr/`, `bootloader/`, `modules/`, `tools/` (gitignored).
 
 ## Key Commands
 

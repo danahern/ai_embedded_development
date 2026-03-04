@@ -39,6 +39,52 @@ When the user says "let's step back and understand X" or "maybe we should invest
 Any operation taking more than 10 minutes requires a pre-flight check before starting.
 "I've done this before" is not a pre-flight check.
 
+### Step 1: Log Parameters (BEFORE starting)
+
+Append an entry to `builds/BUILD_LOG.md` capturing the **full recipe** — everything needed to reproduce this build/flash. The goal is that anyone reading the log can understand exactly what was built, with what, and why.
+
+```markdown
+## <ISO date> — <short description>
+
+### Parameters
+- **Operation**: <kernel build | OSPI flash | MRAM flash | Yocto build | BFT | ...>
+- **Target**: <board/chip>
+- **Tool**: <MCP tool being used>
+
+### Recipe
+<Include ALL inputs that define what gets built or flashed. Pick the relevant sections:>
+
+**Kernel** (if kernel build or flash):
+- Config fragments: <list .cfg files and key CONFIG_ values>
+- Defconfig: <base defconfig>
+- Key overrides: <CONFIG_X=y/n that differ from defconfig>
+
+**TF-A** (if TF-A build or flash):
+- Build flags: <ENABLE_PIE=1, FLASH_EN=1, HYPRAM_EN=1, etc.>
+- Source modifications: <any uncommitted changes, e.g. USB clock enables in sp_min_main.c>
+
+**Yocto image** (if Yocto build):
+- Image recipe: <e.g. alif-tiny-image>
+- IMAGE_INSTALL additions: <packages added>
+- Layer modifications: <changed .bb/.bbappend files>
+
+**DTB** (if DTB build or flash):
+- Base DTB: <source .dts file>
+- fdtput modifications: <list of changes applied>
+
+**Flash layout** (if flashing):
+- ATOC config: <config file name>
+- Images and addresses: <image → address mapping>
+- Flash method: <SE-UART ATOC | J-Link MRAM | TF-A OSPI programmer>
+
+**Artifacts**:
+- <file path> (<size>) → <destination>
+```
+
+This creates the record BEFORE the operation runs, so if it fails or hangs we know exactly what was attempted.
+
+### Step 2: Run Preflight Checks
+
 **Kernel build pre-flight**:
 - Is the kernel config fragment inside the container (not just on the host)?
 - What is the current kernel binary timestamp? (baseline for post-build verification)
@@ -51,6 +97,22 @@ Any operation taking more than 10 minutes requires a pre-flight check before sta
 
 **New flash path pre-flight** (any new `*-jlink.json` or `*-atoc.json` config):
 - Flash a minimal known-good payload, power cycle, confirm it persisted. Only then flash real images.
+
+### Step 3: Log Preflight Results and Outcome (AFTER completing)
+
+Update the same entry in `builds/BUILD_LOG.md`:
+```markdown
+### Preflight
+- [x] Config fragment inside container
+- [x] Using kernel_rebuild
+- [n/a] Flash path persistence verified
+
+### Result
+- **Status**: PASS | FAIL
+- **Duration**: ~Xm
+- **Output**: <ROM/RAM sizes, error messages, key observations>
+- **Notes**: <anything unexpected>
+```
 
 ## Knowledge Generalization: Always Ask the General Principle
 
