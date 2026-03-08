@@ -50,6 +50,27 @@ The onboard JLink VCOM port (`usbmodem*`) **only produces output during an activ
 - Yocto scarthgap branch (kernel 6.12.x)
 - MACHINE: `devkit-e8` (shared machine config)
 
+## Yocto DTB Pipeline Warning — DCT Tool Modifies Header In-Place
+
+The Yocto `dct-kernel.bbclass` runs `do_dct_to_dts` AFTER `do_configure` and modifies
+`devkit_ex_dct_defines.h` in the kernel source tree. This is STATEFUL — the file persists
+across builds, creating contamination risk.
+
+**Critical gotcha**: `bb.utils.contains('HYPRAM_ONLY', '1', ...)` is a word-contains check.
+An empty string `''` matches NEITHER `'1'` NOR `'0'`. When `HYPRAM_ONLY = ''`:
+- Neither branch fires
+- `MEM_HYPER_STATUS` retains its value from the prior build
+- If the prior build had `HYPRAM_ONLY = '0'`, HyperRAM stays `"disabled"`
+- The kernel will compile a DTB with HyperRAM disabled — board will not boot
+
+**Rule**: Always set `HYPRAM_ONLY = "1"` explicitly in any Alif E7 machine config.
+
+**After any Yocto build that produces a DTB**: decompile and check immediately:
+  `dtc -I dtb -O dts <dtb> | grep -A3 "memory@a0000000"`
+Must show `status = "okay"` and `reg = <0xa0000000 0x2000000>` (32MB).
+
+See `retrospective/dtb-verification-skip.md` for full analysis.
+
 ## OSPI Artifact Staging
 
 Flash configs reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-ospi.bin`), but Yocto outputs `xipImage` and `*.cramfs-xip`. Run `stage-ospi.sh` after a Yocto build to copy+rename artifacts.

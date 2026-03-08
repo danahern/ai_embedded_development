@@ -1,0 +1,66 @@
+id: k-6cd5780b-a609-4e5b-ae63-b6cba1a8d091
+title: 'Alif E7 TF-A: must build from source with ENABLE_STACK_PROTECTOR=strong — stale binaries cause silent kernel death'
+body: |-
+  ## Problem
+
+  TF-A for the Alif E7 must be built from source with the exact documented flags every time. Keeping prebuilt copies leads to stale binary confusion — two TF-A binaries that differ by only 4KB (26KB vs 30KB) look identical in behavior (TF-A boots, prints messages) but one silently kills the kernel.
+
+  ## Root Cause
+
+  The `ENABLE_STACK_PROTECTOR=strong` flag adds ~4KB to the binary (26KB → 30KB). The flag was accidentally omitted during a rebuild, producing a smaller binary that was staged alongside the correct one. When the wrong binary was flashed, TF-A booted normally but the kernel never started — no earlycon, no crash, just silence.
+
+  Additionally, the Mar 7 build includes USB clock enabling (commit `56dfb6fd`) which is also required for kernel boot. Without it, the DWC3 USB controller and possibly other peripherals fail.
+
+  ## Solution
+
+  1. **Always build from source** — use `firmware/linux/alif-e7/build-tfa.sh`
+  2. **Never keep prebuilt copies** — the build takes ~5 seconds, no reason to cache
+  3. **Verify after every build** — check for "USB clocks enabled" string
+  4. **Use stage-ospi.sh** — it builds TF-A + stages all artifacts + verifies
+
+  ## Build Command (for reference)
+
+  ```
+  make -j$(nproc) PLAT=devkit_e7 ARCH=aarch32 AARCH32_SP=sp_min \
+    CROSS_COMPILE=arm-linux-gnueabihf- ARM_LINUX_KERNEL_AS_BL33=1 \
+    ARM_TRUSTED_SRAM_BASE=0x08000000 PRELOADED_BL33_BASE=0xC0800000 \
+    ARM_PRELOADED_DTB_BASE=0x80200000 RAM_PRELOADED_DTB_BASE=0x02390000 \
+    ENABLE_PIE=1 ENABLE_STACK_PROTECTOR=strong \
+    BL32_IN_XIP_MEM=1 BL32_XIP_BASE=0x80002000 \
+    UART=2 HYPRAM_EN=1 FLASH_EN=1 AES_EN=0 MODEM_SRAM=0 DEBUG=1 bl32
+  ```
+
+  ## Verification Checklist (build-tfa.sh does this automatically)
+
+  1. Binary size ~30KB (not ~26KB — stack protector adds ~4KB)
+  2. `strings bl32-ospi.bin | grep "USB clocks enabled"` — MUST be present
+  3. `strings bl32-ospi.bin | grep "HyperRAM configured"` — MUST be present
+  4. `strings bl32-ospi.bin | grep "OSPI NOR Flash"` — MUST be present
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - flash
+file_patterns:
+- '**/build-tfa.sh'
+- '**/bl32*.bin'
+- '**/alif_arm-tf/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- alif
+- tfa
+- build
+- stale-binary

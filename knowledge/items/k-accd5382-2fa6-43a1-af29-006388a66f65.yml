@@ -1,0 +1,20 @@
+id: k-accd5382-2fa6-43a1-af29-006388a66f65
+title: Yocto DCT tool silently contaminates DTB — HYPRAM_ONLY empty string is a no-op
+body: 'The Yocto dct-kernel.bbclass (do_dct_to_dts task) modifies devkit_ex_dct_defines.h directly in the kernel source tree. HYPRAM_ONLY='''' (empty string) causes bb.utils.contains() to match neither ''1'' nor ''0'', so the header is NOT updated and retains whatever state the prior build left it. If prior build had MEM_HYPER_STATUS ''disabled'', it stays disabled even though DTS source uses MEM_HYPER_STATUS macro. Fix: set HYPRAM_ONLY = ''1'' explicitly in machine config. Always decompile DTB after Yocto build and check memory@a0000000 status before staging or flashing. HyperRAM disabled = kernel halts at boot with no output. See retrospective/dtb-verification-skip.md.'
+category: toolchain
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags: []

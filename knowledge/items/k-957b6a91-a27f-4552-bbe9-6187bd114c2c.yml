@@ -1,0 +1,65 @@
+id: k-957b6a91-a27f-4552-bbe9-6187bd114c2c
+title: Alif E7 Known-Working Boot Artifacts (verified 2026-03-08)
+body: |-
+  ## Working Artifact Set
+
+  ALL artifacts must be in `tools/setools/build/images/`. This exact combination boots Linux to shell.
+
+  | Artifact | Filename | MD5 | Size | Address |
+  |----------|----------|-----|------|---------|
+  | TF-A | bl32-ospi.bin | 2308077fbc82c2b42555baffaef207f5 | 30,140 | MRAM 0x80002000 |
+  | DTB | devkit-e7-ospi.dtb (.dtb.bin for JLink) | caea9c2cc0cda2ce3983647619972219 | 33,549 | MRAM 0x80200000 |
+  | Kernel | xipImage-ospi | 2766ee14b62601a63f3ad935ecead955 | 3,738,852 | OSPI 0xC0800000 |
+  | RootFS | rootfs-ospi.bin | 9f64dddbe63b910ab9d03579c717625e | 5,042,176 | OSPI 0xC0000000 |
+  | M55 stub | m55_stub_hp.bin | 0e0e167108fae0201eaf9b076947172d | 4,480 | MRAM 0x50000000 |
+
+  ## Flash Configs
+  - MRAM: `config/linux-boot-e7-mram.json` (TFA + DTB + M55 stub)
+  - OSPI: `config/linux-boot-e7-ospi-jlink.json` (rootfs + kernel)
+
+  ## Critical: TF-A Binary Selection
+  - **Working**: Mar 7 build (md5 2308077f...) — has USB clock enabling (CGU + PERIPH_CLK_ENA)
+  - **BROKEN**: Feb 24 build (md5 a8549a65...) — missing USB clocks → kernel silently fails to boot
+  - TF-A output says "USB clocks enabled: CGU=0x11e33111 PERIPH=0x11111113" on working build
+  - Without USB clocks, TF-A completes but kernel never produces output (no earlycon, no crash — just silence)
+
+  ## Critical: DTB Selection
+  - **Working**: devkit-e7-ospi.dtb — HyperRAM status="okay", 32MB
+  - **BROKEN**: appkit-e7.dtb (Yocto-built) — HyperRAM status="disabled" → kernel won't boot
+  - **BROKEN**: devkit-e8.dtb — 64MB HyperRAM (E7 only has 32MB) → kernel aborts
+
+  ## Yocto Build Pitfalls
+  - Yocto-built TF-A passes wrong flags (ISSI_HYPERRAM_EN instead of HYPRAM_EN) → no HyperRAM/OSPI init
+  - Yocto DCT tool may leave HyperRAM disabled in DTB depending on HYPRAM_ONLY evaluation
+  - Always use hand-built TF-A until appkit-e7.conf TF-A_EXTRA_OPTIONS is fixed
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - flash
+  - yocto
+file_patterns:
+- '**/setools/build/images/*'
+- '**/linux-boot-e7-*.json'
+- '**/bl32*.bin'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- alif
+- tfa
+- dtb
+- boot
+- artifacts
+- flash
