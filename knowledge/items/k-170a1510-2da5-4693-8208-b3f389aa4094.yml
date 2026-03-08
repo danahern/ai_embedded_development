@@ -1,0 +1,50 @@
+id: k-170a1510-2da5-4693-8208-b3f389aa4094
+title: Alif E7 SE ISP mode requires cold power cycle — NSRST is insufficient
+body: |-
+  The Alif E7 Secure Enclave (SE) ISP mode is ONLY entered on cold power cycle (full power off/on). NSRST pin reset via J-Link does NOT trigger ISP mode.
+
+  **Verified 2026-03-04**: Custom script triggered NSRST via J-Link JTAG autoconnect (confirmed by "Resetting via Reset pin" in J-Link output), then polled START_ISP at 57600 baud every 50ms for 20s (94 attempts) — zero responses. The SE reboots after NSRST but goes directly to its normal boot sequence without an ISP window.
+
+  **Implications for maintenance mode entry**:
+  - The `alif-flash maintenance(jlink_reset=true)` option will NOT work for entering maintenance mode
+  - `alif-flash maintenance(wait_for_power_cycle=true)` requires a MANUAL cold power cycle (unplug/replug PRG_USB power)
+  - The tool must be started BEFORE the power cycle — it polls START_ISP continuously until the SE responds during its brief ISP window after cold boot
+
+  **ISP protocol details**:
+  - Baud rate: 57600
+  - The SE enters ISP mode briefly after cold power-on, before the boot log output
+  - ISP window is caught by polling START_ISP (cmd 0x00) continuously
+  - After ISP window closes, SE outputs boot log and enters normal operation
+
+  **J-Link debug access when ATOC is missing**:
+  - No debug APs are accessible (M55_HP, A32 not booted)
+  - M55_HE IS running (booted from STOC at 0x58000000) but its AP is also not enumerable
+  - Cannot read/write MRAM via J-Link when board is in "No ATOC" state
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-appkit
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-04
+updated: 2026-03-06
+author: claude
+source_session: null
+tags:
+- alif
+- se-uart
+- isp
+- nsrst
+- maintenance
+- atoc
+- flash

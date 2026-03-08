@@ -27,10 +27,10 @@ file_patterns: []
 status: validated
 validated_by:
 - danahern
-deprecated: false
+deprecated: true
 superseded_by: null
 created: 2026-02-21
-updated: 2026-02-21
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

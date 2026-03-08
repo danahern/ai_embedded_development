@@ -1,0 +1,45 @@
+id: k-3b0375e9-095b-4c92-bb99-a43c7e57b587
+title: 8250_dw pinctrl deferred probe blocks UART on Alif E7 upstream kernel
+body: |-
+  On Alif E7 with upstream kernel 6.12, the 8250_dw UART driver fails to probe due to a cascading deferred probe chain:
+
+  ```
+  MHU driver → "Invalid compatible property" (DTB has "arm,mhuv2", kernel needs "arm,mhuv2-tx"/"arm,mhuv2-rx")
+    → SE host services can't communicate
+      → psclks clock provider never registers
+        → 8250_dw can't get "baudclk" → -EPROBE_DEFER
+          → pinctrl provider also stuck (needs clocks)
+            → pinctrl_bind_pins() returns -EPROBE_DEFER before driver code runs
+  ```
+
+  **Workaround (verified working):** Remove `clocks`, `clock-names`, `pinctrl-0`, `pinctrl-names` from the UART2 DTS node and add `clock-frequency = <100000000>`. TF-A already configures the UART pins and clock, so the driver works without these dependencies.
+
+  **Proper fix (TODO):** Fix MHU compatible strings in DTS to `"arm,mhuv2-tx"` / `"arm,mhuv2-rx"` so the full clock/pinctrl chain works.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - pinctrl
+  - devicetree
+  - kernel
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- deferred-probe
+- pinctrl
+- 8250_dw
+- mhu
+- clock

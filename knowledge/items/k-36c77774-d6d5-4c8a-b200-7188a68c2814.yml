@@ -1,0 +1,52 @@
+id: k-36c77774-d6d5-4c8a-b200-7188a68c2814
+title: 'Alif E7 ATOC: SE reserves first 2MB of APP MRAM — non-TFA entries must be >= 0x80200000'
+body: |-
+  The SE firmware (SES B4 v1.107.0) reserves the first 2MB of APP MRAM (0x80000000–0x801FFFFF). Non-TFA ATOC entries with mramAddress in this range cause "[SES] No ATOC" rejection on boot.
+
+  **The boundary is exactly 0x80200000 (2MB offset).** Binary search confirmed:
+
+  | mramAddress | Result |
+  |-------------|--------|
+  | 0x8000A000 (40KB) | FAILS |
+  | 0x80010000 (64KB) | FAILS |
+  | 0x80100000 (1MB) | FAILS |
+  | 0x80180000 (1.5MB) | FAILS |
+  | 0x801C0000 (1.75MB) | FAILS |
+  | 0x801E0000 (1.875MB) | FAILS |
+  | 0x801F0000 (1.9375MB) | FAILS |
+  | 0x801FF000 (~2MB-4KB) | FAILS |
+  | **0x80200000 (2MB)** | **WORKS** |
+
+  TFA at 0x80002000 is the exception — it's allowed in the reserved region (likely because cpu_id=A32_0 and it's the trusted firmware entry point).
+
+  The SWRM-recommended DTB address of 0x80010000 does NOT work. Use 0x80200000 or higher for DTB and other non-TFA entries.
+
+  This is NOT an overlap issue (TFA is only 30KB ending at ~0x80009600). The SE appears to enforce a 2MB reserved region regardless of actual TFA size.
+
+  Testing methodology: ATOC-only flash (no binaries) via `app-write-mram -p -S -b 57600` + JLink NSRST reset + SE boot capture at 57600 baud. Each test isolated to a single variable (mramAddress).
+category: hardware
+severity: critical
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- mram
+- address
+- se-firmware
+- flash
+- 2mb-boundary

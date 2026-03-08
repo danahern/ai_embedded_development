@@ -1,0 +1,43 @@
+id: k-168e8941-d939-4181-8be1-949fb3334d66
+title: Alif OSPI1 pin mapping — RXDS uses alternate function 7 (not 1)
+body: |-
+  From SDK `ospi_xip/ospi_xip_user.h` — OSPI1 (flash XIP) pin mapping:
+
+  - D[0:2]: PORT_9 PIN_5–7, function 1
+  - D[3:7]: PORT_10 PIN_0–4, function 1
+  - RXDS: PORT_10 PIN_7, **function 7** (NOT function 1 like all other pins)
+  - SCLK: PORT_5 PIN_5, function 1
+  - SCLKN: PORT_8 PIN_0, function 1
+  - CS: PORT_5 PIN_7, function 1
+
+  OSPI0 (PSRAM/HyperRAM): D[0:7] PORT_6 PIN_0–7, SCLK/N PORT_3, CS PORT_3 PIN_2, RXDS PORT_3 PIN_4 — all function 1.
+
+  OSPI XIP defaults: 100 MHz clock, 16 wait cycles, RX sample delay 4, DDR drive edge 1, RXDS delay 11.
+
+  OSPI flash reset GPIO: Port 15 Pin 7 (flash), Port 15 Pin 6 (HyperRAM).
+category: hardware
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - alif_e7
+  - alif_e8
+  tools: []
+  subsystems: []
+file_patterns:
+- '**/ospi_xip/**'
+- '**/norflash_ospi*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- ospi
+- pinmux
+- xip
+- is25wx256
+- footgun

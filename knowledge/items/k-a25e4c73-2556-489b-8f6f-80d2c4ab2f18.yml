@@ -1,0 +1,32 @@
+id: k-a25e4c73-2556-489b-8f6f-80d2c4ab2f18
+title: ATOC mramAddress 0x80010000 causes SE "No ATOC" — confirmed with official tool
+body: "## Finding\n\nThe SE rejects the entire ATOC when any entry has `mramAddress: \"0x80010000\"`. This is NOT a bug in our flash MCP — the official `app-write-mram -p -v` tool produces the identical failure.\n\n## Verified Working vs Failing\n\n| Config | DTB mramAddress | Result |\n|--------|----------------|--------|\n| test-dtb-at-200000 | 0x80200000 | ATOC valid, boots |\n| test-dtb-m55hp-cpu | 0x80010000 | `[SES] No ATOC` |\n| test-renamed-dtb | 0x80200000 | ATOC valid (name \"DTB\" irrelevant) |\n| test-dtb-binary-at-m55-addr | 0x80200000 | ATOC valid (DTB binary content irrelevant) |\n\n## Root Cause Analysis (in progress)\n\n- The mramAddress is encoded in the AppTocPackage.bin at offset ~0x06CC with a 0x10000000 flag (e.g., 0x90010000 for 0x80010000)\n- Both packages are identical size (5232 bytes), both gen_toc succeeds, both flash succeeds — the SE rejects the ATOC on boot\n- The address 0x80010000 does NOT overlap with: ATOC metadata (~5KB at 0x8057EB90), TFA (0x80002000-0x800095C0), or any other structure\n- SWRM Figure 8-4 shows official DTB address as 0x8000A000, NOT 0x80010000\n- The SE may have address range validation rules not documented in SWRM\n\n## Eliminated Variables\n\n- Entry name (DTB vs M55_HP_STUB) — not the cause\n- Binary content (DTB vs stub) — not the cause  \n- cpu_id (A32_0 vs M55_HP) — not the cause\n- flags (boot vs no boot) — not the cause\n- Flash tool (our MCP vs official app-write-mram) — not the cause\n- **mramAddress is the SOLE differentiator**\n\n## Next Steps\n\n- Test with SWRM official address 0x8000A000\n- Binary search for address boundary between working and failing\n- May need to test app-gen-toc address validation or SE firmware constraints"
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - app-gen-toc
+  - app-write-mram
+  - alif-flash
+  subsystems: []
+file_patterns:
+- '**/setools/**/*.json'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- atoc
+- mram
+- flash
+- se-uart
+- mramAddress

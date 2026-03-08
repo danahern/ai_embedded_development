@@ -1,0 +1,76 @@
+id: k-f579d948-7ca8-414c-91f2-5a66749d8712
+title: Alif E7 app-gen-toc only supports MRAM/SRAM — OSPI requires TF-A MRAM-staging
+body: |-
+  ## Discovery
+
+  Alif's `app-gen-toc` tool only recognizes `mramAddress` and `loadAddress` keys in config JSON. It rejects `address` (used by J-Link configs for OSPI) with `ERROR: Invalid key: "address"`.
+
+  This means the SE ATOC system **cannot program OSPI directly**. The SE only programs MRAM and loads SRAM images. OSPI programming must go through the TF-A MRAM-staging mechanism.
+
+  ## Experiment
+
+  Created `linux-boot-e7-ospi-full.json` combining MRAM entries (TFA, DTB with `mramAddress`) and OSPI entries (KERNEL, ROOTFS with `address`). gen_toc rejected it:
+
+  ```
+  ERROR: Invalid key: "address" in configuration file, image: KERNEL
+  ```
+
+  Also: `app-gen-toc` rejects any top-level key that isn't a valid image entry (e.g., `_WARNING` or `_EXPERIMENT` comment keys fail with `ERROR: Invalid key: "C"`).
+
+  ## Correct OSPI Flash Path
+
+  Use the 3-pass TF-A MRAM-staging approach with existing configs:
+
+  1. **Pass 1** (`ospi-pass-1-kernel.json`): Stage kernel to MRAM + magic header at 0x8000E000 → power cycle → TF-A programs kernel to OSPI 0xC0800000
+  2. **Pass 2** (`ospi-pass-2-rootfs.json`): Stage rootfs to MRAM + magic header → power cycle → TF-A programs rootfs to OSPI 0xC0000000
+  3. **Pass 3** (`ospi-pass-3-final.json`): Restore normal M55 stub (no OSPI programmer) → power cycle → clean Linux boot
+
+  Each pass requires gen_toc + flash + physical power cycle. Total: ~45-60 minutes.
+
+  ## Key Distinction
+
+  | Address key | Tool support | What handles it |
+  |-------------|-------------|-----------------|
+  | `mramAddress` | app-gen-toc, SE ATOC | SE programs MRAM directly |
+  | `loadAddress` | app-gen-toc, SE ATOC | SE loads to SRAM |
+  | `address` | J-Link MCP only | J-Link writes directly (not persistent) |
+  | OSPI programming | N/A | TF-A MRAM-staging with magic header |
+
+  ## Corrects Previous Inference
+
+  Knowledge items k-9e1d2148 and k-3b471ccd stated the SE programs OSPI from the ATOC. This was inference from observing J-Link writes not persisting. The actual mechanism is: SE only programs MRAM/SRAM from ATOC; OSPI must be programmed separately via TF-A.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7
+  chips:
+  - alif_e7
+  tools:
+  - alif-flash
+  - app-gen-toc
+  subsystems:
+  - ospi
+  - flash
+  - atoc
+  - se-uart
+file_patterns:
+- '**/linux-boot-e7-ospi*.json'
+- '**/ospi-pass-*.json'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-02
+updated: 2026-03-06
+author: claude
+source_session: null
+tags:
+- ospi
+- mram-staging
+- gen-toc
+- atoc
+- se-uart
+- tfa
+- alif-e7

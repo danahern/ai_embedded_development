@@ -1,0 +1,51 @@
+id: k-3f85ac39-75b2-4b7d-be85-55a437d3636b
+title: Segger JLink official device definitions for Alif E7 and E8
+body: |-
+  Segger has official Alif device definitions at https://www.segger.com/supported-devices/alifsemiconductor/
+
+  Device names for JLink operations (JLinkExe, J-Link GDB Server, etc.):
+
+  **E7** (AE722F80F55D5):
+  - `AE722F80F55D5_A32_0` — Cortex-A32 core 0
+  - `AE722F80F55D5_A32_1` — Cortex-A32 core 1
+  - `AE722F80F55D5_HP` — M55 High Performance
+  - `AE722F80F55D5_HE` — M55 High Efficiency
+
+  **E8 BS0 variant** (AE822FA0E5597BS0):
+  - `AE822FA0E5597BS0_A32_0`, `_A32_1` — Cortex-A32 cores
+  - `AE822FA0E5597BS0_M55_HP`, `_M55_HE` — M55 cores
+
+  **E8 LS0 variant** (AE822FA0E5597LS0):
+  - `AE822FA0E5597LS0_A32_0`, `_A32_1` — Cortex-A32 cores
+  - `AE822FA0E5597LS0_M55_HP`, `_M55_HE` — M55 cores
+
+  Installed at `~/Library/Application Support/SEGGER/JLinkDevices/AlifSemi/`.
+
+  Use the `_A32_0` variant for direct JTAG memory reads of MRAM, SRAM, and OSPI XIP regions — avoids the limitations of the custom probe-rs target YAML which only supports M55.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  - alif_e8_devkit
+  chips:
+  - alif_e7
+  - alif_e8
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- jlink
+- jtag
+- debug
+- segger
+- device-definitions

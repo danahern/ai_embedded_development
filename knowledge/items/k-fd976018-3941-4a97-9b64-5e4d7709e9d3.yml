@@ -25,10 +25,10 @@ applies_to:
 file_patterns: []
 status: unvalidated
 validated_by: []
-deprecated: false
+deprecated: true
 superseded_by: null
 created: 2026-02-21
-updated: 2026-02-21
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

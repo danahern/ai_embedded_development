@@ -1,0 +1,40 @@
+id: k-f1de2a8d-de83-4f41-a0d3-2d565961ba9b
+title: UART ttyS0 not registering despite 8250_DW driver compiled in — DTB probe issue
+body: |-
+  With both appkit-e7-ospi.dtb and devkit-e7-ospi.dtb, the kernel loads the 8250/16550 driver ("Serial: 8250/16550 driver, 8 ports") but no ttyS devices are registered. The dw-apb-uart nodes (uart2@4901A000, status "okay") do not trigger any probe messages.
+
+  This means: no serial console output after TFA, no askfirst shell, no dmesg on UART. The only way to see kernel state is via JLink memory reads of __log_buf.
+
+  Root cause unknown — could be:
+  1. Bus node not probing (UARTs are inside apb@ bus node)
+  2. Clock/pinctrl dependency issue
+  3. Missing interrupt controller setup
+  4. Driver matching issue
+
+  Needs investigation. CONFIG_SERIAL_8250_DW=y is confirmed in kernel config.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - serial
+  - boot
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- uart
+- serial
+- console
+- dtb
+- driver

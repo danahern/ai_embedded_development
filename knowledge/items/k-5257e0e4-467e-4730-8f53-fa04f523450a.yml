@@ -1,0 +1,40 @@
+id: k-5257e0e4-467e-4730-8f53-fa04f523450a
+title: 'USB-to-OSPI flasher: OSPI programming verified at 46.3 KB/s'
+body: |-
+  The alif_usb-to-ospi-flasher (M55_HP firmware) programs OSPI NOR via USB CDC-ACM + XMODEM at 46.3 KB/s. Combined image (rootfs 8MB padded + kernel 3.7MB = 12.1MB) transferred in 256 seconds.
+
+  Flasher CDC-ACM port: /dev/cu.usbmodem12001 (VID 0x0525, PID 0xa4a7, serial "1200") on SOC USB connector.
+
+  CRITICAL: Flasher firmware calls SERVICES_set_run_cfg(USB_PHY_MASK) which hangs the SE. After flasher boots:
+  - ISP START_ISP gets no response
+  - JLink can't find M55_HE (AP[4] inaccessible)
+  - JLink can't halt M55_HP
+  - JLink NSRST doesn't fix it (USB PHY hardware state persists across soft reset)
+
+  Recovery requires: hard maintenance mode via native Alif Security Toolkit + full MRAM erase + power cycle. No automated recovery path exists.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-appkit
+  - alif-e7-devkit
+  chips:
+  - AE722F80F55D5
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- ospi
+- usb
+- xmodem
+- flasher
+- se-hang
+- alif

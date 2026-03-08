@@ -1,0 +1,51 @@
+id: k-dfd37f8f-2157-48e6-b24b-e516a6bae16c
+title: 'ATOC address testing: 0x8000A000 (SWRM official DTB address) also rejected by SE'
+body: |-
+  ## Address Range Testing Results
+
+  ATOC-only flashes (no binaries, just AppTocPackage.bin) — isolates the ATOC content from binary placement.
+
+  | DTB mramAddress | ATOC-only Result |
+  |-----------------|-----------------|
+  | 0x8000A000 | `[SES] No ATOC` — FAILS |
+  | 0x80010000 | `[SES] No ATOC` — FAILS |
+  | 0x80200000 | Works (from earlier full-flash tests) |
+
+  ## Key Finding
+
+  - 0x8000A000 is the **official DTB address from SWRM Figure 8-4** — and it FAILS
+  - Both "small" addresses (40KB and 64KB into MRAM) fail
+  - 0x80200000 (2MB into MRAM) works
+  - The boundary between working and failing is somewhere between 0x80010000 and 0x80200000
+  - Next test: 0x80100000 (1MB) to narrow the boundary
+
+  ## Operational Learnings
+
+  - `SetRESET`/`ClrRESET` JLink commands work perfectly for NSRST without disrupting external FTDI
+  - `app-write-mram` needs `-b 57600` (defaults to 55000 which is wrong)
+  - `app-write-mram -S` skips user images, writes ATOC only — useful for isolating ATOC vs binary issues
+  - Piping app-write-mram output through grep/tail causes it to run twice (consumes maintenance mode on first run)
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- atoc
+- mram
+- flash
+- address-range
+- se-validation

@@ -1,0 +1,39 @@
+id: k-9a986cd3-335b-448b-8eeb-abab6b2270a3
+title: AppKit-E7 AIML needs HyperRAM in DTB — kernel crashes without it
+body: |-
+  Board: AppKit-E7 AIML (PN: AK-E7-AIML, HW: D3, LOT: AIML244901). Despite the name, this is NOT a DevKit.
+
+  The board HAS HyperRAM (TFA confirms "HyperRAM configured successfully" with HYPRAM_EN=1). But the appkit-e7-ospi.dtb only defines ~8MB SRAM in the memory node — HyperRAM at 0xA0000000 is either missing or status="disabled".
+
+  Without HyperRAM, the kernel has only ~8MB RAM. It gets past DTB parsing but hits a data abort during page table setup (double abort at 0xFFFF000C in ABT mode).
+
+  With devkit-e7-ospi.dtb (which includes 32MB HyperRAM at 0xA0000000), the kernel boots successfully with 37MB available (32MB as highmem).
+
+  Fix needed: create a proper appkit-e7-ospi.dtb that includes the HyperRAM memory region enabled. Current workaround: use devkit-e7-ospi.dtb.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - boot
+  - memory
+file_patterns:
+- '**/appkit-e7*.dtb'
+- '**/devkit-e7*.dtb'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- dtb
+- memory
+- hyperram
+- boot

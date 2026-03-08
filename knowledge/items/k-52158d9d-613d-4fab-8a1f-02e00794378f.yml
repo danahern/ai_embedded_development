@@ -1,0 +1,58 @@
+id: k-52158d9d-613d-4fab-8a1f-02e00794378f
+title: Alif E7/E8 memory map from SDK — SRAM, TCM, OSPI, peripherals
+body: |-
+  From `soc.h` and `soc_features.h` in SDK 2.1.0:
+
+  **Bulk SRAM**:
+  - SRAM0: `0x02000000`, 4 MB (both E7/E8)
+  - SRAM1: `0x08000000`, 2.5 MB E7 / 4 MB E8
+  - E7-only: SRAM6A `0x62000000` 1MB, SRAM6B `0x62400000` 1MB, SRAM7 `0x63000000` 512KB, SRAM8 `0x63200000` 2MB, SRAM9 `0x60000000` 768KB
+
+  **M55 TCM** (same E7/E8):
+  - HP ITCM: `0x50000000` (global), 256 KB. DTCM: `0x50800000`, **1 MB**
+  - HE ITCM: `0x58000000` (global), 256 KB. DTCM: `0x58800000`, **256 KB**
+  - HP has 4x more DTCM than HE
+
+  **OSPI controllers**:
+  - OSPI0: `0x83000000` (PSRAM/HyperRAM), AES0: `0x83001000`
+  - OSPI1: `0x83002000` (flash XIP), AES1: `0x83003000`
+  - XIP address space: `0xC0000000`, 32 MB
+
+  **Key peripheral bases**:
+  - CGU: `0x1A602000`, PINMUX: `0x1A603000`, AON: `0x1A604000`, VBAT: `0x1A609000`
+  - UART2 (Linux console): `0x4901A000`
+  - USB: `0x48200000`
+  - CLKCTL_PER_MST: `0x4903F000` (PERIPH_CLK_ENA at +0x0C)
+  - CGU CLK_ENA: `0x1A602014`
+  - M55HP_CFG CLK_ENA: `0x400F0010`
+
+  **Warm reset handshake registers** (must clear for debugger attach):
+  - M55-HP: `0x1A600024` (write 0)
+  - M55-HE: `0x1A601024` (write 0)
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  - alif_e8_devkit
+  chips:
+  - alif_e7
+  - alif_e8
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- memory-map
+- sram
+- ospi
+- tcm
+- peripherals
+- registers

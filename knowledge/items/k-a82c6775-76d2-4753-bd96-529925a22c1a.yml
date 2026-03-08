@@ -1,0 +1,64 @@
+id: k-a82c6775-76d2-4753-bd96-529925a22c1a
+title: alif-flash MCP setools_dir resolves to workspace/tools/setools/ — not firmware/linux/alif-e7/setools/
+body: |-
+  The alif-flash MCP server is configured in .mcp.json with:
+    --setools-dir ./tools/setools
+    cwd: ./claude-mcps/alif-flash
+
+  Despite the cwd setting, Claude Desktop spawns all MCP processes from the workspace root,
+  not from the cwd path. So --setools-dir ./tools/setools resolves to:
+    <workspace-root>/tools/setools/
+    = /Users/danahern/code/claude/work/tools/setools/
+
+  NOT firmware/linux/alif-e7/setools/ (that directory is where the upstream Alif setools
+  release was originally unpacked, but the MCP never reads from it).
+
+  CORRECT staging paths:
+    Artifacts (DTBs, kernels, TF-A): tools/setools/build/images/
+    Config JSON files:                tools/setools/build/config/
+
+  WRONG staging paths (MCP ignores these):
+    firmware/linux/alif-e7/setools/build/images/
+    firmware/linux/alif-e7/setools/build/config/
+
+  Evidence: When the server fails to find a config, the log at /tmp/alif-flash.log shows
+  FileNotFoundError with a ./tools/setools/ prefix — confirming process cwd is workspace root.
+  When flash is called with a config from the wrong directory, the log shows:
+    "AppTocPackage.bin not found at /...firmware/linux/alif-e7/AppTocPackage.bin"
+  The absolute path in that warning directly reveals the wrong directory was used.
+
+  Impact of this confusion: 6+ wasted flash cycles (each 7-15 min), a full debugging day
+  chasing "no ATAGS support" that was simply a stale DTB in the wrong staging directory.
+
+  Pre-flash check: verify the artifact is in tools/setools/build/images/ and run gen_toc
+  after any copy to regenerate AppTocPackage.bin. See retrospective/setools-path-confusion.md.
+category: operational
+severity: critical
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  - alif-e8
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns:
+- tools/setools/**
+- firmware/linux/alif-e7/setools/**
+- .mcp.json
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- alif-e7
+- flash
+- gotcha
+- setools
+- mcp
+- staging
+- path-confusion

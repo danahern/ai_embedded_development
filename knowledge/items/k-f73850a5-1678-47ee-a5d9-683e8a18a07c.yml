@@ -1,0 +1,35 @@
+id: k-f73850a5-1678-47ee-a5d9-683e8a18a07c
+title: 'Alif E7 maintenance mode: jlink_reset=true works for fully automated entry'
+body: |-
+  The `maintenance` MCP tool with `jlink_reset=true` fully automates maintenance mode entry on the Alif E7. No manual power cycle or button press needed.
+
+  Flow: JLink NSRST reset → SE reboots → tool catches ISP window → START_ISP → SET_MAINTENANCE → RESET → verify.
+
+  This uses SetRESET/ClrRESET JLink commands which toggle NSRST directly without SWD core connection, so it doesn't disturb external FTDI adapters sharing the board's UART pins.
+
+  Verified working 2026-03-07. Use this instead of manual "soft maintenance" for all automated flash testing.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- alif
+- maintenance
+- jlink
+- flash
+- automation

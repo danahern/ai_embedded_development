@@ -1,0 +1,49 @@
+id: k-68269652-d839-4b93-bab3-cad87d51d6b8
+title: SE-UART probe interferes with boot — never probe after power cycle
+body: |-
+  The `alif-flash.probe()` tool sends START_ISP to the SE-UART. If called during the post-power-on ISP window, this keeps the SE in ISP mode indefinitely (or until STOP_ISP is sent). The SE cannot process the ATOC or boot M55_HP/A32 while in ISP mode.
+
+  **CRITICAL**: After a power cycle, do NOT probe or open the SE-UART port. Let the ISP timeout naturally (a few seconds). Only then will the SE process STOC + ATOC and boot the application processors.
+
+  **ISP RESET_DEVICE (0x09) does NOT process ATOC**: Sending STOP_ISP + RESET_DEVICE from ISP mode causes a warm reset. The SE boots STOC (M55_HE) but skips ATOC processing. Only a cold power cycle (unplug/replug PRG_USB) triggers full ATOC processing.
+
+  **Correct post-flash sequence**:
+  1. Flash via SE-UART (maintenance mode)
+  2. Cold power cycle (unplug/replug PRG_USB)
+  3. Do NOT touch SE-UART — wait 5-10s for ISP timeout
+  4. Open A32 console (UART2) only
+  5. Watch for boot output
+
+  **Wrong sequence** (causes silent boot failure):
+  1. Flash → power cycle
+  2. Probe SE → SE stuck in ISP → A32 never boots
+  3. Send STOP_ISP + RESET → warm reset → no ATOC processing → A32 still doesn't boot
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-appkit
+  - alif-e8-devkit
+  chips:
+  - alif-e7
+  - alif-e8
+  tools:
+  - alif-flash
+  subsystems:
+  - flash
+  - boot
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-06
+author: claude
+source_session: null
+tags:
+- se-uart
+- isp
+- boot
+- atoc
+- power-cycle

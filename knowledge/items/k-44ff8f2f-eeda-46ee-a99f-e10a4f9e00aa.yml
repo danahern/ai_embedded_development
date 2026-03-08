@@ -1,0 +1,42 @@
+id: k-44ff8f2f-eeda-46ee-a99f-e10a4f9e00aa
+title: 'Kconfig: JFFS2_ZLIB requires JFFS2_COMPRESSION_OPTIONS to disable'
+body: |-
+  CONFIG_JFFS2_ZLIB has `default y` and its prompt is gated by `if JFFS2_COMPRESSION_OPTIONS`. Setting `# CONFIG_JFFS2_ZLIB is not set` in a kernel config fragment is SILENTLY IGNORED unless you also set `CONFIG_JFFS2_COMPRESSION_OPTIONS=y`.
+
+  Correct fragment to disable JFFS2 ZLIB compression:
+  ```
+  CONFIG_JFFS2_COMPRESSION_OPTIONS=y
+  # CONFIG_JFFS2_ZLIB is not set
+  CONFIG_JFFS2_RTIME=y
+  ```
+
+  Without JFFS2_COMPRESSION_OPTIONS, Kconfig resolves JFFS2_ZLIB=y regardless of fragment contents. No warning is emitted. Always verify the final .config after builds involving Kconfig overrides of `default y` options gated behind advanced menus.
+
+  Discovered: Wasted 30 min on a rebuild that produced an identical kernel because the fragment was silently ignored.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems:
+  - kernel
+  - jffs2
+file_patterns:
+- '*.cfg'
+- '*defconfig*'
+- '*.config'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-03
+updated: 2026-03-03
+author: claude
+source_session: null
+tags:
+- kconfig
+- yocto
+- jffs2
+- kernel-config
+- gotcha

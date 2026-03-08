@@ -1,0 +1,52 @@
+id: k-4508adab-c0b2-4b96-a0ba-dcdce2fd949e
+title: 'Alif E7 boot hang root cause: wrong DTB (devkit-e8 vs appkit-e7)'
+body: |-
+  The kernel boot hang after reserved memory init was caused by using the WRONG DTB for the board. The Yocto build targets machine `devkit-e8` and produces a devkit-e8 DTB, but the actual hardware is an appkit-e7. These boards have completely different memory maps:
+
+  - **appkit-e7** (working): `reg = <0x2000000 0x400000 0x8000000 0x27f000>` — 4MB SRAM + 2.5MB SRAM in two separate regions
+  - **devkit-e8** (hanging): `reg = <0x2000000 0x7de000>` — single ~8MB region, plus disabled 64MB regions
+
+  The devkit-e8 DTB also has dual CPU with PSCI, different clock tree, different peripheral configs. Using it on appkit-e7 hardware causes the kernel to access non-existent RAM during zone setup (right after reserved memory parsing), hanging immediately.
+
+  Key indicators of this failure mode:
+  - Kernel hangs AFTER "OF: reserved mem:" lines, BEFORE zone setup
+  - Hang occurs with ANY kernel (old or new, regardless of config)
+  - TFA boots fine (it doesn't use the DTB memory map)
+  - Watchdog reboots create repeating boot cycles
+
+  **CRITICAL**: When the Yocto machine doesn't match the actual board, ALWAYS use the board-specific DTB that came with the hardware (appkit-e7-ospi.dtb), NOT the one from the Yocto deploy directory. Modify bootargs via fdtput on the correct base DTB.
+
+  **How we debugged**: Wasted ~4 hours blaming kernel config (JFFS2/PHRAM/ZLIB), rebuilding kernels 3 times, before testing the old known-working kernel — which also hung. Then tested with the original DTB (earlycon broken, no output) → fixed earlycon → old kernel booted → diffed DTBs → found completely different board models.
+
+  **Lesson**: Always verify baseline before changing variables. Should have tested old kernel + old DTB first, not assumed the kernel was the problem.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-devkit
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - kernel
+  - dtb
+  - boot
+file_patterns:
+- '*.dtb'
+- '*.dts'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-03
+updated: 2026-03-03
+author: claude
+source_session: null
+tags:
+- dtb
+- boot-hang
+- root-cause
+- appkit-e7
+- devkit-e8
+- memory-map
+- debugging-lesson

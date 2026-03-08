@@ -1,0 +1,40 @@
+id: k-d4651ffa-3f8d-463a-a818-105733cd5d5d
+title: Kernel xipImage is from devkit-e8 Yocto machine build — MD5 a9458976674764e64c2eee413058d404
+body: |-
+  The xipImage used for OSPI (3738096 bytes, Mar 3) matches the devkit-e8 Yocto deploy, NOT appkit-e8. MD5: a9458976674764e64c2eee413058d404.
+
+  vmlinux for symbol resolution: /home/builder/yocto/build-alif-e7/tmp/work/devkit_e8-poky-linux-musleabi/linux-alif/6.12+git/linux-devkit_e8-standard-build/vmlinux
+  System.map: same directory/System.map
+  objdump: /home/builder/yocto/build-alif-e7/tmp/work/appkit_e8-poky-linux-musleabi/linux-alif/6.12+git/recipe-sysroot-native/usr/bin/arm-poky-linux-musleabi/arm-poky-linux-musleabi-objdump
+
+  Key addresses (XIP kernel virtual):
+  - setup_arch: 0xbfb738a6
+  - cpu_v7_do_idle: 0xbf80a0c0
+  - __log_buf: 0xc003f020 (physical: 0x0203f020)
+  - machine_desc: 0xc00318c4
+  - __atags_pointer: 0xc00318d0
+category: operational
+severity: informational
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - kernel
+  - yocto
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- kernel
+- yocto
+- debug
+- symbols

@@ -1,0 +1,37 @@
+id: k-9433b286-a543-4b6c-b38f-4482b5530c47
+title: OSPI data survives power cycle — SE does not overwrite OSPI unless ATOC has OSPI entries
+body: |-
+  Verified: JLink OSPI writes (rootfs + kernel at 0xC0000000 and 0xC0800000) persist across full power cycles. The SE only reprograms OSPI when the ATOC explicitly contains OSPI programming entries (ospi_programmer + ospi headers). A normal boot ATOC (TFA + DTB + M55_HP stub in MRAM) does NOT touch OSPI.
+
+  Verification method:
+  1. Flash rootfs + kernel to OSPI via JLink FLM
+  2. Power cycle
+  3. Read OSPI via JLink: cramfs magic 0x28cd3d45 at 0xC0000000, ARM instructions at 0xC0800000
+  4. Both matched the original files
+
+  The jlink_flash MCP tool shows a warning about "ATOC-managed OSPI" but this warning is overly cautious for configs without OSPI programming entries.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - flash
+  - ospi
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- ospi
+- flash
+- persistence
+- jlink

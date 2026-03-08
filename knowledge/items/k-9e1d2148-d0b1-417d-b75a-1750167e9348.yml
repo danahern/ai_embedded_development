@@ -1,35 +1,40 @@
 id: k-9e1d2148-d0b1-417d-b75a-1750167e9348
-title: 'Alif E7: Complete SE-UART OSPI flash workflow (stage → gen_toc → flash → power cycle → verify)'
+title: 'Alif E7: Complete flash workflow — SE-UART for MRAM, TF-A MRAM-staging for OSPI'
 body: |-
-  ## Complete SE-UART OSPI Flash Workflow
+  ## Flash Workflow for Alif E7
 
-  The ONLY reliable path for persistent OSPI/MRAM image updates on Alif E7. J-Link writes are silently overwritten by the SE on every power cycle (see k-3b471ccd).
+  Two mechanisms for persistent image updates. J-Link writes don't persist (SE overwrites on boot, see k-3b471ccd).
 
-  ### Steps
+  ### MRAM Images (TFA, DTB): SE-UART ATOC
 
-  1. **Stage artifacts** — Run `stage-ospi.sh` to copy Yocto build outputs (xipImage, cramfs-xip.img, bl32.bin, appkit-e7.dtb) into `build/images/` with the filenames expected by the flash config JSON.
+  1. **Stage** — Copy images to `build/images/` with names matching config JSON
+  2. **gen_toc** — `alif-flash.gen_toc(config="build/config/linux-boot-e7-ospi.json")` — generates ATOC package
+  3. **flash** — `alif-flash.flash(config="linux-boot-e7-ospi.json", maintenance=true)` — ~5 KB/s
+  4. **Power cycle** — Unplug/replug PRG_USB. SE programs MRAM from ATOC.
 
-  2. **Generate ATOC package** — `alif-flash.gen_toc(config="build/config/linux-boot-e7-ospi.json")`. This creates `build/images/AppTocPackage.bin` containing the SE firmware manifest + all images.
+  ### OSPI Images (kernel, rootfs): TF-A MRAM-Staging (3-pass)
 
-  3. **Flash via SE-UART** — `alif-flash.flash(config="linux-boot-e7-ospi.json", maintenance=true)`. The `maintenance=true` flag enters maintenance mode automatically before flashing. Speed: ~5 KB/s. For a full OSPI image set (~8MB), expect ~25 minutes.
+  `app-gen-toc` only supports `mramAddress`/`loadAddress` — NOT OSPI addresses. OSPI must be programmed via TF-A's MRAM-staging mechanism (see k-f579d948).
 
-  4. **Power cycle** — Physically unplug and replug the PRG_USB cable. The SE reprograms all ATOC-managed images from its internal storage on boot.
+  **Pass 1** (`ospi-pass-1-kernel.json`): Stage kernel (3.6 MB) to MRAM + magic header → power cycle → TF-A programs OSPI 0xC0800000
+  **Pass 2** (`ospi-pass-2-rootfs.json`): Stage rootfs (4.8 MB) to MRAM + magic header → power cycle → TF-A programs OSPI 0xC0000000
+  **Pass 3** (`ospi-pass-3-final.json`): Restore normal M55 stub → power cycle → clean Linux boot
 
-  5. **Verify boot** — Monitor UART2 console (`/dev/cu.usbserial-AO009AHE` at 115200 baud) to confirm Linux boots successfully. Look for kernel version string and login prompt.
+  Total: ~45-60 min (3 × gen_toc + flash + power cycle).
+
+  ### OSPI Header Format
+
+  16-byte header at MRAM 0x8000E000: `{ magic=0x4F535049 ("OSPI"), dest_addr, length, src_addr=0x80020000 }`
+  Headers in `build/images/ospi-hdr-kernel-new.bin` and `ospi-hdr-rootfs-new.bin`. Must match file sizes exactly.
 
   ### Key Details
 
-  - SE-UART port: `/dev/cu.usbserial-A10LOVM2` (ISP commands, SE boot log)
-  - UART2 port: `/dev/cu.usbserial-AO009AHE` (A32/Linux console)
-  - Flash config must include a DEVICE entry with the correct part number
-  - The `global-cfg.db` in build/config must match the target (E7 vs E8)
-  - OSPI addresses: rootfs@0xC0000000, kernel@0xC0800000
+  - SE-UART port: `/dev/cu.usbserial-A10LOVM2`
+  - UART2 console: `/dev/cu.usbserial-AO009AHE` at 115200
+  - DEVICE entry required with correct E7 part number
+  - `global-cfg.db` must match target (E7 vs E8)
 
-  ### Why Not J-Link?
-
-  J-Link writes to MRAM (0x80000000–0x80600000) and OSPI (0xC0000000+) appear to succeed and verify OK, but the SE overwrites them from its internal ATOC storage on every power cycle. This was confirmed via 3 independent post-power-cycle tests (2026-03-02). J-Link is only useful for temporary debugging reads/writes that don't need to survive reboot.
-
-  Consolidates: k-f44cd4f4 (SE-UART flow), k-5a99d26d (deprecated), k-502e0e95 (OSPI programmer).
+  Consolidates: k-f44cd4f4, k-5a99d26d (deprecated), k-502e0e95 (OSPI programmer).
 category: operational
 severity: critical
 applies_to:
@@ -47,10 +52,10 @@ file_patterns:
 - '**/stage-ospi.sh'
 status: unvalidated
 validated_by: []
-deprecated: false
+deprecated: true
 superseded_by: null
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

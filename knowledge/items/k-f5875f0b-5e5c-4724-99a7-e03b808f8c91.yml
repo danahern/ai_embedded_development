@@ -1,0 +1,41 @@
+id: k-f5875f0b-5e5c-4724-99a7-e03b808f8c91
+title: Linux boots from OSPI on Alif E7 — verified workflow
+body: |-
+  Linux 6.12.6 boots successfully from OSPI NOR flash on Alif E7 AppKit. Verified 2026-03-07.
+
+  OSPI layout:
+  - 0xC0000000: rootfs (cramfs, ~4.9MB)
+  - 0xC0800000: kernel (xipImage, ~3.7MB)
+
+  Boot config (MRAM):
+  - ATOC at 0x8057EB90 (5232 bytes) — DEVICE + TFA + DTB
+  - TFA (bl32-ospi.bin) at 0x80002000 — configures OSPI XIP, boots kernel
+  - DTB (appkit-e7-ospi.dtb) at 0x80200000
+
+  Kernel command line: earlycon=uart8250,mmio32,0x4901a000 console=ttyS0,115200n8 root=mtd:physmap-flash.0 rootfstype=cramfs ro
+
+  Known issue: "Warning: unable to open an initial console." — likely missing /dev/console in cramfs rootfs or overlayfs setup issue. Init runs but no interactive shell available.
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif-e7-appkit
+  chips:
+  - AE722F80F55D5
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- ospi
+- linux-boot
+- cramfs
+- xip
+- alif

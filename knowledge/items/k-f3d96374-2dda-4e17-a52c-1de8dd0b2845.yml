@@ -1,0 +1,57 @@
+id: k-f3d96374-2dda-4e17-a52c-1de8dd0b2845
+title: 'Alif E7 Reset Types: AIRCR vs NSRST Pin — Verified Behavior'
+body: |-
+  ## JLink Reset Behavior on Alif E7 M55_HP (Verified 2026-03-07, 8 tests)
+
+  ### AIRCR SYSRESETREQ (w4 0xE000ED0C 0x05FA0004)
+  - **Does NOT trigger SE reboot** — only resets the M55_HP core locally
+  - JLink's default reset strategy (`r` command) for `AE722F80F55D5_HP` uses AIRCR, not NSRST
+  - JLink setup script prints: "Disabling WARM_RST handshakes in order to make reset via AIRCR work"
+  - No SE-UART output, no ATOC reprocessing
+  - M55_HP restarts its firmware but SE/A32/other cores unaffected
+  - 4/4 tests: zero SE output, FTDI ports remain
+
+  ### NSRST Pin Reset (JLink `RSetType 2` + `r`)
+  - **Triggers full SE reboot** — SEROM → SES → STOC → ATOC, processes all boot entries
+  - JLink toggles NSRST pin ~4 times per `r` command, causing ~9 cascading SE boot sequences
+  - Final boot always completes successfully with `[SES] ATOC ok`
+  - Debug logic also resets (JLink prints "VC_CORERESET did not halt CPU. Debug logic also reset by reset pin?")
+  - 4/4 tests: full SE boot, ATOC processed, all images loaded
+
+  ### FTDI Behavior
+  - **FTDI never disconnects** during any reset type (AIRCR or NSRST)
+  - Both `/dev/cu.usbserial-*` ports remain available throughout
+  - UART sessions stay open and functional
+  - Previous claim of "FTDI disconnects temporarily (~3 sec)" was WRONG
+
+  ### How to use
+  - **To restart M55_HP only**: JLink `r` (default AIRCR) or write 0x05FA0004 to 0xE000ED0C
+  - **To trigger full SE reboot (reprocess ATOC)**: JLink `RSetType 2` then `r`
+  - **To get clean single reboot**: Use reset button (SW2) or ISP RESET_DEVICE instead — JLink NSRST causes cascading reboots
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- alif
+- reset
+- jlink
+- aircr
+- nsrst
+- se-reboot
+- verified

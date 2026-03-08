@@ -1,0 +1,45 @@
+id: k-bfad04fa-35f3-45bc-8766-b521dd4a703e
+title: Alif E7 vs E8 SoC differences from SDK 2.1.0
+body: |-
+  Key differences from `Device/soc/*/include/soc_features.h`:
+
+  **SRAM**: E7 has 13.5 MB (extra banks SRAM6A/B, 7, 8, 9 at 0x60000000–0x63XXXXXX). E8 has 9.75 MB. SRAM1 is 2.5 MB on E7 vs 4 MB on E8.
+
+  **USB**: E7 has 8 endpoints. E8 has 16 endpoints.
+
+  **OSPI/AES**: E8 has additional OSPI features (CLK enable, addr in single FIFO, AES addr ctrl shim, AES XIP write HC DFS). E7 does not.
+
+  **GPIO**: E8 has GPIO ports 16-17, HW bit manipulation, clock enable, and HW ctrl mode. E7 does not.
+
+  **NPU**: E7 has Ethos-U55 only. E8 adds Ethos-U85.
+
+  **Clocks**: E7 requires `FORCE_ENABLE_SYSTEM_CLOCKS=1` (must explicitly enable clocks at boot). E8 has them enabled by default.
+
+  **Other E8 additions**: LPSPI master/slave, ISP (Image Signal Processor), LPTIMER PWM, I2C restart, CPI cropping, SD/MMC 1.8V, CLK76P8M enable.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif_e7_appkit
+  - alif_e8_devkit
+  chips:
+  - alif_e7
+  - alif_e8
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- soc-features
+- sram
+- usb
+- gpio
+- npu
+- sdk

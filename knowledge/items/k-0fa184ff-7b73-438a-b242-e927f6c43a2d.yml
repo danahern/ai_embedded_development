@@ -1,0 +1,41 @@
+id: k-0fa184ff-7b73-438a-b242-e927f6c43a2d
+title: JLink OSPI flash via FLM works but is slow — 3.1 KB/s, ~45 min for 8.4MB
+body: |-
+  JLink OSPI programming via the Ensemble_IS25WX256.FLM flash algorithm works end-to-end. Requires M55_HP (AP[3]) accessible — boot M55_HP stub via ATOC first.
+
+  Performance: 3.1 KB/s actual (not the estimated 7 KB/s). For 8.4MB (5MB rootfs + 3.4MB kernel): ~45 minutes. This is comparable to or slower than the SE-UART 3-pass MRAM staging approach.
+
+  Workflow:
+  1. gen_toc + flash with linux-boot-e7-ospi.json (includes M55_HP stub + TFA + DTB)
+  2. JLink reset (AIRCR from M55_HP) — SE boots M55_HP, AP[3] accessible
+  3. jlink_flash with linux-boot-e7-ospi-jlink.json (rootfs + kernel to OSPI)
+  4. JLink reset or power cycle → Linux boots
+
+  JLink V9.20 device name: AE722F80F55D5_HP (not _M55_HP).
+category: operational
+severity: informational
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - flash
+  - ospi
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- jlink
+- ospi
+- flash
+- performance

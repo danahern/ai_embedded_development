@@ -1,0 +1,55 @@
+id: k-fe1581cf-61c5-4467-b49a-940b2c0c6138
+title: 'Alif E7 REV_B4: ATOC mramAddress minimum is 0x80200000 (2MB offset) — confirmed with full flash'
+body: |-
+  On Alif E7 REV_B4 (SES v1.107.0), any ATOC entry with mramAddress below 0x80200000 causes "[SES] No ATOC" on boot, regardless of:
+  - Whether binaries are written (ATOC-only AND full flash both fail)
+  - Whether cpu_id is set or omitted
+  - Whether flags (boot/load) are set or omitted
+  - TFA at 0x80002000 with cpu_id=A32_0 is the sole exception
+
+  **Boundary is exactly 0x80200000 (2MB).** Confirmed by binary search: 0x801FF000 fails, 0x80200000 works.
+
+  The Security Toolkit docs say mramAddress starts from "0x8000-0100 (for REV_Ax)" but don't specify the REV_B limit. Our testing establishes the REV_B4 minimum at 0x80200000.
+
+  **Practical rule:** Place DTB at 0x80200000 or higher. The SWRM-recommended 0x80010000 does NOT work on REV_B4.
+
+  Test matrix:
+  | Address | ATOC-only | Full flash | cpu_id | flags | Result |
+  |---------|-----------|------------|--------|-------|--------|
+  | 0x8000A000 | yes | - | M55_HP | boot | FAILS |
+  | 0x80010000 | yes | - | M55_HP | boot | FAILS |
+  | 0x80010000 | - | yes | (none) | (none) | FAILS |
+  | 0x80100000 | yes | - | M55_HP | boot | FAILS |
+  | 0x80180000 | yes | - | M55_HP | boot | FAILS |
+  | 0x801C0000 | yes | - | M55_HP | boot | FAILS |
+  | 0x801E0000 | yes | - | M55_HP | boot | FAILS |
+  | 0x801F0000 | yes | - | M55_HP | boot | FAILS |
+  | 0x801FF000 | yes | - | M55_HP | boot | FAILS |
+  | 0x80200000 | yes | - | M55_HP | boot | WORKS |
+category: hardware
+severity: critical
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- mram
+- address
+- se-firmware
+- flash
+- 2mb-boundary
+- rev-b4

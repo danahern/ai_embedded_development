@@ -1,0 +1,54 @@
+id: k-e3db93a6-4c3d-4a25-96ce-9f0c48653cb4
+title: Alif SE services API — CPU boot, clocks, crypto, OSPI keys
+body: |-
+  The SE (Secure Enclave) exposes services over MHU mailbox. From `se_services/include/services_lib_api.h`:
+
+  **CPU control** (CPU IDs: A32_0=0, A32_1=1, M55_HP=2, M55_HE=3):
+  - `SERVICES_boot_cpu(handle, cpu_id, address, &err)` — boot a CPU at an address
+  - `SERVICES_boot_reset_cpu(handle, cpu_id, &err)` — reset a specific CPU
+  - `SERVICES_boot_release_cpu(handle, cpu_id, &err)` — release from reset
+  - `SERVICES_boot_reset_soc(handle)` — full SoC reset
+
+  **TOC inspection**:
+  - `SERVICES_system_get_toc_data(handle, &toc_data, &err)` — returns all 15 TOC entries (name, CPU, addresses, size, flags)
+
+  **Clock control**:
+  - `SERVICES_clocks_enable_clock(handle, clock_id, enable, &err)` — enable/disable specific clocks
+  - Clock IDs include: CLKEN_SYSPLL, CLKEN_CPUPLL, CLKEN_HFXO_OUT, CLKEN_CLK_100M/160M/200M/266M/400M, CLKEN_MRAM, CLKEN_SRAM0/1, CLKEN_USB (implied via IP gating)
+  - `SERVICES_clocks_select_a32_source(handle, source, &err)` — A32 clock: REFCLK/SYSPLL/CPUPLL
+
+  **OSPI encryption**:
+  - `SERVICES_application_ospi_write_key(handle, cmd, key, &err)` — burn 16-byte AES key to OTP for transparent XIP decryption
+  - AES0/AES1 hardware between OSPI controller and AXI bus decrypt XIP reads transparently
+
+  **Crypto (MbedTLS via SE)**:
+  - AES ECB/CBC/CTR/OFB (128/192/256), SHA-1/224/256, GCM, CCM, ChaCha20-Poly1305, CMAC
+  - `SERVICES_cryptocell_get_rnd(handle, len, buf, &err)` — TRNG
+  - OTP read/write: custom area starts at offset 0x70
+
+  **BL error codes**: `0x23` = `BL_ERROR_HAVE_FAILED_ATOC_IMAGES` — ATOC image verification failed, boot silently prevented.
+category: hardware
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - alif_e7
+  - alif_e8
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- se-services
+- cpu-boot
+- clocks
+- crypto
+- ospi-encryption
+- mhu

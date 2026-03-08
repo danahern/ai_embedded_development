@@ -1,0 +1,35 @@
+id: k-3ff8d424-2287-4b9a-b2d9-dbae5819ba15
+title: 'earlycon baud rate bug: omit baud rate to preserve TF-A divisor'
+body: |-
+  When using earlycon with 8250 on Alif E7, specifying a baud rate (e.g. `earlycon=uart8250,mmio32,0x4901a000,115200`) causes earlycon to recalculate the divisor using its default `uartclk=1843200` Hz. This gives divisor=1, which with the actual 100 MHz UART clock produces 6.25 Mbaud — no output visible.
+
+  **Fix:** Omit the baud rate: `earlycon=uart8250,mmio32,0x4901a000`. earlycon then reads and preserves TF-A's correct divisor (DLL=0x36, divisor=54 → 115200 baud with 100 MHz clock).
+
+  This applies to any platform where the bootloader (TF-A, U-Boot, etc.) has already configured the UART baud rate and the actual UART clock differs from earlycon's default 1.8432 MHz assumption.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - earlycon
+  - kernel
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- earlycon
+- baud-rate
+- uart
+- tfa
+- divisor

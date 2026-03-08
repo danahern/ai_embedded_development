@@ -1,0 +1,42 @@
+id: k-a4d0f1df-83f6-4bd8-a78b-8accf6a36486
+title: JLink ATOC persists across sessions — SE clears ATOC after processing (by design)
+body: |-
+  JLink's MRAM flash algorithm (Bank 0 @ 0x80000000) preserves w4 writes on session disconnect. The "Flash download: Bank 0" message on disconnect writes back the CURRENT MRAM state, including any w4 changes made during the session. ATOC data survives across multiple JLink sessions.
+
+  The "ATOC zeros after reset" observed earlier was caused by the SE clearing the ATOC after processing it during boot — this is normal, by design. The ATOC is a one-shot boot configuration: the SE reads it, processes it (boots configured cores), then clears the ATOC area.
+
+  Verified workflow (multi-session):
+  1. Session 1: Write ATOC via w4 commands → disconnect (ATOC persists in MRAM)
+  2. Session 2: loadbin TFA + DTB → mem32 confirms ATOC still present → RSetType 2 + r → SE processes ATOC → Linux boots
+  3. After boot, ATOC area reads as zeros (SE cleared it) — this is expected
+
+  The `loadbin` implicit resets ("Performing implicit reset & halt of MCU") do NOT clear the ATOC — verified by mem32 read after multiple loadbins in the same session.
+
+  Previous knowledge item k-f6e1304e was incorrect — it claimed JLink cleared the ATOC on new session connect. This was a misdiagnosis.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-appkit
+  - alif-e7-devkit
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- jlink
+- atoc
+- mram
+- flash-driver
+- alif
+- corrected

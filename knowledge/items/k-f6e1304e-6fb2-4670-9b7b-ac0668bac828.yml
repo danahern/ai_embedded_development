@@ -1,0 +1,34 @@
+id: k-f6e1304e-6fb2-4670-9b7b-ac0668bac828
+title: JLink Alif flash driver clears ATOC on new session connect
+body: |-
+  JLink's Alif E7 device definition includes a flash driver for MRAM (Bank 0 @ 0x80000000). When a NEW JLink session connects to any Alif core (M55_HE, M55_HP, A32), the flash driver initializes and zeros the ATOC area (~0x8057EB90-0x80580000). TFA at 0x80002000 and DTB at 0x80200000 survive — only the ATOC near the system MRAM boundary is cleared.
+
+  Workaround: ATOC write + reset MUST be in the SAME JLink session. Use a single command file with w4 writes followed by `RSetType 2` + `r` + `q`. A second JLink session connecting (even just to read or reset) will zero the ATOC.
+
+  Both `loadbin` and `w4` commands trigger the flash driver ("Flash download: Bank 0 @ 0x80000000"). The difference is session lifecycle, not write method.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-appkit
+  - alif-e7-devkit
+  chips:
+  - AE722F80F55D5
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- jlink
+- atoc
+- mram
+- flash-driver
+- alif

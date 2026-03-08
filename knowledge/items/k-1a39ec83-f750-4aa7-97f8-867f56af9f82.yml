@@ -1,0 +1,38 @@
+id: k-1a39ec83-f750-4aa7-97f8-867f56af9f82
+title: TFA DTB address must match ATOC config — ARM_PRELOADED_DTB_BASE=0x80200000
+body: |-
+  TFA copies DTB from ARM_PRELOADED_DTB_BASE to RAM_PRELOADED_DTB_BASE (0x02390000) and passes the RAM address in r2 to the kernel.
+
+  The current bl32-ospi.bin is built with ARM_PRELOADED_DTB_BASE=0x80200000 (NOT 0x80010000 as previously documented in MEMORY.md). The ATOC config must put DTB at mramAddress: 0x80200000 to match.
+
+  Symptom when mismatched: kernel crashes silently in setup_arch with __atags_pointer containing garbage. The error message ("unrecognized/unsupported device tree compatible list") is printed via early_print (DEBUG_LL) which produces no visible output since DEBUG_LL is not configured. Crash appears as infinite loop at setup_arch+0x18.
+
+  Verified by: reading __atags_pointer from physical RAM (0x020318d0), comparing MRAM source (0x80200000) with RAM destination (0x02390000) — identical data confirmed TFA copies from 0x80200000.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - tfa
+  - boot
+file_patterns:
+- '**/linux-boot-e7*.json'
+- '**/bl32*.bin'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- tfa
+- dtb
+- flash
+- ospi
+- boot

@@ -8,14 +8,6 @@ paths: ["**/alif-e7/**", "**/alif_e7*", "**/appkit-e7*", "**/linux-boot-e7*"]
 
 The onboard JLink VCOM port (`usbmodem*`) **only produces output during an active JLink debug session**. Without it, the port is completely silent.
 
-**To enable VCOM, run JLinkExe in background with a long sleep:**
-
-```bash
-/Applications/SEGGER/JLink/JLinkExe -nogui 1 -if SWD -speed 4000 \
-  -device AE722F80F55D5_M55_HP -SelectEmuBySN 001219307699 \
-  -AutoConnect 1 -CommandFile /tmp/jlink_persist.jlink &
-```
-
 **Sequence matters:** Power cycle board FIRST, wait 5+ seconds for boot, THEN start JLink session.
 
 ## Probe Serial Numbers
@@ -23,29 +15,41 @@ The onboard JLink VCOM port (`usbmodem*`) **only produces output during an activ
 - **Onboard JLink** (VCOM + debug): Serial `001219307699`
 - **J-Trace PRO** (external): Serial `001223000022`
 
-## E7 Flash Layout (OSPI boot — active config)
+## E7 Memory Map (from AUGD0022 / SDK)
 
-| Component | File | Address | Medium |
-|-----------|------|---------|--------|
-| TF-A | bl32.bin | 0x80002000 | MRAM |
-| DTB | appkit-e7-ospi.dtb | 0x80010000 | MRAM |
-| Rootfs | rootfs-ospi.bin | 0xC0000000 | OSPI NOR |
-| Kernel | xipImage-ospi | 0xC0800000 | OSPI NOR |
+| Region | Address | Size |
+|--------|---------|------|
+| SRAM | 0x02000000 | 8MB |
+| MRAM | 0x80000000 | 6MB |
+| OSPI1 NOR Flash | 0xC0000000 | up to 1024MB |
+| HyperRAM | 0xA0000000 | 64MB |
 
-OSPI images programmed via SE-UART ATOC path (`alif-flash.gen_toc` + `alif-flash.flash`). J-Link FLM writes to OSPI do NOT survive a power cycle — the SE overwrites from its internal storage on every boot.
+## E7 MRAM Layout (from official docs)
 
-## OSPI Artifact Staging (CRITICAL)
+| Component | File | Address |
+|-----------|------|---------|
+| TF-A (bl32) | bl32.bin | 0x80002000 |
+| DTB | appkit-e7-ospi.dtb | 0x80010000 |
+| Kernel (MRAM boot) | xipImage | 0x80020000 |
+| Rootfs (MRAM boot) | cramfs-xip | 0x80380000 |
 
-Flash configs reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-ospi.bin`), but Yocto outputs `xipImage` and `*.cramfs-xip`. **Always run `stage-ospi.sh` after a Yocto build to copy+rename artifacts.**
+## E7 OSPI Layout (from official docs)
 
-```bash
-firmware/linux/alif-e7/stage-ospi.sh        # copies from yocto-build container → images/
-```
+| Component | File | Address |
+|-----------|------|---------|
+| Rootfs | cramfs-xip | 0xC0000000 |
+| Kernel | xipImage | 0xC0800000 |
 
-Without this step, flash tools will use stale files with no warning.
+## E7 Device ID
+
+- Part number in device config: `AE722F80F55D5LS`
+- This MUST match the actual SoC — ATOC is silently skipped on mismatch (AUGD0005 p.15)
 
 ## E7 Kernel
 
-- Branch: `devkit-b0-5.4.y` (kernel 5.4.x)
-- Yocto release: zeus (OE 3.0)
-- MACHINE: `appkit-e7`
+- Yocto scarthgap branch (kernel 6.12.x)
+- MACHINE: `devkit-e8` (shared machine config)
+
+## OSPI Artifact Staging
+
+Flash configs reference `-ospi` suffixed filenames (`xipImage-ospi`, `rootfs-ospi.bin`), but Yocto outputs `xipImage` and `*.cramfs-xip`. Run `stage-ospi.sh` after a Yocto build to copy+rename artifacts.

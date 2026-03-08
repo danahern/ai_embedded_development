@@ -1,0 +1,34 @@
+id: k-4dc04095-490e-48fc-be58-9e331a560c05
+title: JLink loadbin rejects DTB files — copy to .bin extension
+body: |-
+  JLink's `loadbin` command rejects .dtb (device tree blob) files with "File is of unknown / unsupported format". The DTB magic number 0xD00DFEED at the start of the file confuses JLink's format auto-detection.
+
+  Workaround: copy the DTB to a .bin extension before loading:
+  ```
+  cp appkit-e7-ospi.dtb /tmp/dtb_raw.bin
+  loadbin /tmp/dtb_raw.bin 0x80200000
+  ```
+
+  This works because JLink treats .bin files as raw binary without format validation.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - jlink
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- jlink
+- dtb
+- loadbin
+- workaround

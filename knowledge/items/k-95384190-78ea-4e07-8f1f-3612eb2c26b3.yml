@@ -1,0 +1,81 @@
+id: k-95384190-78ea-4e07-8f1f-3612eb2c26b3
+title: 'USB-to-OSPI flasher: working build, config, and transfer workflow'
+body: |-
+  ## USB-to-OSPI Flash Programming (Verified Working 2026-03-05)
+
+  Programs OSPI flash directly via M55_HP firmware over USB CDC-ACM + XMODEM at ~46 KB/s. 12MB combined image transfers in ~4.3 minutes.
+
+  ### ATOC Config — CRITICAL
+  - Flasher firmware is linked at **`mramAddress: 0x80200000`** — NOT loadAddress 0x50000000
+  - Use `flags: ["boot"]` and `signed: false` (not `["load", "boot"]`)
+  - Config: `linux-boot-e7-ospi-usbflash.json` in `build/config/`
+  - ATOC is small (~4KB) because binary goes to MRAM separately
+
+  ### Build (CMSIS Toolbox)
+  - CMSIS Toolbox **2.12.0** required (bundled in flasher project, download from GitHub releases)
+  - ARM GNU Toolchain 14.2 (full, with newlib — NOT brew's arm-none-eabi-gcc which lacks newlib)
+  - ThreadX pack URL: `https://github.com/alifsemi/alif_ensemble-Azure-RTOS/releases/download/v2.0.0/AlifSemiconductor.ThreadX.2.0.0.pack`
+  - GCC 14 needs `-Wno-incompatible-pointer-types` in `cdefault.yml`
+  - `export GCC_TOOLCHAIN_14_2_1=/path/to/arm-gnu-toolchain/bin`
+  - `cbuild alif.csolution.yml --context flasher.release+DevKit-E7-HP --toolchain GCC`
+  - Output: `out/flasher/DevKit-E7-HP/release/flasher.bin` (131KB)
+
+  ### XMODEM Protocol
+  - Use **128-byte SOH blocks** (standard XMODEM) — NOT 1024-byte STX (XMODEM-1K)
+  - Firmware xmodem.c handles both SOH and STX in receive path, but 1K blocks fail with no ACK
+  - CRC-16 mode (firmware sends 'C' to request it)
+  - Actual speed: ~46 KB/s (flash erase cycles are the bottleneck, not USB)
+
+  ### USB CDC-ACM
+  - Device appears as `/dev/cu.usbmodem*` on macOS (VID 0x0525, PID 0xa4a7)
+  - **3 second settle time** needed after device node appears — macOS driver not ready immediately
+  - Firmware waits for CDC activation (host opens port) before starting XMODEM
+  - If session times out (port opened then closed without transfer), must power cycle to reset
+  - Green LED = programming active, Red LED = CDC not connected
+
+  ### Power Cycle / ISP Workflow Issues
+  - Unplugging PRG_USB kills FTDI ports — `wait_for_power_cycle` fails because fd goes stale
+  - `wait_for_replug` also unreliable in practice
+  - **Workaround**: enter maintenance manually via Alif SE tools, then use `flash()` without maintenance flag
+  - Future: need a script that watches for port reappear and immediately sends ISP commands
+
+  ### Combined OSPI Image
+  - `make-ospi-image.sh`: rootfs padded to 8MB + kernel appended
+  - Images at `firmware/linux/alif-e7/images/` (symlink to `tools/setools/build/images/`)
+  - Config files must be copied to `tools/setools/build/config/` for gen_toc
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - devkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  - cbuild
+  - arm-gnu-toolchain
+  subsystems:
+  - flash
+  - usb
+  - ospi
+file_patterns:
+- '*ospi-usbflash*'
+- '*xmodem*'
+- '*flash-ospi*'
+- '*make-ospi*'
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-06
+updated: 2026-03-06
+author: claude
+source_session: null
+tags:
+- ospi
+- usb
+- flash
+- xmodem
+- cdc-acm
+- cmsis
+- m55

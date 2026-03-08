@@ -10,38 +10,51 @@ Packet format: `[length, cmd, data..., checksum]`. All bytes including checksum 
 
 | Port pattern | Device | Use | Baud |
 |---|---|---|---|
-| `/dev/cu.usbserial-*` | External FTDI adapter | SE-UART ISP flash protocol | 57600 |
-| `/dev/cu.usbmodem*` | Onboard JLink VCOM | Linux console + TF-A boot output | 115200 |
+| `/dev/cu.usbserial-A10LOVM2` | FTDI adapter | SE-UART ISP flash protocol | 57600 |
+| `/dev/cu.usbserial-AO009AHE` | FTDI adapter | UART2 (A32/Linux console) | 115200 |
+| `/dev/cu.usbmodem*` | Onboard JLink VCOM | Debug output (requires active JLink session) | 115200 |
 
-## Flashing Tool Selection (CRITICAL)
+## Verified Flash Workflow (2026-03-07)
 
-**NEVER use `jlink_flash` for persistent image updates.** The SE reprograms ALL ATOC-managed images (kernel, rootfs, DTB, bl32) from its internal storage on every power cycle. J-Link writes to OSPI and MRAM verify successfully but are silently overwritten before the A32 starts. This is the SE's normal security model, not a bug.
+1. `app-gen-toc -f config.json` — generates AppTocPackage.bin
+2. Write ATOC to MRAM via **JLink w4 commands** (ISP writes to ATOC area are silently dropped after full erase)
+3. Write TFA/DTB via ISP (`flash()`) or JLink (`loadbin` — copy `.dtb` to `.bin` first)
+4. Reset via JLink NSRST (`RSetType 2` + `r`)
 
-**SE-UART `flash()` — use for ALL persistent image updates:**
-- Call `alif-flash.gen_toc(config=...)` then `alif-flash.flash(config=..., maintenance=true)`
-- Writes to SE's internal storage; SE programs MRAM/OSPI from this copy on each boot
-- ~5 KB/s for MRAM images directly; OSPI images use TF-A MRAM-staging programmer (~42 KB/s)
-- Required when adding new ATOC entries or changing addresses
+**NEVER ask for manual power cycles.** Use JLink NSRST or ISP RESET_DEVICE instead. All reset types process ATOC identically.
 
-**`jlink_flash` — only for temporary debugging:**
-- Useful for reading back memory, testing transient changes, or writing to non-ATOC regions
-- Writes do NOT survive a power cycle for any ATOC-managed address
-- Speed: ~44 KB/s MRAM, ~6 KB/s OSPI (but irrelevant — writes are overwritten)
+**ATOC is one-shot:** The SE reads ATOC, processes it (boots configured cores), then clears the ATOC area. This is by design. After a successful boot, ATOC reads as zeros — this is normal, not a bug.
 
-**OSPI NOR Flash** (0xC0000000+): Use TF-A MRAM-staging programmer (see plan `alif-e7-ospi-boot/`).
+**ATOC persists across JLink sessions:** JLink's MRAM flash algorithm preserves w4 writes on disconnect. You can write ATOC in session 1 and reset in session 2. The "Flash download: Bank 0" message on disconnect writes back current MRAM state (including your writes), not a cached snapshot.
 
-## ATOC / gen_toc
+**ISP ATOC Write Bug:** After full MRAM erase, ISP BURN_MRAM silently drops writes to ATOC area (~0x8057xxxx). SE ACKs all commands but data is zeros. Both native tool and MCP fail. JLink writes to same addresses work. Workaround: JLink ATOC bootstrap.
 
-- `gen_toc` only validates MRAM address range. OSPI addresses cause "Images DO NOT FIT" error.
-- Valid address ranges: SRAM (0x50000000-0x63200000) and MRAM (0x80000000, 6MB).
+**JLink DTB Format Rejection:** `loadbin` rejects `.dtb` files ("File is of unknown / unsupported format") due to DTB magic 0xD00DFEED. Workaround: `cp foo.dtb /tmp/dtb_raw.bin` then `loadbin /tmp/dtb_raw.bin 0x80200000`.
 
-## Power Cycle Protocol
+## USB-to-OSPI Flash Workflow
 
-After SE-UART flash: must **unplug/replug PRG_USB** for SE boot sequence. JLink reset alone is insufficient.
+1. `gen_toc` + JLink ATOC w4 + NSRST with flasher config (`linux-boot-e7-ospi-usbflash.json`)
+2. Connect SOC USB — flasher CDC-ACM appears at `/dev/cu.usbmodem12001`
+3. XMODEM send combined OSPI image (~12MB, ~4.4 min at 46.3 KB/s)
+4. **Hard maintenance erase** via native Alif tool (flasher hangs SE — no automated recovery)
+5. `gen_toc` + JLink ATOC w4 + NSRST with boot config (TFA+DTB)
+6. Linux boots from OSPI
 
-## SE-UART ISP Window
+## ATOC Failure Modes (from AUGD0005)
 
-The SE accepts ISP commands for ~2-3 seconds after power-on. **Do NOT open the SE-UART port at 57600 during boot** or you will catch the SE in ISP mode and prevent normal boot.
+- **Part number mismatch**: If ATOC part number doesn't match SoC, ATOC is silently skipped (no boot, no error on A32 console)
+- **Image verification failure**: If any non-bootable image fails verification, ALL APP core booting is skipped
+- **"No ATOC" message**: Normal SE output when no valid ATOC found at expected MRAM location
+
+## Validated Flash Facts (from systematic testing)
+
+- **mramAddress minimum**: 0x80200000 for non-TFA entries (SE REV_B4 rejects lower). TFA at 0x80002000 is the exception.
+- **All reset types process ATOC**: JLink NSRST, reset button, ISP RESET_DEVICE, cold power cycle — all trigger full SE reboot.
+- **ISP user image writes work**: TFA, DTB at valid addresses persist via ISP.
+- **ISP ATOC writes fail silently**: After full erase, use JLink for ATOC.
+- **JLink access without ATOC**: Connect to M55_HE (`AE722F80F55D5_HE`).
+
+See `plans/alif-flash-reset.md` for full test details.
 
 ## Multi-Device Support
 

@@ -36,9 +36,9 @@ file_patterns:
 status: unvalidated
 validated_by: []
 deprecated: true
-superseded_by: k-d2fcc93f-fa50-4ef4-9717-7b7cadbcdc3b
+superseded_by: null
 created: 2026-02-22
-updated: 2026-02-22
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

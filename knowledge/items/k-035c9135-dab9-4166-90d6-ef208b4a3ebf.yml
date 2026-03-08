@@ -1,0 +1,36 @@
+id: k-035c9135-dab9-4166-90d6-ef208b4a3ebf
+title: Alif E7 UART2 clock is 100 MHz, not 1.8432 MHz
+body: |-
+  The Alif E7 UART2 peripheral clock is 100 MHz (same as arch_timer). Verified by reading TF-A's baud rate divisor via JLink:
+
+  - DLL register = 0x36 (decimal 54)
+  - `uartclk = 16 * divisor * baudrate = 16 * 54 * 115200 = 99,532,800 ≈ 100 MHz`
+
+  When patching DTB for standalone UART (without psclks clock provider), use `clock-frequency = <100000000>` in the UART node.
+
+  base_baud reported by kernel: 6250000 (= 100MHz / 16).
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - uart
+  - clock
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- uart-clock
+- 100mhz
+- baud-rate
+- divisor

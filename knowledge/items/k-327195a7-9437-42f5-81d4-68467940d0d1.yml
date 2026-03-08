@@ -1,0 +1,37 @@
+id: k-327195a7-9437-42f5-81d4-68467940d0d1
+title: SE "No ATOC" message is cosmetic — board boots normally
+body: |-
+  The SE boot log message `[SES] No ATOC` does NOT mean the ATOC is missing or broken. The SE still reads and processes the ATOC from APP MRAM correctly. The "No ATOC" message refers to the persistent System MRAM copy.
+
+  **Evidence**: After flashing pass 1 config (OSPI programmer + TFA + DTB + kernel), SE-UART showed:
+  ```
+  [SES] No ATOC
+  [SES] STOC DEVICE ok
+  ```
+  STOC table showed only DEVICE, SERAM0, SERAM1 — no ATOC entries visible. But the A32 console showed a full Linux boot: OSPI programmer ran, TFA booted kernel, Linux 6.12.6 started, cramfs mounted, overlayfs activated.
+
+  **Key diagnostic**: When debugging boot issues, always check the A32 console (UART2 at 115200), not just the SE-UART. The SE boot table is misleading — it only shows STOC entries even when the ATOC is working.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif-e7-appkit
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - boot
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-06
+author: claude
+source_session: null
+tags:
+- se-uart
+- atoc
+- boot
+- diagnostic

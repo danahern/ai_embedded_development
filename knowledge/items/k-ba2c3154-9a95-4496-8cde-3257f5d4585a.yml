@@ -1,0 +1,32 @@
+id: k-ba2c3154-9a95-4496-8cde-3257f5d4585a
+title: 'Alif E7 XIP kernel hang: JFFS2/PHRAM additions cause boot hang after reserved memory init'
+body: "Adding CONFIG_JFFS2_FS and/or CONFIG_MTD_PHRAM to the Alif E7 XIP kernel causes a hard hang after reserved memory initialization (after \"OF: reserved mem:\" lines, before zone setup).\n\nTested and ruled out:\n- Stale build artifacts (clean rebuild with cleansstate — same hang, different binary size confirms genuine rebuild)\n- OSPI corruption (J-Link readback of first and last 32 bytes matches source file exactly)\n- CONFIG_ZLIB_INFLATE conflict with CONFIG_XIP_DEFLATED_DATA (removed JFFS2_ZLIB, ZLIB_INFLATE still present from XIP_DEFLATED_DATA — same hang)\n- Bootargs (removed phram bootargs — same hang)\n- Rootfs (new rootfs programmed to OSPI — kernel hangs before rootfs mount)\n\nNOT yet tested:\n- PHRAM only (no JFFS2)\n- JFFS2 only (no PHRAM) \n- Old working kernel (3,628,416 bytes, no JFFS2/PHRAM) through current 3-pass flash path\n- Whether issue is kernel size exceeding some XIP memory boundary\n\nKey sizes:\n- Working kernel: 3,628,416 bytes (no JFFS2/PHRAM)\n- Hanging kernel with JFFS2+ZLIB+PHRAM: 3,750,858 bytes\n- Hanging kernel with JFFS2+PHRAM (no ZLIB): 3,738,096 bytes\n\nThe hang produces repeated boot cycles (watchdog reboot), each stopping at the same point. initcall_debug produces no additional output because the hang is pre-initcall."
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e7-devkit
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - kernel
+  - ospi
+  - xip
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: k-4508adab-c0b2-4b96-a0ba-dcdce2fd949e
+created: 2026-03-03
+updated: 2026-03-03
+author: claude
+source_session: null
+tags:
+- xip
+- kernel-hang
+- jffs2
+- phram
+- boot
+- debugging
+- investigation

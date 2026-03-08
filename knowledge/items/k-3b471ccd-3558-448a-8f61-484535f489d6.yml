@@ -3,11 +3,14 @@ title: 'Alif E7: J-Link writes to OSPI and MRAM are overwritten by SE on every b
 body: |-
   ## Discovery
 
-  The Secure Enclave (SE) reprograms ALL ATOC-managed images from its internal storage on every power cycle. This includes:
+  The Secure Enclave (SE) reprograms ATOC-managed MRAM images from its internal storage on every power cycle:
   - **MRAM images**: DTB (0x80010000), bl32 (0x80002000)
-  - **OSPI images**: kernel (0xC0800000), rootfs (0xC0000000)
 
-  J-Link writes to these addresses succeed and verify, but are **silently overwritten** on the next boot. The flash tool reports success because verification reads back correctly — but the data doesn't survive a power cycle.
+  J-Link writes to MRAM succeed and verify, but are **silently overwritten** on the next boot.
+
+  OSPI images (kernel at 0xC0800000, rootfs at 0xC0000000) also don't persist via J-Link. The exact mechanism is unclear — it may be SE ATOC enforcement or OSPI XIP remapping — but the observation is consistent: J-Link OSPI writes don't survive power cycles.
+
+  **CORRECTION (2026-03-02):** Earlier version claimed "SE programs OSPI from ATOC." This was inference, not observation. Experiment confirmed `app-gen-toc` does NOT support OSPI addresses (see k-f579d948). OSPI must be programmed via TF-A MRAM-staging.
 
   ## Evidence
 
@@ -51,10 +54,10 @@ file_patterns:
 status: validated
 validated_by:
 - danahern
-deprecated: false
+deprecated: true
 superseded_by: null
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

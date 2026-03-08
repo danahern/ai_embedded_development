@@ -1,0 +1,45 @@
+id: k-6ed97fdc-cdec-449d-81d2-334ff3dde760
+title: 'Alif E7 ATOC address boundary: mramAddress must be >= 0x80200000 for SE acceptance'
+body: |-
+  The SE firmware rejects ATOC entries with mramAddress below 0x80200000, printing "[SES] No ATOC" on boot.
+
+  Binary search results (ATOC-only flash, no binaries — proves the ATOC metadata itself is rejected):
+
+  | mramAddress | Result |
+  |-------------|--------|
+  | 0x8000A000  | FAILS — "[SES] No ATOC" |
+  | 0x80010000  | FAILS — "[SES] No ATOC" |
+  | 0x80100000  | FAILS — "[SES] No ATOC" |
+  | 0x80180000  | FAILS — "[SES] No ATOC" |
+  | 0x80200000  | WORKS — SE boots ATOC entries |
+
+  The exact boundary is between 0x80180000 and 0x80200000. The SWRM-recommended address of 0x8000A000 for DTB does NOT work on this hardware/firmware combination (SES B4 v1.107.0).
+
+  TFA at 0x80002000 works fine in the same ATOC — the issue is specific to addresses in the range ~0x8000A000–0x801FFFFF for non-TFA entries. This may be related to SE reserved MRAM regions or alignment requirements.
+
+  Testing methodology: gen_toc with test config → ATOC-only flash via `app-write-mram -p -S -b 57600` → JLink NSRST reset → capture SE boot output on SE-UART at 57600 baud.
+category: hardware
+severity: critical
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: true
+superseded_by: null
+created: 2026-03-07
+updated: 2026-03-07
+author: claude
+source_session: null
+tags:
+- alif
+- atoc
+- mram
+- address
+- se-firmware
+- flash

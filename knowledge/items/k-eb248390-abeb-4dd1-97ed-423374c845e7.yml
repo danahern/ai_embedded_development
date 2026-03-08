@@ -38,10 +38,10 @@ file_patterns:
 - '**/norflash_ospi_setup.*'
 status: unvalidated
 validated_by: []
-deprecated: false
+deprecated: true
 superseded_by: null
 created: 2026-02-23
-updated: 2026-02-23
+updated: 2026-03-06
 author: claude
 source_session: null
 tags:

@@ -1,6 +1,6 @@
 # Plan: Persistent OverlayFS — MRAM or OSPI
 
-**Status**: Planned
+**Status**: In-Progress
 
 ## Context
 

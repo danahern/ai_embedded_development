@@ -1,0 +1,35 @@
+id: k-3c6f123b-ca9e-4e84-b74a-bf4ad9a0f368
+title: JLink AIRCR reset triggers full SE reboot but disconnects FTDI
+body: |-
+  JLink AIRCR.SYSRESETREQ from M55_HP triggers a full system reset including the SE. The SE reprocesses the ATOC and boots all configured cores. This eliminates the need for manual power cycling in most cases.
+
+  However, the reset also resets the USB subsystem, causing FTDI serial adapters to momentarily disconnect. UART sessions must be closed and reopened after the reset (wait ~2-3 seconds for re-enumeration).
+
+  This means boot output is lost during JLink-initiated resets. To capture boot output, use a physical power cycle with the UART already open, or accept reading the kernel log buffer after boot via JLink memory reads.
+
+  Command: echo "r\ng\nexit" | JLinkExe -device AE722F80F55D5_HP -if SWD -speed 4000 -autoconnect 1
+category: operational
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  subsystems:
+  - debug
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-08
+updated: 2026-03-08
+author: claude
+source_session: null
+tags:
+- jlink
+- reset
+- uart
+- ftdi

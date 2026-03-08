@@ -1,0 +1,42 @@
+id: k-446efef3-1e1f-4141-8a13-a9b1dde9a9a2
+title: Alif DevKit-e7 board config — UART, OSPI, LED, I2C assignments
+body: |-
+  From SDK `Boards/DevKit-e7/board_defs.h`:
+
+  **UART**: UARTA=UART2 (console), UARTB=UART4, Clickboard=UART0
+  **I2C**: I2C0 (clickboard + slave), I2C1 (camera + master)
+  **OSPI flash**: OSPI1, reset GPIO Port 15 Pin 7
+  **OSPI PSRAM/HyperRAM**: OSPI0, reset GPIO Port 15 Pin 6
+  **Flash size**: 32 MB (IS25WX256), PSRAM size: 32 MB
+  **OSPI bus speed**: 100 MHz both instances
+  **Joystick**: GPIO Port 15, Pins 0–4 (A, B, C, D, Center)
+  **LCD Reset**: GPIO Port 15 Pin 5
+  **RGB LED0**: R=Port12/Pin3 (UTIMER ch9), G=Port7/Pin4 (UTIMER ch10), B=UTIMER ch8
+  **I3C header**: present
+
+  **DMA**: UARTs 0–3 hardwired to DMA0. UARTs 4–7 flexible (DMA0 or DMA1). LP peripherals on DMA2.
+category: hardware
+severity: informational
+applies_to:
+  boards:
+  - alif_e7_appkit
+  chips:
+  - alif_e7
+  tools: []
+  subsystems: []
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-05
+updated: 2026-03-05
+author: claude
+source_session: null
+tags:
+- board-config
+- pinout
+- uart
+- ospi
+- dma
+- led
