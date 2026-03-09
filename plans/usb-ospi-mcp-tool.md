@@ -1,6 +1,6 @@
 # Plan: Add USB OSPI Programming Tool to alif-flash MCP
 
-**Status:** Planned
+**Status:** In-Progress
 
 ## Context
 
