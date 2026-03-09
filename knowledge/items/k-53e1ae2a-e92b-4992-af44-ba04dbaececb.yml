@@ -1,0 +1,65 @@
+id: k-53e1ae2a-e92b-4992-af44-ba04dbaececb
+title: Overlayfs writable root on cramfs — working pattern with tmpfs + chroot
+body: |-
+  Pattern for creating a writable root filesystem on top of read-only cramfs (XIP from OSPI flash):
+
+  ```sh
+  #!/bin/sh
+  # preinit — called via init=/sbin/preinit in bootargs
+  mount -t proc proc /proc
+  mount -t devtmpfs devtmpfs /dev 2>/dev/null
+
+  # tmpfs for overlay backing store
+  mount -t tmpfs -o size=4m tmpfs /tmp
+  mkdir -p /tmp/upper /tmp/work /tmp/newroot
+
+  # Overlay: cramfs below, tmpfs above
+  mount -t overlay overlay \
+      -o "lowerdir=/,upperdir=/tmp/upper,workdir=/tmp/work" \
+      /tmp/newroot
+
+  # Move kernel filesystems into overlay
+  mount --move /proc /tmp/newroot/proc
+  mount --move /dev /tmp/newroot/dev
+
+  # Use chroot (NOT switch_root — BusyBox bug)
+  exec chroot /tmp/newroot /sbin/init "$@"
+  ```
+
+  Key constraints:
+  - Do NOT `mount --move /tmp` into the overlay — creates circular dependency (symlink loop error)
+  - The overlay holds VFS references to upper/work dirs; they survive chroot
+  - Kernel needs CONFIG_OVERLAY_FS=y
+  - overlayfs will warn about xattr failures on tmpfs upper (harmless — falls back to redirect_dir=nofollow, uuid=null)
+  - cramfs must have /tmp directory pre-existing as the mountpoint for tmpfs
+category: pattern
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips: []
+  tools:
+  - yocto
+  subsystems:
+  - rootfs
+  - overlayfs
+  - cramfs
+  - init
+file_patterns:
+- '**/preinit'
+- '**/overlayfs-dev/**'
+- '**/overlayfs.cfg'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- overlayfs
+- cramfs
+- tmpfs
+- writable-root
+- preinit

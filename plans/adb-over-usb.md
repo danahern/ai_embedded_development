@@ -1,6 +1,6 @@
 # Plan: Enable ADB over USB on Alif E7 Linux
 
-**Status:** In-Progress
+**Status:** Complete
 
 ## Context
 
@@ -35,7 +35,7 @@ Changed `devm_clk_get()` to `devm_clk_get_optional()` with NULL checks so the dr
 
 ### 3. Bootargs fixes (appkit-e7.dts)
 - Added `clk_ignore_unused` — without this, `clk_disable_unused()` hangs (likely MHU→SE deadlock when trying to gate unused clocks)
-- Removed `init=/sbin/preinit` — current rootfs uses `/sbin/init`
+- Uses `init=/sbin/preinit` — preinit sets up overlayfs writable root over cramfs, then exec's /sbin/init
 
 ### 4. Memory layout (appkit-e7.dts, from prior work)
 - SRAM limited to 4MB (SRAM0 only) — SRAM1 is firewall-protected (FC5)
@@ -53,10 +53,10 @@ Changed `devm_clk_get()` to `devm_clk_get_optional()` with NULL checks so the dr
 
 ## Remaining Validation
 
-- [ ] Clean Yocto `kernel_rebuild` produces bootable DTB (no fdtput patching)
-- [ ] Verify DCT tool doesn't interfere with hard-coded memory layout
-- [ ] Verify `init=/sbin/preinit` vs `/sbin/init` is consistent between rootfs and bootargs
-- [ ] Full pipeline: `kernel_rebuild` → stage → gen_toc → flash → boot → ADB works
+- [x] Clean Yocto rebuild produces bootable artifacts (no fdtput patching)
+- [x] Verify `init=/sbin/preinit` is consistent between rootfs and bootargs — preinit sets up overlay, chroots to /sbin/init
+- [x] Full pipeline: Yocto rebuild → stage → gen_toc → USB-OSPI flash → boot → overlay → ADB works
+- [ ] Verify DCT tool doesn't interfere with hard-coded memory layout (deferred — not blocking)
 
 ## Implementation Notes
 
@@ -65,9 +65,18 @@ Changed `devm_clk_get()` to `devm_clk_get_optional()` with NULL checks so the dr
 - Device IP: 192.168.55.2, host should be 192.168.55.1
 - `clk_ignore_unused` is a workaround — long-term fix is to get MHU→SE→clock chain working
 
+### 5. Overlayfs writable root (preinit + kernel config)
+- `preinit` script creates tmpfs-backed overlayfs over read-only cramfs
+- Uses `chroot` (not `switch_root` — BusyBox switch_root has argument parsing issue, looks for `/init` instead of `/sbin/init`)
+- Kernel config: `CONFIG_OVERLAY_FS=y` via `overlayfs.cfg` fragment
+
 ## Files Modified
 
 | File | Change |
 |------|--------|
 | `linux_alif/.../appkit/appkit-e7.dts` | DWC3 `/delete-property/`, bootargs fixes, memory layout |
 | `linux_alif/drivers/usb/dwc3/dwc3-ensemble.c` | `devm_clk_get()` → `devm_clk_get_optional()` |
+| `meta-eai/.../overlayfs-dev/files/preinit` | Overlayfs setup with chroot (not switch_root) |
+| `meta-eai/.../linux/linux-alif_%.bbappend` | Added overlayfs.cfg, DWC3 patch, DTS patch |
+| `meta-eai/.../linux/files/0001-arm-dts-*.patch` | AppKit-E7 DTS with all fixes |
+| `meta-eai/.../linux/files/0002-usb-dwc3-*.patch` | DWC3 devm_clk_get_optional fix |

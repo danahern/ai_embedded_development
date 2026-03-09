@@ -23,6 +23,8 @@ Cross-cutting lessons (Tier 1 — always loaded). Board/platform-specific gotcha
 
 **ALWAYS use MCP tools. NEVER shell out to CLI equivalents.** Hooks enforce this — blocked commands will tell you which MCP tool to use instead. If an MCP tool fails, STOP and tell the user — fix the MCP server, don't work around it.
 
+**When the user catches a violation**: If the user calls out that you used Bash instead of an MCP tool, that is a directive to add a new rule to `.claude/hooks/enforce-mcp-first.sh` blocking that command pattern. Don't just apologize and switch — add the hook so it's a hard block for all future sessions. Advisory text in CLAUDE.md is not sufficient; only hooks enforce behavior.
+
 ## CRITICAL: Learn and Retain
 
 **When you discover the right approach to something, verify it works first, then capture it so it loads automatically next session.**

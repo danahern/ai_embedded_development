@@ -60,5 +60,15 @@ if echo "$COMMAND" | grep -qE '\bopenocd\b'; then
   deny "Use openocd-debug MCP tools instead of openocd."
 fi
 
+# docker exec — use linux-build MCP (run_command, kernel_rebuild, yocto_build, etc.)
+if echo "$COMMAND" | grep -qE '\bdocker\s+exec\b'; then
+  deny "Use linux-build MCP tools (run_command, kernel_rebuild, yocto_build, etc.) instead of docker exec."
+fi
+
+# docker cp — use linux-build MCP (collect_artifacts, list_artifacts, etc.)
+if echo "$COMMAND" | grep -qE '\bdocker\s+cp\b'; then
+  deny "Use linux-build MCP tools (collect_artifacts, list_artifacts) instead of docker cp."
+fi
+
 # Not blocked — allow
 exit 0

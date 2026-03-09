@@ -1,0 +1,44 @@
+id: k-848d775e-964a-448d-bce6-9d752209cd38
+title: BusyBox switch_root ignores init argument — use chroot instead
+body: |-
+  BusyBox `switch_root` on Yocto Scarthgap (BusyBox 1.36.x) ignores the explicit init argument and falls back to looking for `/init` (its default). Calling `exec switch_root /tmp/newroot /sbin/init` produces:
+
+  ```
+  switch_root: '/init' is not a regular file
+  Kernel panic - not syncing: Attempted to kill init!
+  ```
+
+  The fix is to use `exec chroot /tmp/newroot /sbin/init "$@"` instead. This works correctly — chroot changes root to the overlay and execs /sbin/init. The downside is the old root isn't cleaned up (stays mounted), but for cramfs rootfs this is harmless.
+
+  Verified working on Alif E7 AppKit with cramfs + overlayfs writable root.
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - busybox
+  - yocto
+  subsystems:
+  - rootfs
+  - init
+  - overlayfs
+file_patterns:
+- '**/preinit'
+- '**/overlayfs-dev/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- busybox
+- switch_root
+- chroot
+- overlayfs
+- cramfs
