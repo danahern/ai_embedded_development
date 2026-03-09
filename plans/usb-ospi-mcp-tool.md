@@ -1,6 +1,6 @@
 # Plan: Add USB OSPI Programming Tool to alif-flash MCP
 
-**Status:** In-Progress
+**Status:** Complete
 
 ## Context
 
@@ -179,9 +179,22 @@ No Bash calls, no manual cancellation needed.
 
 ## Verification
 
-- [ ] Unit tests pass (CRC, packet build, completion parsing)
-- [ ] Tool auto-detects CDC-ACM device (VID 0x0525)
-- [ ] Full XMODEM transfer completes and tool returns structured result
-- [ ] Tool returns promptly after "Success" message (doesn't hang on 'C')
-- [ ] Error cases handled: no device, no receiver ready, transfer failure
-- [ ] Normal boot restored and Linux boots after USB programming cycle
+- [x] Unit tests pass (CRC, packet build, completion parsing) — 47 tests, all passing
+- [x] Tool auto-detects CDC-ACM device (VID 0x0525) — fixed ioreg parser to traverse full tree
+- [x] Full XMODEM transfer completes and tool returns structured result — 12.1MB, 252.4s, 46.9 KB/s
+- [x] Tool returns promptly after "Success" message (doesn't hang on 'C') — confirmed
+- [x] Error cases handled: no device, no receiver ready, transfer failure — unit tested
+- [x] Normal boot restored and Linux boots after USB programming cycle — "Linux Hello World" on UART2
+
+## Bugs Found During Integration
+
+1. **Stale ATOC**: `jlink_flash` writes whatever AppTocPackage.bin exists. Must run `gen_toc` before each `jlink_flash` when switching between configs. Documented in CLAUDE.md and README.md.
+2. **CDC-ACM detection**: `ioreg -c IOUSBHostDevice` doesn't traverse deep enough — `IOCalloutDevice` is nested under `AppleUSBACMData > IOSerialBSDClient`. Fixed to use full `ioreg -l` traversal (commit `570d18a`).
+
+## Implementation Notes
+
+- `xmodem.py`: 366 lines, pure Python + pyserial
+- `test_xmodem.py`: 47 tests covering CRC, packets, completion parsing, CDC detection, send protocol, timeouts
+- `server.py`: Tool registration + `_ospi_program_usb` wrapper using `asyncio.to_thread`
+- Build script: `build-tfa.sh --usb-init` for USB programming mode TF-A variant
+- Full workflow documented in `firmware/linux/alif-e7/README.md` and `alif-flash/CLAUDE.md`
