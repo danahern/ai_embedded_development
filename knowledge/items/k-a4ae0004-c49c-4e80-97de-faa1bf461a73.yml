@@ -1,0 +1,60 @@
+id: k-a4ae0004-c49c-4e80-97de-faa1bf461a73
+title: jlink_flash with config now writes ATOC — bypasses SE-UART ISP entirely
+body: |-
+  ## Problem
+  `jlink_flash` with a config previously only wrote component images to MRAM, NOT the AppTocPackage.bin (ATOC). After NSRST reset, the SE processed the OLD ATOC and restored old images, overwriting JLink-written data. This made `jlink_flash` useless for changing boot configurations.
+
+  ## Fix (2026-03-08)
+  Updated `flash_from_config()` in `alif-flash/src/alif_flash/jlink.py` to:
+  1. Write 8KB erase pad of zeros below ATOC address (clears stale 'ccBS' magic)
+  2. Write `AppTocPackage.bin` to `system_mram_base - atoc_size` (0x8057xxxx for E7)
+  3. Write component images from config
+  4. Reset via NSRST — SE processes NEW ATOC
+
+  ATOC address calculation: `system_mram_base (0x80580000) - AppTocPackage.bin size`
+
+  ## Result
+  - `jlink_flash` is now a complete replacement for SE-UART ISP flash for MRAM configs
+  - No need for maintenance mode, no SE responsiveness issues
+  - Flash + reset in ~2 seconds (vs ~1 minute for SE-UART)
+  - Result includes `atoc` field with address and size
+
+  ## Impact on k-b4a4b26f
+  The old knowledge "NEVER use jlink_flash to update individual MRAM images" is now partially outdated. When using `jlink_flash` with a config (not image_dir), both ATOC and images are written atomically. The warning still applies to `jlink_flash` with image_dir (no config = no ATOC update).
+
+  ## Corrects Previous Issue
+  "JLink ATOC clearing: New JLink sessions zero the ATOC. Must write ATOC + reset in same session." — No longer an issue since ATOC is always written with images.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  - devkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink
+  - alif-flash
+  - jlink_flash
+  subsystems:
+  - flash
+  - mram
+  - atoc
+file_patterns:
+- '**/alif-flash/**/jlink.py'
+- '**/linux-boot-e7*.json'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- jlink
+- atoc
+- flash
+- mram
+- alif-flash
+- jlink_flash

@@ -1,0 +1,59 @@
+id: k-e453effa-faf5-4f7e-ba27-c35f237f254a
+title: SERVICES_set_run_cfg(USB_PHY_MASK) hangs SE when called from M55_HP — works from A32/TF-A
+body: |-
+  ## Problem
+  `SERVICES_set_run_cfg(USB_PHY_MASK)` called from M55_HP hangs the Secure Enclave. The SE ACKs the MHU message but never returns. No recovery except hard maintenance erase + power cycle.
+
+  ## Root Cause
+  The SE AIPM service for modifying the run profile (`SERVICE_POWER_SET_RUN_REQ_ID = 311`) apparently has a dependency on being called from the A32 core's MHU channel. When called from M55_HP's MHU, the SE enters a deadlock.
+
+  ## Solution: Split Architecture
+  - **A32/TF-A** (`bl32-usbinit.bin`): Calls `service_enable_usb_phy()` via SE AIPM — safe from A32. Then parks in WFE loop (prevents BL33 jump during programming).
+  - **M55_HP** (flasher firmware): Does direct register writes for USB clocks (CGU bits 21-23, PERIPH_CLK_ENA) and PHY registers (VBAT_PWR_CTRL, CLKCTL_USB_CTRL2). No SE service calls.
+
+  Both are included in a programming-mode ATOC config (`linux-boot-e7-ospi-usbflash.json`).
+
+  ## Build
+  TF-A USB-init variant built with `USB_INIT_HALT=1` flag:
+  ```
+  make ... USB_INIT_HALT=1 bl32
+  ```
+  The `#if USB_INIT_HALT` block in `sp_min_main.c` calls `service_enable_usb_phy()` then parks A32 in `while(1) { wfe; }`.
+
+  ## Correction to Prior Knowledge
+  Knowledge item k-430c6af7 states "The SE AIPM approach does NOT work — causes boot hang." This is WRONG — AIPM works from A32/TF-A. It only hangs when called from M55_HP. The stale item k-9b281e73 also describes this pattern correctly but doesn't mention the M55_HP restriction.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  - devkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - alif-flash
+  subsystems:
+  - usb
+  - aipm
+  - tfa
+  - se-service
+  - mhu
+file_patterns:
+- '**/sp_min_main.c'
+- '**/services.c'
+- '**/platform.mk'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- usb-phy
+- aipm
+- se-hang
+- m55-hp
+- tfa
+- split-architecture
