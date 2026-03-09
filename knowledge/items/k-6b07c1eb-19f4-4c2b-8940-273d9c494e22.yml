@@ -1,0 +1,46 @@
+id: k-6b07c1eb-19f4-4c2b-8940-273d9c494e22
+title: gen_toc MUST be run before jlink_flash when switching ATOC configs
+body: |-
+  AppTocPackage.bin is a shared file in `tools/setools/build/`. `jlink_flash(config=...)` writes whatever AppTocPackage.bin currently exists — it does NOT regenerate it. If you flash config A then switch to config B without running `gen_toc(config B)` first, the SE processes config A's ATOC and boots the wrong firmware.
+
+  **Symptom**: Board boots wrong firmware (e.g., programming mode instead of Linux, or vice versa). M55_HP VTOR stays at 0x00000000 (SERAM), never jumps to application code.
+
+  **Fix**: Always call `gen_toc()` immediately before `jlink_flash()` when switching configs:
+  ```
+  gen_toc(config="build/config/linux-boot-e7-ospi-usbflash.json")
+  jlink_flash(config="build/config/linux-boot-e7-ospi-usbflash.json")
+  ```
+
+  This was discovered when the USB programming mode ATOC (5232 bytes) was overwritten by a normal boot gen_toc (12304 bytes). The SE processed the wrong ATOC and M55_HP never booted the flasher firmware.
+category: operational
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools:
+  - jlink_flash
+  - gen_toc
+  - alif-flash
+  subsystems:
+  - flash
+  - atoc
+file_patterns:
+- '**/alif-flash/**'
+- '**/setools/**/*.json'
+- '**/config/*.json'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- atoc
+- gen_toc
+- jlink_flash
+- stale-artifact
+- alif-e7

@@ -1,0 +1,40 @@
+id: k-510fa878-fac5-4e1d-873a-c2ee61eebc62
+title: macOS ioreg CDC-ACM detection requires full tree traversal
+body: |-
+  `ioreg -r -c IOUSBHostDevice -l` does NOT traverse deep enough to find `IOCalloutDevice` for CDC-ACM devices. The `IOCalloutDevice` property (e.g., `/dev/cu.usbmodem12001`) lives on a deeply nested `IOSerialBSDClient` object under `AppleUSBACMData`, while `idVendor` lives on the parent `IOUSBHostDevice`. A simple line-by-line parser matching `idVendor` and `IODialinDevice`/`IOCalloutDevice` in the same block will never find CDC-ACM devices.
+
+  **Fix**: Use `ioreg -l` (full tree) and track the most recent `idVendor` seen as you scan. Match `IOCalloutDevice` lines that contain `usbmodem` to inherit the ancestor's VID.
+
+  **Verified mapping**:
+  - `/dev/cu.usbmodem12001` → VID 0x0525 (Alif DWC3 CDC-ACM, product "Devkit")
+  - `/dev/cu.usbmodem0012193076991` → VID 0x1366 (J-Link VCOM)
+
+  Note: `ioreg -l` output is larger (~10s timeout recommended vs 5s for `-c IOUSBHostDevice`).
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - ioreg
+  - alif-flash
+  subsystems:
+  - usb
+  - cdc-acm
+file_patterns:
+- '**/xmodem.py'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- macos
+- ioreg
+- cdc-acm
+- usb
+- device-detection
