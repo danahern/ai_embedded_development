@@ -1,0 +1,43 @@
+id: k-50186995-43d8-447a-b9b7-f0684b2035f6
+title: 'Alif E7: clk_disable_unused() hangs with Yocto DTB — requires clk_ignore_unused'
+body: |-
+  The Yocto-built DTB for Alif E7 causes the kernel to hang at `clk: Disabling unused clocks` during boot. The kernel's `clk_disable_unused()` tries to disable clocks with no consumers, and this triggers communication via the broken MHU→SE host services chain, causing a deadlock.
+
+  **Root cause:** When clock/PHY properties are removed from DTS nodes (e.g., DWC3 USB `/delete-property/ clocks`), those clocks lose their consumer references. The kernel clock framework sees them as unused and tries to disable them. The Alif clock driver (`psclks`) attempts to communicate with the SE via MHU to gate the clocks, but the MHU→SE chain doesn't work reliably, causing a silent hang.
+
+  **Symptom:** Boot output stops after `clk: Disabling unused clocks` — no crash, no panic, just silence. The CPU hangs waiting for a response from SE.
+
+  **Fix:** Add `clk_ignore_unused` to kernel bootargs. This tells the kernel to skip `clk_disable_unused()` entirely. With this parameter, boot output shows `clk: Not disabling unused clocks` and proceeds normally.
+
+  **Why known-working DTB didn't hang:** The Alif SDK DTB keeps clock properties on all nodes (even if drivers can't use them), so the clocks have consumers and aren't targeted by `clk_disable_unused()`.
+
+  **Long-term fix:** Get the MHU→SE→clock chain working end-to-end, then remove `clk_ignore_unused`.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - clock
+  - mhu
+  - usb
+file_patterns:
+- '**/appkit-e7.dts'
+- '**/ensemble-ex.dtsi'
+- '**/devkit_ex_dct_defines.h'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- clk_ignore_unused
+- boot-hang
+- dwc3
+- yocto-dtb

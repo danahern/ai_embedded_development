@@ -1,0 +1,55 @@
+id: k-7454d1fd-d7f6-454e-abe6-1bb1e7ae1e82
+title: 'Alif E7: SRAM1 firewall-protected by FC5 — A32 limited to SRAM0 (4MB)'
+body: |-
+  SRAM1 (starting at 0x02400000) is firewall-protected by Firewall Controller 5 (FC5) on the Alif E7. The A32 core (Master ID 0x01) cannot access SRAM1 addresses. Accessing 0x025FF000 triggers:
+
+  ```
+  Firewall exception from FC5, caused by Master ID 0x01 at address 0x025FF000
+  ```
+
+  This manifests as a kernel Prefetch Abort when the kernel tries to use SRAM1 memory.
+
+  **Impact on DTS memory layout:**
+  - `mem_stitch` SRAM region MUST be limited to 4MB (0x02000000, size 0x400000) = SRAM0 only
+  - Using 8MB (0x7DE000) or any size that reaches into SRAM1 causes a firewall exception and kernel crash
+  - The Yocto DCT tool's default `MEM_STITCH` calculation may include SRAM1 — must be overridden
+
+  **Known-working memory layout (appkit-e7.dts):**
+  ```dts
+  &mem_stitch {
+      reg = <0x02000000 0x400000 0x08010000 0x26f000>;
+      status = "okay";
+  };
+  ```
+  This gives: SRAM0 4MB + MRAM ~2.4MB. Combined with HyperRAM 32MB = ~38MB usable.
+
+  **The DCT tool bypass:** Hard-code `mem_stitch` reg directly in appkit-e7.dts rather than relying on DCT macros, which can compute wrong values based on HYPRAM_ONLY setting.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - memory
+  - firewall
+  - dts
+file_patterns:
+- '**/appkit-e7.dts'
+- '**/ensemble-ex.dtsi'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- sram1
+- firewall
+- fc5
+- memory-layout
+- prefetch-abort

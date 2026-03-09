@@ -1,0 +1,60 @@
+id: k-14724e28-c879-43a2-a717-107394c3e008
+title: 'Alif E7: DWC3 USB works with /delete-property/ workaround + devm_clk_get_optional'
+body: |-
+  The DWC3 USB controller on Alif E7 can be made to work by:
+
+  1. **DTS:** Remove clock/PHY dependencies from hsusb and dwc3 nodes:
+  ```dts
+  &hsusb {
+      /delete-property/ clocks;
+      /delete-property/ clock-names;
+      dwc3: usb@48200000 {
+          /delete-property/ phy;
+          /delete-property/ phy-names;
+      };
+  };
+  ```
+
+  2. **Driver:** Change `devm_clk_get()` to `devm_clk_get_optional()` in `dwc3-ensemble.c` with NULL checks on all clock usage paths (prepare/enable, disable/unprepare).
+
+  **Why this works:** TF-A's sp_min enables USB clocks before jumping to Linux:
+  - CGU CLK_ENA bits 21-23
+  - PERIPH_CLK_ENA = 0x11111113
+  - The ensemble glue driver's `power_control()` handles PHY power-on register writes directly
+
+  **Boot output when working:**
+  ```
+  alif-ensemble 48100000.ahb-b:dwc3@48200000: supply vdd33 not found, using dummy regulator
+  alif-ensemble 48100000.ahb-b:dwc3@48200000: supply vdd18 not found, using dummy regulator
+  ```
+  The dummy regulators are fine — TF-A already powered everything.
+
+  **CRITICAL:** Must also add `clk_ignore_unused` to bootargs or the removed clock references cause `clk_disable_unused()` to hang. See related knowledge item.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e7
+  chips:
+  - alif-e7
+  tools: []
+  subsystems:
+  - usb
+  - dwc3
+  - dts
+file_patterns:
+- '**/dwc3-ensemble.c'
+- '**/appkit-e7.dts'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- dwc3
+- usb-gadget
+- adb
+- devm_clk_get_optional
