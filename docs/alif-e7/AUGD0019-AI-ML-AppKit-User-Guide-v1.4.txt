@@ -1,0 +1,754 @@
+                              User Guide
+
+   AI/ML AppKit (AK-E7-AIML)
+
+                                Version 1.4
+
+
+
+
+User Guide                 www.alifsemi.com   Preliminary Information
+AUGD0019 v1.4 – May 2025
+                                                                                                                AI/ML AppKit User Guide
+
+Table of Contents
+Introduction .................................................................................................................................................. 3
+   Target Setup Requirements ...................................................................................................................... 3
+Verifying Configuration Jumpers .................................................................................................................. 4
+Booting the AppKit ........................................................................................................................................ 4
+Install Alif Security Toolkit ............................................................................................................................ 6
+Determining UART Port Assignments ........................................................................................................... 6
+   SETOOLS Port Discovery............................................................................................................................ 6
+   UART Errors ............................................................................................................................................... 7
+   Determining SEUART Port Assignment ..................................................................................................... 7
+Optional Connections ................................................................................................................................... 9
+   User UART COM Port Selection ................................................................................................................ 9
+   JTAG Debugger Connection: ................................................................................................................... 10
+   Display Side Camera Connection: ........................................................................................................... 10
+Major Components ..................................................................................................................................... 11
+Pre-Built Demos .......................................................................................................................................... 13
+Regulatory and Compliance Statements..................................................................................................... 14
+Legal and Support Information ................................................................................................................... 20
+   Disclaimers .............................................................................................................................................. 20
+   Related Documents and Tools ................................................................................................................ 20
+   Contact Information................................................................................................................................ 20
+Document History ....................................................................................................................................... 21
+
+
+
+
+ User Guide                                                                                                       Preliminary Information
+                                                                               2
+ AUGD0019 v1.3 – March 2024
+                                                                         AI/ML AppKit User Guide
+
+
+Introduction
+This user guide will take you through the steps of initial setup to power up the Ensemble AI/ML AppKit
+(Gen 2) and observe the factory facial detection model results on the display.
+
+We will then go through the possible options for setting up options for things such as access to one of
+the user UART ports of the device, where to connect a JTAG debugger, and how to use the optional
+camera position connector.
+
+The Ensemble AI/ML AppKit contains an Ensemble E7 device with a Cortex M55_HE high efficiency
+processor and a M55_HP high performance processor, both of which contain an Ethos U55 micro-NPU,
+or Neural Processor Unit, and two Cortex-A32 application processors. The M55_HE has a 128 MAC wide
+U55 NPU and the M55_HP has a 256 MAC wide U55 NPU associated with it.
+
+The E7 Family MCU device also contains large on-chip RAM and non-volatile memory, as well as analog
+and digital peripherals supporting wired connectivity. The range of computational performance, power
+efficiency, and their rich peripheral set make them suitable for a wide range of embedded IoT
+applications.
+Details of the E7 MCU architecture are discussed in the white paper “Fusion Processors System
+Architecture Introduction”.
+
+
+
+Target Setup Requirements
+        •   Ensemble AI/ML AppKit (Gen 2)
+        •   Micro-USB Cable (included in the kit)
+        •   Windows PC with terminal emulation software
+        •   JTAG debugger such as Segger J-Link or Arm ULINKpro (optional for program debugging)
+
+NOTE: Equipment is supplied by an external power source that meets limits of ES1 and PS1 according to
+IEC 62368-1.
+
+
+
+
+User Guide                                                                 Preliminary Information
+                                                    3
+AUGD0019 v1.3 – March 2024
+                                                                               AI/ML AppKit User Guide
+
+      Verifying Configuration Jumpers
+      Before powering up your AppKit, you should verify that the configuration jumpers are set as shown
+      below.
+                               J3 – 3.3V Current                       J4 – 1.8V Current
+
+
+
+
+                                                                                                              J6 (1-2) –
+                                                                                                           WIFI=Run mode
+
+
+                                                                                                             J5 (1-2) –
+J15-A & J15-B                                                                                              FLEXIO = 1.8V
+(1-3 and 2-4)
+  = SEUART
+
+
+
+
+                                                                                                              J11 (2-3) –
+                                                                                                            Camera LDO =
+                                                                                                                 2.6V
+
+
+
+
+      Booting the AppKit
+
+
+
+
+      To power your AppKit, connect a USB cable from your computer to the “PRG USB” micro-USB socket on
+      the board.
+
+
+       User Guide                                                                Preliminary Information
+                                                        4
+       AUGD0019 v1.3 – March 2024
+                                                                           AI/ML AppKit User Guide
+
+
+Upon powering the board, a boot message will be displayed and
+then the default face detection application will start with the
+message shown to the right.
+
+
+
+
+To start a continuous inference process, press the center of joystick SW2. Pressing it again will stop
+inferencing.
+
+
+
+
+User Guide                                                                  Preliminary Information
+                                                     5
+AUGD0019 v1.3 – March 2024
+                                                                              AI/ML AppKit User Guide
+
+Install Alif Security Toolkit
+The next step is to install the latest version of the Alif Security Toolkit (SETOOLS). Refer to the Alif
+Security Toolkit Quick Start Guide [click here] for installation instructions.
+
+The latest version of the Alif Security Toolkit is available from the Alif Semiconductor web site at:
+        Windows ZIP format: https://alifsemi.com/download/APFW0001
+        Linux tar format: https://alifsemi.com/download/APFW0002
+        MacOS tar format: https://alifsemi.com/download/APFW0003
+
+Your AI/ML AppKit has been provisioned at the factory with Version 1.0.86 firmware, so it is not
+necessary to update the device firmware before proceeding.
+
+
+Determining UART Port Assignments
+The AI/ML AppKit has a 2-channel USB UART adapter on the board. It is connected to the SEUART that is
+used by the SETOOLS applications to query device status and program images into the MRAM. The other
+channel can be connected to the SEUART or to the UART2 or UART4 user com ports on the E7 device..
+
+SETOOLS Port Discovery
+The first time you execute one of the SETOOLS scripts you will be prompted for the required serial port.
+When the ports are presented, just enter the port name and press [ENTER].
+
+This port data is saved in a local configuration file (isp_config_data.cfg). The next time a command is
+invoked and this configuration file is present, it will use the parameters from this file.
+
+To override this option simply use the -d option:
+This will force a re-discovery of the Serial ports.
+
+
+
+
+User Guide                                                                     Preliminary Information
+                                                       6
+AUGD0019 v1.3 – March 2024
+                                                                      AI/ML AppKit User Guide
+
+UART Errors
+There is only one SE-UART on the device. When running the SETOOLS, please ensure you have no other
+Tera term or putty sessions using the same SE-UART. The following shows the output if the SE-UART is
+already being used by another program:
+
+
+
+
+Determining SEUART Port Assignment
+
+The SEUART port will usually appear as the lowest
+numbered port available from the USB UART
+adapter chip on the board but depending on other
+USB port assignments in the system, it sometimes
+is the higher numbered port.
+
+With the SEUART connected to your PC, open a
+Windows command prompt and navigate to the
+SETOOLS Version 0.65.0 release directory.
+
+Run “maintenance -d” and select the lower
+numbered COM port.
+
+Then, from the available options in the
+maintenance program menu:
+        1. select “4 – Utilities”
+        2. select “1 – Terminal Mode”
+        3. press the RESET button
+
+
+
+
+User Guide                                                              Preliminary Information
+                                                    7
+AUGD0019 v1.3 – March 2024
+                                                                         AI/ML AppKit User Guide
+
+
+If you are connected to the SEUART port, you will see a log file as shown below.
+
+
+
+
+If you see no output, you should exit the maintenance program terminal mode by pressing Ctrl-C, then
+press RETURN twice to exit maintenance mode.
+
+Then rerun the process while selecting the higher numbered COM port and you should see the SEUART
+boot screen shown above. The tools will remember the last port selection used, so once you have the
+correct port for the SEUART you will not have to go back through port discovery.
+
+
+
+
+User Guide                                                                 Preliminary Information
+                                                    8
+AUGD0019 v1.3 – March 2024
+                                                                     AI/ML AppKit User Guide
+
+Optional Connections
+
+User UART COM Port Selection
+
+One of the two UART COM ports is always connected to the SEUART. This is usually the lower-numbered
+port. The other port can be selected to be connected to the SEUART or to either UART2 or UART4 user
+UARTs on the Alif E7 device by the jumpers on J15.
+If you need a user UART setting for your application, use the jumper settings shown below to select
+either UART2 or UART4 for your user serial port.
+
+
+
+
+               SEUART
+
+
+
+
+               UART2 (option 1)                              UART2 (option 2)
+
+
+
+
+                   UART4
+
+
+
+
+User Guide                                                            Preliminary Information
+                                                 9
+AUGD0019 v1.3 – March 2024
+                                                                       AI/ML AppKit User Guide
+
+JTAG Debugger Connection:
+
+If you are doing program development and need to do interactive debugging, you can connect a
+debugger such as the Segger J-Link or Arm ULINKpro to the 19-pin JTAG connector J17. That connector is
+on the component of the board near the RESET button. The keyway for the tab on the JTAG connector is
+on the side of the connector closest to the display.
+
+
+
+
+Display Side Camera Connection:
+
+For applications requiring a display-side camera that
+views towards the person holding the board, there is
+an alternate camera connector on the display side of
+the board.
+
+You can remove the camera from the back-side
+“viewfinder mode” connector and plug it into the
+front side connector.
+
+The two connectors are wired in parallel and only
+one camera can be connected to the board at one time.
+
+
+
+You have now updated your internal system image and can proceed with design and debug.
+
+A complete step-by-step tutorial on doing bare metal design is available in the documents
+       “Getting Started with VS Code, GCC, & J-Link Using CMSIS Toolbox (Gen 2)” [click here] or
+       “Getting Started With Bare Metal Design Using Keil MDK (Gen 2)” [click here]
+
+
+
+
+User Guide                                                               Preliminary Information
+                                                   10
+AUGD0019 v1.3 – March 2024
+                                                                               AI/ML AppKit User Guide
+
+
+
+       Major Components
+
+                      WIFI/BLE                                 PDM Mic
+I2S Mic (x2)
+
+                                                                                                           RGB LEDs
+Audio CODEC
+
+
+ OSPI Flash                                                                                                 OSPI RAM
+                                                     ALIF E7
+“Power” LED                                          BGA194
+
+                                                                                                           Joystick Switch
+SOC “Device”
+    USB
+                                                                                                           Camera 1 Opt
+                                 ALIF E1
+Programming                      BGA194
+    USB                                                                                                      PDM Mic
+
+Cypress Bridge
+                                                   J-Link Enable                              Reset Switch
+   J-Link               J-Link LED                                     IMUs (x2)
+                                                       Switch
+  Switches
+
+                                       Figure 1A – Key Components (Top Side)
+
+
+
+
+                                                                                                          I2S Mic Port
+ PDM Mic Port                                                                                                 Hole
+    Hole
+
+
+                                                                                                      LCD Outline
+
+
+                                                                                                          JLINK E1
+  Camera 2 Opt                                                                                              JTAG
+
+                                                                                                      I2S Mic Port
+ PDM Mic Port                                                                                             Hole
+    Hole
+
+        User Guide                                                              Preliminary Information
+                                                         11
+        AUGD0019 v1.3 – March 2024
+                                                                           AI/ML AppKit User Guide
+
+
+                                    Figure 1B – Key Components (Bottom Side)
+
+
+
+                                                                                   WIFI Programming
+
+    UART Select
+     SE, U2, U4
+                                                                                                         Touch Flex
+
+3.5mm Headphone
+                                                                                                          LCD Flex
+                                                    ALIF E7
+                                                    BGA194
+
+
+   SOC “Device”
+       USB                                                                                               Camera 1
+                                                                                                          Option
+                                  ALIF E1
+                                  BGA194
+   Programming
+       USB
+                                                                                                         Target SOC
+                                                                                                           JTAG0
+                      JLink E1               Figure 2 – Connectors                   Target SOC
+                      SEUART                                                          SEUART
+
+
+
+
+           User Guide                                                          Preliminary Information
+                                                        12
+           AUGD0019 v1.3 – March 2024
+                                                                         AI/ML AppKit User Guide
+
+Pre-Built Demos
+There is an archive of pre-built demo images and the files necessary to create a loadable image for the
+AI/ML AppKit Gen 2. With these files, you can easily load demos for your AI/ML AppKit.
+
+The archive is available at https:/alifsemi.com/download/AAPK0002
+
+Download and open the archive and install the files according to the directions below.
+
+First, note where you installed your Alif Security Toolkit (SETOOLS). The recommended directory is
+C:\app-release-exec but it can be in another location. We will refer to that directory at <SETOOLS_root>.
+
+Open a file explorer window in <SETOOLS_root>
+
+Open the archive into another file explorer window.
+
+Copy all the files from the archive to <SETOOLS_root>. There will be 2 “.bat” batch files loaded into
+<SETOOLS_root>, 2 configuration “.json” files loaded into <SETOOLS_root>/build/config, and 2 image
+“.bin” files loaded into <SETOOLS_root>/build/images.
+
+To load a demo, open a command prompt window and go to the <SETOOLS>_root directory
+
+Execute the batch file for the desired demo according to the following table:
+       Batch File                                       Demo
+       ethos-u-alif_obj_detection_appkit.bat            Object detection (default factory app)
+       ethos-u-alif_img_class_appkit.bat                Object classification mobilenet-v2
+
+Prior to this, you should execute the SETOOLS command “maintenance -d” and select the COM port
+corresponding to the SEUART.
+
+
+
+
+User Guide                                                                 Preliminary Information
+                                                   13
+AUGD0019 v1.3 – March 2024
+                                                                      AI/ML AppKit User Guide
+
+Regulatory and Compliance Statements
+Federal Communications Commission (FCC) and ISED Canada Compliance Statements
+
+FCC
+
+Identification of product: AK-E7-AIML
+
+This device complies with Part 15(B) of the FCC Rules. Operation is subject to the following two
+conditions:
+(1) This device may not cause harmful interference, and
+(2) The device must accept any interference received, including interference that may cause
+undesired operation.
+
+Changes or modifications not expressly approved by the party responsible for compliance could
+void the user’s authority to operate the equipment.
+EMC
+Class B
+This equipment has been tested and found to comply with the limits for a Class B digital device,
+pursuant to part 15 of the FCC Rules. These limits are designed to provide reasonable protection
+against harmful interference in a residential installation. This equipment generates, uses and can
+radiate radio frequency energy and, if not installed and used in accordance with the instructions,
+may cause harmful interference to radio communications. However, there is no guarantee that
+interference will not occur in a particular installation. If this equipment does cause harmful
+interference to radio or television reception, which can be determined by turning the equipment
+off and on, the user is encouraged to try to correct the interference by one or more of the following
+measures:
+—Reorient or relocate the receiving antenna.
+—Increase the separation between the equipment and receiver.
+—Connect the equipment into an outlet on a circuit different from that to which the receiver is
+connected.
+—Consult the dealer or an experienced radio/TV technician for help.
+
+RF exposure safety
+
+This device complies with the FCC RF exposure limits and has been evaluated in compliance
+with portable/mobile exposure conditions.
+The equipment must be installed and operated and was evaluated with minimum distance of 20
+cm of the human body. This distance or greater is maintained by vehicle design and ensures
+compliance by normal use of the vehicle.
+
+
+
+
+ISED CANADA
+This device complies with Industry Canada License-exempt RSS standard(s). Operation is
+subject to the following two conditions:
+(1) This device may not cause harmful interference, and
+
+
+User Guide                                                             Preliminary Information
+                                                 14
+AUGD0019 v1.3 – March 2024
+                                                                         AI/ML AppKit User Guide
+
+(2) The device must accept any interference received, including interference that may cause
+undesired operation.
+
+Le présent appareil est conforme aux CNR d'Industrie Canada applicables aux appareils radio
+exempts de licence.L'exploitation est autorisée aux deux conditions suivantes:
+(1) l'appareil ne doit pas produire de brouillage, et,
+(2) l'utilisateur de l'appareil doit accepter tout brouillage radioélectrique subi, même si le brouillage
+est susceptible d'en compromettre le fonctionnement.
+
+Changes or modifications not expressly approved by the party responsible for compliance could
+void the user’s authority to operate the equipment.
+
+RF exposure safety
+This device complies with the ISED RF exposure limits and has been evaluated in compliance
+with portable exposure conditions.
+The equipment must be installed and operated and was evaluated with minimum distance of 20
+cm of the human body. This distance or greater is maintained by vehicle design and ensures
+compliance by normal use of the vehicle.
+CAN ICES-003
+Les changements ou modifications non expressément approuvés par la partie responsable de la
+conformité peuvent annuler le droit de l'utilisateur à utiliser l'équipement.
+
+Sécurité d'exposition aux RF
+Cet appareil est conforme aux limites d'exposition RF d'ISED et a été évalué conformément aux
+conditions d'exposition portable.
+L'équipement doit être installé et utilisé à une distance minimale de 20 cm du corps humain. Cette
+distance ou plus est maintenue par la conception du véhicule et assure la conformité par
+l'utilisation normale du véhicule.
+
+CAN NMB-003
+Cet appareil numérique de classe B est conforme à la norme canadienne NMB-003.
+
+
+
+
+User Guide                                                                Preliminary Information
+                                                   15
+AUGD0019 v1.3 – March 2024
+                                                               AI/ML AppKit User Guide
+
+
+CE Conformity
+
+
+
+
+Brand: Alif Semiconductor, Inc.
+Model: AK-E7-AIML
+WiFi 2.4
+Tx Power: 10 dBm
+Antenna Type: Integral Antenna
+Antenna Gain: -2.5 dBi
+BLE
+Tx Power: 10 dBm
+Antenna Type: Integral Antenna
+Antenna Gain: -2.5 dBi
+Warning
+ETSI EN 301 489-1 V2.2.3 (2019-11)
+ETSI EN 301 489-17 V3.2.6(2023-06) for Class B
+Warning: this device is compliant with Class B of
+ETSI EN 301 489-1 V2.2.3 (2019-11)
+ETSI EN 301 489-17 V3.2.6(2023-06)
+EN 300 328 V2.2.2 (2019-07)
+IEC 62368-1:2014 + COR1:2015 + COR2:2015
+EN 62368-1:2014 + AC:2015 + AC:2017-03 + A11:2017
+UNE EN 62368-1:2014 + AC:2015 + AC1:2015 + AC2:2015 + AC:2017-03 + A11:2017
+EN62311
+
+
+
+
+User Guide                                                       Preliminary Information
+                                                 16
+AUGD0019 v1.3 – March 2024
+                                                                 AI/ML AppKit User Guide
+
+
+RoHS Compliant
+DIRECTIVE 2011/65/EU OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 8 June
+2011
+DIRECTIVE (EU) 2017/2102 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 15
+November 2017 amending Directive 2011/65/EU on the restriction of the use of certain hazardous
+substances in electrical and electronic equipment
+
+
+
+
+User Guide                                                        Preliminary Information
+                                             17
+AUGD0019 v1.3 – March 2024
+                                                                                   AI/ML AppKit User Guide
+
+
+     Simplified DoFC
+български          С настоящото Alif Semiconductor, Inc. декларира, че този тип радиосъоръжение AK-E7-AIML е в
+BG                   съответствие с Директива 2014/53/ЕС. Цялостният текст на ЕС декларацията за съответствие може
+                     да се намери на следния интернет адрес: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Česky                Tímto Alif Semiconductor, Inc. prohlašuje, že typ rádiového zařízení AK-E7-AIML je v souladu se
+CS                   směrnicí 2014/53/EU. Úplné znění EU prohlášení o shodě je k dispozici na této internetové adrese:
+                     https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Dansk                Hermed erklærer Alif Semiconductor, Inc., at radioudstyrstypen AK-E7-AIML er i overensstemmelse med
+DA                   direktiv 2014/53/EU. EU-overensstemmelseserklæringens fulde tekst kan findes på følgende
+                     internetadresse: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Deutsch              Hiermit erklärt Alif Semiconductor, Inc., dass der Funkanlagentyp AK-E7-AIML 1 der Richtlinie
+DE                   2014/53/EU entspricht. Der vollständige Text der EU-Konformitätserklärung ist unter der folgenden
+                     Internetadresse verfügbar: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Greek                Με την παρούσα ο/η Alif Semiconductor, Inc., δηλώνει ότι ο ραδιοεξοπλισμός AK-E7-AIML πληροί την
+EL                   οδηγία 2014/53/ΕΕ. Το πλήρες κείμενο της δήλωσης συμμόρφωσης ΕΕ διατίθεται στην ακόλουθη
+                     ιστοσελίδα στο διαδίκτυο: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Eesti                Käesolevaga deklareerib Alif Semiconductor, Inc., et käesolev raadioseadme tüüp AK-E7-AIML vastab
+ET                   direktiivi 2014/53/EL nõuetele. ELi vastavusdeklaratsiooni täielik tekst on kättesaadav järgmisel
+                     internetiaadressil: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+English              Hereby, Alif Semiconductor, Inc. declares that the radio equipment type AK-E7-AIML is in compliance
+EN                   with Directive 2014/53/EU. The full text of the EU declaration of conformity is available at the following
+                     internet address: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Español              Por la presente, Alif Semiconductor, Inc. declara que el tipo de equipo radioeléctrico AK-E7-AIML es
+ES                   conforme con la Directiva 2014/53/UE. El texto completo de la declaración UE de conformidad está
+                     disponible en la dirección Internet siguiente: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Estonian             Käesolevaga deklareerib Alif Semiconductor, Inc., et käesolev raadioseadme tüüp AK-E7-AIML vastab
+ET                   direktiivi 2014/53/EL nõuetele. ELi vastavusdeklaratsiooni täielik tekst on kättesaadav järgmisel
+                     internetiaadressil: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Finnish              Alif Semiconductor, Inc. vakuuttaa, että radiolaitetyyppi AK-E7-AIML on direktiivin 2014/53/EU
+FI                   mukainen. EU-vaatimustenmukaisuusvakuutuksen täysimittainen teksti on saatavilla seuraavassa
+                     internetosoitteessa: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Français             Le soussigné, Alif Semiconductor, Inc., déclare que l'équipement radioélectrique du type AK-E7-AIML
+FE                   est conforme à la directive 2014/53/UE. Le texte complet de la déclaration UE de conformité est
+                     disponible à l'adresse internet suivante: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Croatian             Alif Semiconductor, Inc. ovime izjavljuje da je radijska oprema tipa AK-E7-AIML u skladu s Direktivom
+HR                   2014/53/EU. Cjeloviti tekst EU izjave o sukladnosti dostupan je na sljedećoj internetskoj adresi:
+                     https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Hungarian            Alif Semiconductor, Inc. igazolja, hogy a AK-E7-AIML típusú rádióberendezés megfelel a 2014/53/EU
+HU                   irányelvnek. Az EU-megfelelőségi nyilatkozat teljes szövege elérhető a következő internetes címen:
+                     https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Italiano             Il fabbricante, Alif Semiconductor, Inc., dichiara che il tipo di apparecchiatura radio AK-E7-AIML è
+IT                   conforme alla direttiva 2014/53/UE. Il testo completo della dichiarazione di conformità UE è disponibile
+                     al seguente indirizzo Internet: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Lietuvių             Aš, Alif Semiconductor, Inc., patvirtinu, kad radijo įrenginių tipas AK-E7-AIML atitinka Direktyvą
+LT                   2014/53/ES. Visas ES atitikties deklaracijos tekstas prieinamas šiuo interneto adresu:
+                     https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Latvian              Ar šo Alif Semiconductor, Inc. deklarē, ka radioiekārta AK-E7-AIML atbilst Direktīvai 2014/53/ES. Pilns ES
+LV                   atbilstības deklarācijas teksts ir pieejams šādā interneta vietnē: https://alifsemi.com/support/kits/ai-ml-
+                     appkit-gen-2/
+
+
+
+
+        User Guide                                                                   Preliminary Information
+                                                           18
+        AUGD0019 v1.3 – March 2024
+                                                                                    AI/ML AppKit User Guide
+
+Malti                 B'dan, Alif Semiconductor, Inc., niddikjara li dan it-tip ta' tagħmir tar-radju AK-E7-AIML huwa konformi
+MT                    mad-Direttiva 2014/53/UE. It-test kollu tad-dikjarazzjoni ta' konformità tal-UE huwa disponibbli f'dan l-
+                      indirizz tal-Internet li ġej: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Nederlands            Hierbij verklaar ik, Alif Semiconductor, Inc., dat het type radioapparatuur AK-E7-AIML conform is met
+NL                    Richtlijn 2014/53/EU. De volledige tekst van de EU-conformiteitsverklaring kan worden geraadpleegd op
+                      het volgende internetadres: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Polski                Alif Semiconductor, Inc. niniejszym oświadcza, że typ urządzenia radiowego AK-E7-AIML jest zgodny z
+PL                    dyrektywą 2014/53/UE. Pełny tekst deklaracji zgodności UE jest dostępny pod następującym adresem
+                      internetowym: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Português             O(a) abaixo assinado(a) Alif Semiconductor, Inc. declara que o presente tipo de equipamento de rádio
+PT                    AK-E7-AIML está em conformidade com a Diretiva 2014/53/UE. O texto integral da declaração de
+                      conformidade está disponível no seguinte endereço de Internet: https://alifsemi.com/support/kits/ai-
+                      ml-appkit-gen-2/
+Romanian              Prin prezenta, Alif Semiconductor, Inc. declară că tipul de echipamente radio AK-E7-AIML este în
+RO                    conformitate cu Directiva 2014/53/UE. Textul integral al declarației UE de conformitate este disponibil la
+                      următoarea adresă internet: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Slovensky             Alif Semiconductor, Inc. týmto vyhlasuje, že rádiové zariadenie typu AK-E7-AIML je v súlade so
+SK                    smernicou 2014/53/EÚ. Úplné EÚ vyhlásenie o zhode je k dispozícii na tejto internetovej adrese:
+                      https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Slovensko             Alif Semiconductor, Inc. potrjuje, da je tip radijske opreme AK-E7-AIML skladen z Direktivo 2014/53/EU.
+SL                    Celotno besedilo izjave EU o skladnosti je na voljo na naslednjem spletnem naslovu:
+                      https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Swedish               Härmed försäkrar Alif Semiconductor, Inc. att denna typ av radioutrustning AK-E7-AIML
+SV                    överensstämmer med direktiv 2014/53/EU. Den fullständiga texten till EU-försäkran om
+                      överensstämmelse finns på följande webbadress: https://alifsemi.com/support/kits/ai-ml-appkit-gen-
+                      2/
+Icelandic             Hér með lýsir Alif Semiconductor, Inc. yfir því að AK-E7-AIML er í samræmi við grunnkröfur og aðrar
+                      kröfur, sem gerðar eru í tilskipun 2014/53/EU. Allur texti samræmisyfirlýsingar ESB er að finna á
+                      eftirfarandi netfangi: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+Norway                Alif Semiconductor, Inc. erklærer herved at utstyret AK-E7-AIML er i samsvar med de grunnleggende
+                      krav og øvrige relevante krav i direktiv 2014/53/EU. Den fulle teksten til EU-samsvarserklæringen er
+                      tilgjengelig på følgende Internett-adresse: https://alifsemi.com/support/kits/ai-ml-appkit-gen-2/
+
+
+
+
+         User Guide                                                                   Preliminary Information
+                                                            19
+         AUGD0019 v1.3 – March 2024
+                                                                            AI/ML AppKit User Guide
+
+Legal and Support Information
+Disclaimers
+Legal Notice – Please Read
+Alif Semiconductor™ reserves the right, without notice, to alter, edit, update, make corrections, and
+improvements to Alif documentation and products at any time. It is the responsibility of customers to
+maintain the most current versions of documentation before making any purchases from Alif. The
+information found in this documentation is provided to purchasers solely for the purpose of enabling
+hardware and software implementation of Alif products.
+Alif neither takes any responsibility for, nor guarantees the appropriateness of, its products for a specific
+purpose. Customers accept the responsibility for the selection and incorporation of Alif products into
+their systems and Alif has no liability with respect thereto. ALIF ALSO DISCLAIMS ANY AND ALL LIABILITY
+WITH RESPECT THERETO, INCLUDING WITHOUT LIMITATION, DIRECT, CONSEQUENTIAL, INDIRECT,
+SPECIAL AND INCIDENTAL DAMAGES. ADDITIONALLY, ALIF DISCLAIMS AND EXCLUDES ALL WARRANTIES,
+WHETHER STATUTORY, EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTY OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT AND THOSE
+ARISING FROM COURSE OF DEALING AND USAGE OF TRADE.
+
+Alif Semiconductor and the Alif logo are trademarks of Alif. For more information about our trademarks
+please visit our website at https://alifsemi.com/legal/. The omission of any Alif trademark, product
+name or any other name from this list does not constitute a waiver of Alif's intellectual property rights.
+The recipient of this document does not have permission to copy, reprint, reproduce, duplicate, share,
+in any form, in whole or in part, unless prior written consent from Alif is obtained.
+
+Please contact an Alif representative at contact@alifsemi.com if you have any questions regarding the
+information in this document. Alif sells products according to standards terms and conditions of sales,
+which can be found at: https://alifsemi.com/legal/
+
+Related Documents and Tools
+◼  Alif Semiconductor device series-specific Hardware Reference Manual (HWRM)
+◼  Alif Semiconductor device series-specific Software Reference Manual (SWRM)
+◼ Alif Semiconductor device series-specific Datasheet
+For additional Alif Semiconductor technical documentation and software resources please visit:
+◼ User Guides & App Notes
+◼ Software & Tools
+For managing software configurations of device resources, power, pins, clocks, DMA requests,
+interrupts, and various other additional settings, refer to the Alif Conductor tool.
+
+Contact Information
+For more information visit our website Alif Semiconductor (www.alifsemi.com) or contact us:
+contact@alifsemi.com
+US HQ – Silicon Valley, CA
+7901 Stoneridge Drive, Suite 300
+Pleasanton, CA 94588
+
+
+
+
+User Guide                                                                   Preliminary Information
+                                                     20
+AUGD0019 v1.3 – March 2024
+                                                                     AI/ML AppKit User Guide
+
+
+
+
+Document History
+Version                                          Change Log
+  1.0     Initial public release for AI/ML AppKit Gen 2
+  1.1     Added instructions on downloading and installing pre-built demos
+  1.2     Minor text edits for clarity
+  1.3     Updated regulatory compliance statements
+
+
+
+
+User Guide                                                             Preliminary Information
+                                                21
+AUGD0019 v1.3 – March 2024
+

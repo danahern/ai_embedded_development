@@ -1,0 +1,97 @@
+                        Application Note
+
+  Power Measurement On the
+  Ensemble E8 DevKit (DK-E8)
+                          Version 1.0
+
+
+
+
+Application Note            www.alifsemi.com   Preliminary Information
+AAPN0042 January 2026
+                                                                Power Measurement On the Ensemble E8 DevKit
+
+Table of Contents
+Board Version................................................................................................................................................ 3
+Device Supplies ............................................................................................................................................. 3
+Power Measurement Points ......................................................................................................................... 3
+Board Modifications...................................................................................................................................... 4
+Document History ......................................................................................................................................... 5
+
+
+
+
+ Application Note                                                                                                            Preliminary Information
+                                                                              2
+ AAPN0042
+                                           Power Measurement On the Ensemble E8 DevKit
+
+
+
+Board Version
+This application note is applicable to the Ensemble E8 DevKit (DK-E8) Rev. A or Rev. B
+
+Device Supplies
+
+
+
+
+            Supply Name              Description
+            VDD_USB_3V3              Supply for USB PHY, 3.3V only
+            VDD_BUCK                 Supply for internal DC-DC
+            VDD_MAIN                 Supply for internal LDOs
+            VDD_IO_1V8               Supply for majority of IO pins, 1.8V only
+            VDD_IO_FLEX              Supply for subset of IO pins, 1.8V or 3.3V
+            VDD_BATT                 Supply for internal LDOs
+
+
+
+Power Measurement Points
+The DevKit has no shunt resistors so an ammeter or DMM with ammeter mode is required.
+JP1 allows you to measure VDD_USB_3V3. This supply is only relevant if the USB PHY is to be used,
+otherwise it can be left floating or tied to ground to reduce power.
+JP2 allows you to measure VDD_BUCK, VDD_MAIN, and VDD_BATT.
+JP3 allows you to measure VDD_IO_1V8.
+JP4 allows you to measure and configure VDD_IO_FLEX for 1.8V or 3.3V mode.
+JP5 should be kept in position 1-2 so that VDD_BATT is tied to BUCK and MAIN on JP2.
+
+
+Application Note                                                                   Preliminary Information
+                                                    3
+AAPN0042
+                                          Power Measurement On the Ensemble E8 DevKit
+
+Most power will be drawn through JP2 (BUCK+MAIN+BATT). This is the primary measuring point when
+evaluating the Ensemble MCU’s power modes.
+During heavy IO operations, there will be power drawn through JP3 (VDD_IO_1V8).
+
+Board Modifications
+The DK-E8 Rev. B does not have JP1 through JP4 installed in the factory, the jumpers are bypassed with
+cuttable shunts as shown in the schematic. Before measuring power on the DevKit through these
+jumpers, it is necessary to cut the traces on S4 through S7.
+At a minimum: Only cut S5 and measure current through JP2 (BUCK+MAIN+BATT).
+Optionally: Cut S6 and connect a second ammeter to JP3 (VDD_IO_1V8).
+When using USB: Cut S4 and measure USB PHY current through JP1 (VDD_USB_3V3).
+
+
+
+
+Application Note                                                                 Preliminary Information
+                                                   4
+AAPN0042
+                                   Power Measurement On the Ensemble E8 DevKit
+
+
+
+
+Document History
+Version                                Change Log
+  1.0     Initial public release
+
+
+
+
+Application Note                                              Preliminary Information
+                                         5
+AAPN0042
+

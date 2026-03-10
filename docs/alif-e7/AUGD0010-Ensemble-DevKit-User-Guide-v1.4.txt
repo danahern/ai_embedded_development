@@ -1,0 +1,726 @@
+                                  User Guide
+
+          Ensemble DevKit Gen 2
+
+                                    Version 1.4
+
+
+
+
+User Guide                     www.alifsemi.com
+AUGD0010 v1.4 - January 2025
+                                                                                                           Ensemble DevKit User Guide
+
+Table of Contents
+Introduction .................................................................................................................................................. 3
+   Target Setup Requirements ...................................................................................................................... 3
+DevKit Quick Start ......................................................................................................................................... 4
+   Check Board Jumpers ................................................................................................................................ 4
+   Powering The Board .................................................................................................................................. 5
+   Install Alif Security Toolkit ........................................................................................................................ 6
+   Determining UART Port Assignments ....................................................................................................... 6
+       SETOOLS Port Discovery........................................................................................................................ 6
+       UART Errors ........................................................................................................................................... 7
+   Determining SEUART Port Assignment ..................................................................................................... 7
+   Updating Device Firmware ....................................................................................................................... 8
+   Connecting a JTAG Debugger .................................................................................................................... 9
+Optional User UART Connections ............................................................................................................... 10
+Ensemble DevKit Key Components ............................................................................................................. 11
+Ensemble DevKit Connectors ...................................................................................................................... 12
+Ensemble DevKit Configuration Jumpers .................................................................................................... 13
+Regulatory Compliance Statements ........................................................................................................... 14
+   FCC .......................................................................................................................................................... 14
+   EMC ......................................................................................................................................................... 14
+   ISED CANADA .......................................................................................................................................... 14
+   RoHS Compliant ...................................................................................................................................... 15
+   Simplified DoFC ....................................................................................................................................... 16
+Legal and Support Information ................................................................................................................... 18
+   Disclaimers .............................................................................................................................................. 18
+   Related Documents and Tools ................................................................................................................ 18
+   Contact Information................................................................................................................................ 18
+   Trademarks ............................................................................................................................................. 19
+Document History ....................................................................................................................................... 19
+
+
+
+
+ User Guide
+                                                                                2
+ AUGD0010 v1.4 – January 2025
+                                                                     Ensemble DevKit User Guide
+
+
+Introduction
+This user guide will take you through the steps of initial setup to power up the Alif Semiconductor®
+Ensemble® Development Kit (DevKit) Gen 2 and observe the factory LED blinky application.
+
+We will then go through the possible options for setting up options for things such as access to one of
+the user UART ports of the device, where to connect a JTAG debugger, and how to use other optional
+signal connections.
+
+The Ensemble DevKit Gen 2 contains an Ensemble E7 device with Application Processor cores consisting
+of dual-core Arm Cortex®-A32 processors and Real Time Processor Cores consisting of Cortex-M55
+processors. The Real-Time Processor cores implement the Arm v8.1 instruction set, including Helium M-
+Profile Vector Extension (MVE).
+The Real Time Processor cores are:
+    ▪ High-Performance Arm Cortex-M55 (M55-HP) operating at up to 400 MHz with a 256 MAC wide
+        Ethos® U55 NPU
+    ▪   High-Efficiency Arm Cortex-M55 (M55-HE) operating at up to 160 MHz with a 128 MAC wide
+        Ethos® U55 NPU
+
+The Alif Semiconductor Ensemble family of Fusion Processors incorporate multiple CPU and NPU cores,
+large on-chip RAM and non-volatile memory, and analog and digital peripherals supporting wired
+connectivity. Their range of computational performance, power efficiency, and rich peripheral set make
+them suitable for a wide range of embedded IoT applications.
+Each CPU subsystem can execute code independently of others but may share a power domain and
+memory and peripherals can be shared between subsystems.
+
+Details of the E7 MCU architecture are discussed in the white paper “Fusion Processors System
+Architecture Introduction”.
+
+
+
+Target Setup Requirements
+        •   Ensemble DevKit Gen 2
+        •   Micro-USB Cable (included in the kit)
+        •   Windows PC with terminal emulation software
+        •   JTAG debugger such as Segger J-Link or Arm ULINKpro
+
+
+
+
+User Guide
+                                                    3
+AUGD0010 v1.4 – January 2025
+                                                                                  Ensemble DevKit User Guide
+
+       DevKit Quick Start
+
+       Check Board Jumpers
+
+       Before powering up your board, check the jumpers to ensure they are in the default positions as shown
+       in the diagram below.
+
+       A table of the jumper setting definitions is included at the end of this user guide.
+
+
+
+
+                 J24 – no shunt                     J5 – 3.3V Current                  J6 – 1.8V Current
+
+                                                                                                             J9 (1-2) –
+                                                                                                           SDFlash = 3.3V
+J25 – no shunt
+
+
+
+
+                                                                                                             J8 (1-2) –
+                                                                                                           FLEXIO = 1.8V
+J26-A & J26-B
+(3-5 and 4-6)                                                                                                 J31 –
+  = UART4                                                                                                    USB_3V3
+                                                                                                             Current
+
+
+                                                                                                             J19 (1-2) –
+                                                                                                           Camera LDO =
+                                                                                                                2.8V
+
+
+
+
+                                                                                                            J7 – no shunt
+
+
+
+                                     J13 (1-2) –
+                                  Click_IO = 1.8V
+
+
+
+                                     Figure 1 – Configuration Jumpers – Factory Default Settings
+
+
+
+
+        User Guide
+                                                                        4
+        AUGD0010 v1.4 – January 2025
+                                                                   Ensemble DevKit User Guide
+
+
+
+Powering The Board
+
+To power your DevKit, connect a USB cable from your computer to the “PRG USB” micro-USB socket on
+the board.
+
+
+Upon powering the board, the green power LED next to the Alif Semiconductor logo will illuminate and
+the factory default application will begin blinking the RGB LED near the lower edge of the board in an
+alternating red and green pattern.
+
+
+
+
+                                        RESET button
+
+
+
+
+User Guide
+                                                   5
+AUGD0010 v1.4 – January 2025
+                                                                         Ensemble DevKit User Guide
+
+
+Install Alif Security Toolkit
+
+The next step is to install the latest release of the Alif Security Toolkit (SETOOLS). Refer to the Alif
+Security Toolkit Quick Start Guide [click here] for installation instructions.
+
+You should download the latest version of the SETOOLS (the filename begins with “app-release-exec”)
+that is Version 1.0.0 or higher. It is available on the Ensemble DevKit Gen 2 page at
+https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+
+For example, version 1.0.0 for Windows is filename “app-release-exec-windows-SE_FW_1.0.0”.
+
+Determining UART Port Assignments
+
+The DevKit has a 2-channel USB UART adapter on the board. It is connected to the SEUART that is used
+by the SETOOLS applications to query device status and program images into the MRAM. The other
+channel can be connected to either the UART2 or the UART4 general-purpose UART ports of the
+Ensemble device.
+
+SETOOLS Port Discovery
+The first time you execute one of the SETOOLS scripts you will be prompted for the required serial port.
+When the ports are presented, just enter the port name and press [ENTER].
+
+This port data is saved in a local configuration file (isp_config_data.cfg). The next time a command is
+invoked and this configuration file is present, it will use the parameters from this file.
+
+To override this option simply use the -d option:
+This will force a re-discovery of the Serial ports.
+
+
+
+
+User Guide
+                                                       6
+AUGD0010 v1.4 – January 2025
+                                                                  Ensemble DevKit User Guide
+
+
+
+UART Errors
+There is only one SE-UART on the device. When running the SETOOLS, please ensure you have no other
+Tera term or putty sessions using the same SE-UART. The following shows the output if the SE-UART is
+already being used by another program:
+
+
+
+
+Determining SEUART Port Assignment
+
+The SEUART port will usually appear as the lowest
+numbered port available from the USB UART adapter
+chip on the board but depending on other USB port
+assignments in the system, it sometimes is the higher
+numbered port.
+
+With the SEUART connected to your PC, open a
+Windows command prompt and navigate to the
+SETOOLS release directory.
+
+Run “maintenance -d” and select the lower
+numbered COM port.
+
+Then, from the available options in the maintenance
+program menu:
+        1. select “4 – Utilities”
+        2. select “1 – Terminal Mode”
+        3. press the RESET button
+
+
+
+
+User Guide
+                                                   7
+AUGD0010 v1.4 – January 2025
+                                                                     Ensemble DevKit User Guide
+
+
+If you are connected to the SEUART port, you will see a log file as shown below.
+
+
+
+
+If you see no output, you should exit the maintenance program terminal mode by pressing Ctrl-C, then
+press RETURN twice to exit maintenance mode.
+
+Then rerun the process while selecting the higher numbered COM port and you should see the SEUART
+boot screen shown above. The tools will remember the last port selection used, so once you have the
+correct port for the SEUART you will not have to go back through port discovery.
+
+
+Updating Device Firmware
+
+To update the device firmware image, go to the top level SETOOLS directory for the version you just
+downloaded (the default location is C:\app-release-exec) and execute the command
+“updateSystemPackage”. The program will determine the correct baud rate and update your firmware.
+
+
+
+
+User Guide
+                                                    8
+AUGD0010 v1.4 – January 2025
+                                                                  Ensemble DevKit User Guide
+
+
+
+
+Connecting a JTAG Debugger
+
+JTAG debugger connections are available in the middle of the board near the lower edge. The picture
+below shows a Segger J-Link with 19-pin Cortex-M adapter connected to J16 on the DevKit which is the
+19-pin JTAG-0 connector.
+
+
+
+
+User Guide
+                                                  9
+AUGD0010 v1.4 – January 2025
+                                                                     Ensemble DevKit User Guide
+
+After you have updated your internal system image and connected your debugger, you can proceed
+with design and debug.
+
+A complete step-by-step tutorial on doing bare metal design using VSCode + GNU tools is available upon
+request from the Alif Semiconductor applications team.
+
+
+Optional User UART Connections
+If an example application you are going to use specifies the need for additional UART connections, the
+instructions below will show you how to connect to UART2 or UART4.
+
+When a micro-USB cable is plugged into the “PRG USB” port (the port closest to the corner of the
+board), power is applied to the board and there is access to 2 UART ports. One of these will be the
+SEUART that is used to access the Secure Enclave to get device status and to program application images
+into the non-volatile MRAM of the device. You determined how to select the SEUART port in a previous
+section.
+
+The other port is either the UART2 or UART4 general purpose peripheral port depending on jumper
+settings for header pins labeled “J26” just to the right of the “PRG USB” socket.
+
+Putting jumpers on the two pairs of pins closer to the center of the board selects UART4 which is the
+default selection, while putting jumpers on the two pairs of pins closer to the edge of the board selects
+UART2.
+
+
+        UART4 Selection (default)                                         UART2 Selection
+
+
+
+
+The SoC USB connector is connected directly to the USB peripheral output pins of the Ensemble E7 SoC
+device and can be used in program development.
+
+User Guide
+                                                    10
+AUGD0010 v1.4 – January 2025
+                                                                         Ensemble DevKit User Guide
+
+
+
+       Ensemble DevKit Key Components
+                                 I2S/PDM
+                             Microphone Ports
+                                                                               OSPI Flash
+                               OSPI HyperRAM
+
+                                                                                                         Click Board
+
+Programming                                                                                               SD Card
+    USB
+
+SOC “Device”                                                                                              Camera 1
+                                                               ALIF E7
+    USB                                                        BGA194
+
+ SOC “Host”                                                                                               Reset Swit
+    USB
+
+  Ethernet                                                                                               Joystick Switch
+
+
+                                                                                                           User Pot
+
+
+                                                                                                          RGB LEDs
+
+
+               “Power” LED              I2S/PDM
+                                                                                              JTAG0
+                                    Microphone Ports
+                                                                                            Connectors
+
+                                       Figure 2A – Key Components (Top Side)
+
+
+
+
+        User Guide
+                                                        11
+        AUGD0010 v1.4 – January 2025
+                                                                        Ensemble DevKit User Guide
+
+
+
+
+   I2S/PDM
+  Microphones
+
+
+    Camera 2
+                                                                                           LCD Display
+
+     Coin Cell
+    REMOVED
+
+      JTAG1
+
+                                                                                            LCD Touch
+   I2S/PDM
+  Microphones
+
+
+                                  Figure 2B – Key Components (Bottom Side)
+
+
+
+
+        Ensemble DevKit Connectors
+
+GPIO Headers                                                                                   Click Board
+     (4)
+                                                                                                 SD Card
+2.1mm DC Jack
+
+Programming                                                   ALIF E7
+    USB                                                       BGA194
+
+
+
+SOC “Device”
+    USB                                                                                         Camera 1
+                                                                                                 Option
+  SOC “Host”
+     USB
+
+  Ethernet                                                                                       JTAG0
+                                                                                               Connectors
+
+
+                                             Figure 3 – Connectors
+                                   See Figure 2B for Bottom Side Connectors
+
+
+
+        User Guide
+                                                     12
+        AUGD0010 v1.4 – January 2025
+                                                                  Ensemble DevKit User Guide
+
+Ensemble DevKit Configuration Jumpers
+        J5 – SOC 3.3V Current Measurement**
+        J6 – SOC 1.8V Current Measurement**
+        J7 – SOC Coin Cell (VBATT) Current Measurement
+        J8 – FLEXIO Voltage Selection
+                 Pin 1-2 FLEXIO = 1.8V **
+                 Pin 2-3 FLEXIO = 3.3V
+        J9 – SD Flash Card Voltage Selection
+                 Pins 1-2 SD Flash = 3.3V **
+                 Pins 2-3 SD Flash = 1.8V
+        J13 – Click Board and a Few Other GPIOs Voltage selection
+                 Pins 1-2 Click I/O = 1.8V **
+                 Pins 3-4 Click I/O = 3.3V
+                 Pins 5-6 Click I/O = 5.0V
+        J19 – MIPI Camera LDO Analog Voltage Selection
+                 Pins 1-2 Analog Voltage = 2.8V
+                 Pins 2-3 Analog Voltage = 2.6V **
+        J26 – UART Selection between SOC and Cypress UART / USB Bridge
+                 Pins 1-3 and 2-4 = UART2
+                 Pins 3-5 and 4-6 = UART4 **
+All Configuration Jumpers are male headers, 2.54mm pin spacing. Factory default settings are denoted
+with **.
+
+
+
+
+User Guide
+                                                 13
+AUGD0010 v1.4 – January 2025
+                                                                    Ensemble DevKit User Guide
+
+Regulatory Compliance Statements
+Federal Communications Commission (FCC) and ISED Canada Compliance Statements
+
+
+FCC
+
+Identification of product: DK-E7
+
+This device complies with Part 15(B) of the FCC Rules. Operation is subject to the following two
+conditions:
+(1) This device may not cause harmful interference, and
+(2) The device must accept any interference received, including interference that may cause
+undesired operation.
+
+Changes or modifications not expressly approved by the party responsible for compliance could
+void the user’s authority to operate the equipment.
+
+EMC
+Class B
+This equipment has been tested and found to comply with the limits for a Class B digital device,
+pursuant to part 15 of the FCC Rules. These limits are designed to provide reasonable protection
+against harmful interference in a residential installation. This equipment generates, uses and can
+radiate radio frequency energy and, if not installed and used in accordance with the instructions,
+may cause harmful interference to radio communications. However, there is no guarantee that
+interference will not occur in a particular installation. If this equipment does cause harmful
+interference to radio or television reception, which can be determined by turning the equipment
+off and on, the user is encouraged to try to correct the interference by one or more of the following
+measures:
+—Reorient or relocate the receiving antenna.
+—Increase the separation between the equipment and receiver.
+—Connect the equipment into an outlet on a circuit different from that to which the receiver is
+connected.
+—Consult the dealer or an experienced radio/TV technician for help.
+
+ISED CANADA
+
+This device complies with Industry Canada License-exempt RSS standard(s). Operation is
+subject to the following two conditions:
+(1) This device may not cause harmful interference, and
+(2) The device must accept any interference received, including interference that may cause
+undesired operation.
+
+Le présent appareil est conforme aux CNR d'Industrie Canada applicables aux appareils radio
+exempts de licence.L'exploitation est autorisée aux deux conditions suivantes:
+(1) l'appareil ne doit pas produire de brouillage, et,
+(2) l'utilisateur de l'appareil doit accepter tout brouillage radioélectrique subi, même si le brouillage
+est susceptible d'en compromettre le fonctionnement.
+
+
+User Guide
+                                                   14
+AUGD0010 v1.4 – January 2025
+                                                             Ensemble DevKit User Guide
+
+Changes or modifications not expressly approved by the party responsible for compliance could
+void the user’s authority to operate the equipment.
+
+CAN ICES-003
+Les changements ou modifications non expressément approuvés par la partie responsable de la
+conformité peuvent annuler le droit de l'utilisateur à utiliser l'équipement.
+
+CAN NMB-003
+Cet appareil numérique de classe B est conforme à la norme canadienne NMB-003.
+
+RoHS Compliant
+DIRECTIVE 2011/65/EU OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 8 June
+2011
+DIRECTIVE (EU) 2017/2102 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL of 15
+November 2017 amending Directive 2011/65/EU on the restriction of the use of certain hazardous
+substances in electrical and electronic equipment
+
+
+
+
+User Guide
+                                             15
+AUGD0010 v1.4 – January 2025
+                                                                               Ensemble DevKit User Guide
+
+
+        Simplified DoFC
+
+български             С настоящото Alif Semiconductor, Inc. декларира, че този тип радиосъоръжение DK-E7 е в
+BG                    съответствие с Директива 2014/53/ЕС. Цялостният текст на ЕС декларацията за съответствие може
+                      да се намери на следния интернет адрес: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Česky                 Tímto Alif Semiconductor, Inc. prohlašuje, že typ rádiového zařízení DK-E7 je v souladu se směrnicí
+CS                    2014/53/EU. Úplné znění EU prohlášení o shodě je k dispozici na této internetové adrese:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Dansk                 Hermed erklærer Alif Semiconductor, Inc., at radioudstyrstypen DK-E7 er i overensstemmelse med
+DA                    direktiv 2014/53/EU. EU-overensstemmelseserklæringens fulde tekst kan findes på følgende
+                      internetadresse: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Deutsch               Hiermit erklärt Alif Semiconductor, Inc., dass der Funkanlagentyp DK-E7 1 der Richtlinie 2014/53/EU
+DE                    entspricht. Der vollständige Text der EU-Konformitätserklärung ist unter der folgenden Internetadresse
+                      verfügbar: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Greek                 Με την παρούσα ο/η Alif Semiconductor, Inc., δηλώνει ότι ο ραδιοεξοπλισμός DK-E7 πληροί την οδηγία
+EL                    2014/53/ΕΕ. Το πλήρες κείμενο της δήλωσης συμμόρφωσης ΕΕ διατίθεται στην ακόλουθη ιστοσελίδα
+                      στο διαδίκτυο: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Eesti                 Käesolevaga deklareerib Alif Semiconductor, Inc., et käesolev raadioseadme tüüp DK-E7 vastab direktiivi
+ET                    2014/53/EL nõuetele. ELi vastavusdeklaratsiooni täielik tekst on kättesaadav järgmisel internetiaadressil:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+English               Hereby, Alif Semiconductor, Inc. declares that the radio equipment type DK-E7 is in compliance with
+EN                    Directive 2014/53/EU. The full text of the EU declaration of conformity is available at the following
+                      internet address: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Español               Por la presente, Alif Semiconductor, Inc. declara que el tipo de equipo radioeléctrico DK-E7 es conforme
+ES                    con la Directiva 2014/53/UE. El texto completo de la declaración UE de conformidad está disponible en la
+                      dirección Internet siguiente: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Estonian              Käesolevaga deklareerib Alif Semiconductor, Inc., et käesolev raadioseadme tüüp DK-E7 vastab direktiivi
+ET                    2014/53/EL nõuetele. ELi vastavusdeklaratsiooni täielik tekst on kättesaadav järgmisel internetiaadressil:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Finnish               Alif Semiconductor, Inc. vakuuttaa, että radiolaitetyyppi DK-E7 on direktiivin 2014/53/EU mukainen. EU-
+FI                    vaatimustenmukaisuusvakuutuksen täysimittainen teksti on saatavilla seuraavassa internetosoitteessa:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Français              Le soussigné, Alif Semiconductor, Inc., déclare que l'équipement radioélectrique du type DK-E7 est
+FE                    conforme à la directive 2014/53/UE. Le texte complet de la déclaration UE de conformité est disponible à
+                      l'adresse internet suivante: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Croatian              Alif Semiconductor, Inc. ovime izjavljuje da je radijska oprema tipa DK-E7 u skladu s Direktivom
+HR                    2014/53/EU. Cjeloviti tekst EU izjave o sukladnosti dostupan je na sljedećoj internetskoj adresi:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Hungarian             Alif Semiconductor, Inc. igazolja, hogy a DK-E7 típusú rádióberendezés megfelel a 2014/53/EU
+HU                    irányelvnek. Az EU-megfelelőségi nyilatkozat teljes szövege elérhető a következő internetes címen:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Italiano              Il fabbricante, Alif Semiconductor, Inc., dichiara che il tipo di apparecchiatura radio DK-E7 è conforme
+IT                    alla direttiva 2014/53/UE. Il testo completo della dichiarazione di conformità UE è disponibile al seguente
+                      indirizzo Internet: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Lietuvių              Aš, Alif Semiconductor, Inc., patvirtinu, kad radijo įrenginių tipas DK-E7 atitinka Direktyvą 2014/53/ES.
+LT                    Visas ES atitikties deklaracijos tekstas prieinamas šiuo interneto adresu:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Latvian               Ar šo Alif Semiconductor, Inc. deklarē, ka radioiekārta DK-E7 atbilst Direktīvai 2014/53/ES. Pilns ES
+LV                    atbilstības deklarācijas teksts ir pieejams šādā interneta vietnē:
+                      https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+
+
+        User Guide
+                                                            16
+        AUGD0010 v1.4 – January 2025
+                                                                                 Ensemble DevKit User Guide
+
+Malti                  B'dan, Alif Semiconductor, Inc., niddikjara li dan it-tip ta' tagħmir tar-radju DK-E7 huwa konformi mad-
+MT                     Direttiva 2014/53/UE. It-test kollu tad-dikjarazzjoni ta' konformità tal-UE huwa disponibbli f'dan l-indirizz
+                       tal-Internet li ġej: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Nederlands             Hierbij verklaar ik, Alif Semiconductor, Inc., dat het type radioapparatuur DK-E7 conform is met Richtlijn
+NL                     2014/53/EU. De volledige tekst van de EU-conformiteitsverklaring kan worden geraadpleegd op het
+                       volgende internetadres: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Polski                 Alif Semiconductor, Inc. niniejszym oświadcza, że typ urządzenia radiowego DK-E7 jest zgodny z
+PL                     dyrektywą 2014/53/UE. Pełny tekst deklaracji zgodności UE jest dostępny pod następującym adresem
+                       internetowym: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Português              O(a) abaixo assinado(a) Alif Semiconductor, Inc. declara que o presente tipo de equipamento de rádio
+PT                     DK-E7 está em conformidade com a Diretiva 2014/53/UE. O texto integral da declaração de
+                       conformidade está disponível no seguinte endereço de Internet:
+                       https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Romanian               Prin prezenta, Alif Semiconductor, Inc. declară că tipul de echipamente radio DK-E7 este în conformitate
+RO                     cu Directiva 2014/53/UE. Textul integral al declarației UE de conformitate este disponibil la următoarea
+                       adresă internet: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Slovensky              Alif Semiconductor, Inc. týmto vyhlasuje, že rádiové zariadenie typu DK-E7 je v súlade so smernicou
+SK                     2014/53/EÚ. Úplné EÚ vyhlásenie o zhode je k dispozícii na tejto internetovej adrese:
+                       https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Slovensko              Alif Semiconductor, Inc. potrjuje, da je tip radijske opreme DK-E7 skladen z Direktivo 2014/53/EU.
+SL                     Celotno besedilo izjave EU o skladnosti je na voljo na naslednjem spletnem naslovu:
+                       https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Swedish                Härmed försäkrar Alif Semiconductor, Inc. att denna typ av radioutrustning DK-E7 överensstämmer med
+SV                     direktiv 2014/53/EU. Den fullständiga texten till EU-försäkran om överensstämmelse finns på följande
+                       webbadress: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Icelandic              Hér með lýsir Alif Semiconductor, Inc. yfir því að DK-E7 er í samræmi við grunnkröfur og aðrar kröfur,
+                       sem gerðar eru í tilskipun 2014/53/EU. Allur texti samræmisyfirlýsingar ESB er að finna á eftirfarandi
+                       netfangi: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+Norway                 Alif Semiconductor, Inc. erklærer herved at utstyret DK-E7 er i samsvar med de grunnleggende krav og
+                       øvrige relevante krav i direktiv 2014/53/EU. Den fulle teksten til EU-samsvarserklæringen er tilgjengelig
+                       på følgende Internett-adresse: https://alifsemi.com/support/kits/ensemble-devkit-gen2/
+
+
+
+
+         User Guide
+                                                              17
+         AUGD0010 v1.4 – January 2025
+                                                                       Ensemble DevKit User Guide
+
+Legal and Support Information
+Disclaimers
+Legal Notice – Please Read
+Alif Semiconductor™ reserves the right, without notice, to alter, edit, update, make corrections, and
+improvements to Alif documentation and products at any time. It is the responsibility of customers to
+maintain the most current versions of documentation before making any purchases from Alif. The
+information found in this documentation is provided to purchasers solely for the purpose of enabling
+hardware and software implementation of Alif products.
+Alif neither takes any responsibility for, nor guarantees the appropriateness of, its products for a specific
+purpose. Customers accept the responsibility for the selection and incorporation of Alif products into
+their systems and Alif has no liability with respect thereto. ALIF ALSO DISCLAIMS ANY AND ALL LIABILITY
+WITH RESPECT THERETO, INCLUDING WITHOUT LIMITATION, DIRECT, CONSEQUENTIAL, INDIRECT,
+SPECIAL AND INCIDENTAL DAMAGES. ADDITIONALLY, ALIF DISCLAIMS AND EXCLUDES ALL WARRANTIES,
+WHETHER STATUTORY, EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTY OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT AND THOSE
+ARISING FROM COURSE OF DEALING AND USAGE OF TRADE.
+
+Alif Semiconductor and the Alif logo are trademarks of Alif. For more information about our trademarks
+please visit our website at https://alifsemi.com/legal/. The omission of any Alif trademark, product
+name or any other name from this list does not constitute a waiver of Alif's intellectual property rights.
+The recipient of this document does not have permission to copy, reprint, reproduce, duplicate, share,
+in any form, in whole or in part, unless prior written consent from Alif is obtained.
+
+Please contact an Alif representative at contact@alifsemi.com if you have any questions regarding the
+information in this document. Alif sells products according to standards terms and conditions of sales,
+which can be found at: https://alifsemi.com/legal/
+
+Related Documents and Tools
+◼  Alif Semiconductor device series-specific Hardware Reference Manual (HWRM)
+◼  Alif Semiconductor device series-specific Software Reference Manual (SWRM)
+◼ Alif Semiconductor device series-specific Datasheet
+For additional Alif Semiconductor technical documentation and software resources please visit:
+◼ User Guides & App Notes
+◼ Software & Tools
+For managing software configurations of device resources, power, pins, clocks, DMA requests,
+interrupts, and various other additional settings, refer to the Alif Conductor tool.
+
+Contact Information
+For more information visit our website Alif Semiconductor (www.alifsemi.com) or contact us:
+contact@alifsemi.com
+US HQ – Silicon Valley, CA
+7901 Stoneridge Drive, Suite 300
+Pleasanton, CA 94588
+
+
+
+
+User Guide
+                                                     18
+AUGD0010 v1.4 – January 2025
+                                                                 Ensemble DevKit User Guide
+
+Trademarks
+The Alif logo, Ensemble, and aiPM are trademarks of Alif Semiconductor. For additional information
+about Alif Semiconductor trademarks, refer to https://alifsemi.com/legal/.
+Arm, Cortex, CoreSight, TrustZone, AMBA, Thumb, and Ethos are registered trademarks or trademarks
+of Arm Limited (or its subsidiaries) in the US and/or elsewhere.
+Neon, and Helium are trademarks of Arm Limited (or its subsidiaries) in the US and/or elsewhere.
+Secure Digital and SD is a registered trademark of SD Card Association.
+Synopsys & DesignWare are registered trademarks of Synopsys, Inc.
+eMMC is trademarks of MultiMediaCard Association.
+All other product or service names are the property of their respective owners.
+
+
+
+
+Document History
+ Version                                       Change Log
+  V0.91    Pre-release copy
+  V1.0     Initial production release
+  V1.1     Added Regulatory Compliance Statements
+  V1.2     Updated screenshots and minor edits
+  V1.3     Edited Regulatory Compliance Statements
+  V1.4     Updated jumper and component diagrams
+
+
+
+
+User Guide
+                                                 19
+AUGD0010 v1.4 – January 2025
+

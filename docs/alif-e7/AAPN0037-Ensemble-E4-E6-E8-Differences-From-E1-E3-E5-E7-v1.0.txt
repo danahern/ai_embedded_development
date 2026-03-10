@@ -1,0 +1,143 @@
+                       Application Note
+
+      Ensemble E4, E6, E8
+Differences From E1, E3, E5, E7
+                         Version 1.0
+
+
+
+
+Application Note           www.alifsemi.com   Preliminary Information
+AAPN0037 August 2025
+                                                             Ensemble E4, E6, E8 Differences From E1, E3, E5, E7
+
+Table of Contents
+Functional Differences .................................................................................................................................. 3
+Security/firewalling notes ............................................................................................................................. 4
+Changes Covered by Alif drivers ................................................................................................................... 4
+Other ............................................................................................................................................................. 4
+Document History ......................................................................................................................................... 5
+
+
+
+
+ Application Note                                                                                                                 Preliminary Information
+                                                                                 2
+ AAPN0037
+                                      Ensemble E4, E6, E8 Differences From E1, E3, E5, E7
+
+
+
+Overview
+The Ensemble E4, E6, and E8 devices have some functional differences compared to the E1, E3, E5, and
+E7 devices. This document outlines the items that a designer should be aware of when doing a design
+for the E4, E6, or E8 devices and which ones are taken care of when using the Alif-provided Device
+Family Pack (DFP) drivers.
+
+Functional Differences
+   •   SRAM1 is now at 0x0240_0000 instead of 0x0800_0000
+          o For existing projects, the linker and device tree will need modifications
+   •   SRAM6-9 are removed
+          o RAM available at locations starting with 0x6 is not available
+          o Instead, use the additional 1.5MB in SRAM1
+
+   •   HCLK and PCLK are now derived from SYSPLL, not ACLK, so HCLK and PCLK will not slow when
+       the ACLK divider is increased.
+           o When configuring HCLK and PCLK frequencies, use new calculations for the divider as
+              provided in the HWRM.
+
+   •   There are several new CGU clock gates in the CLK_EN register. Most default to ON, a few like the
+       CLK_76M8 going to I2S and PDM blocks default to off.
+          o If not using the latest SDK, please check HWRM for clock enable requirements
+
+   •   OSPI IP has been updated to 2.01, and has some configuration changes:
+          o SSIC_XIP_EXT_SSEL_EN 0->1, meaning the XIP_SER register no longer exists, and there is
+               no manual control of slave select lines. Access to XIP_SER will fault. Slave selection is
+               now performed on the basis of bit 28 of the address, so 0xA/C0000000 selects slave 0,
+               and 0xB/D0000000 selects slave 1.
+                   ▪ When working with multiple slave devices connected to the same OSPI instance,
+                       use a designated address window to select between them
+          o XIP_WRITE_CTRL now has a new bit XIPWR_DFS_HC, and hard-coded DFS support now
+               works for writes as well as reads. This defaults to on.
+                   ▪ When working with external RAM, use these new registers to improve
+                       compatibility
+          o Unaligned, narrow, and sparse writes to DDR memory now work correctly, due to
+               upgrades of the SSI, and the insertion of an XHB-500 bridge, as long as
+               XIP_WRITE_CTRL.XIPWR_DFS_HC and XIP_CTRL.DFS_HC are both set.
+                   ▪ Use of external RAM as general-purpose memory and shared memory between
+                       multiple bus masters is now supported
+
+   •   The function indexes of pin P5_6 have shifted down by 1.
+           o When configuring pin mux for pin P5_6 use the updated definition for the new device
+
+
+
+
+Application Note                                                                 Preliminary Information
+                                                  3
+AAPN0037
+                                       Ensemble E4, E6, E8 Differences From E1, E3, E5, E7
+
+Security/firewalling notes
+   •   Extra memory aliases exist, such as OSPI0 at 0x2000_0000. These could defeat the pre-existing
+       firewall configuration. All of them can be disabled - the intent is that this should be possible via
+       SERAM device config JSON settings.
+           o This excludes M55.
+           o When working with external memory over OSPI, ensure your firewall configuration
+                covers the new address in the 0x2000_0000 range.
+
+
+Changes Covered by Alif drivers
+   •   I2C has a configuration option IC_EMPTYFIFO_HOLD_MASTER_EN, which means STOP and
+       RESTART indications must be written into the transmit FIFO.
+           o Additional I2C capabilities - user can decide whether a STOP or RESTART condition is
+               issued as the transaction goes on
+
+   •   OSPI clock gating that was in the MRAM controller register spacing is now in CFGMST0 at
+       0x4902_F03C. Again, not in the Bolt HWRM. The gating is not enabled by default, different from
+       Bolt.
+           o When not using Alif SDK (CMSIS or Zephyr) use the new clock enable register for OSPI at
+               0x4902_F03C
+
+
+Other
+   •   Performance will be noticeably different, mainly from things being faster. No significant
+       performance losses are expected. Differences will be:
+           o Faster MRAM
+           o Full duplex SRAM access (combined read+write to 1 SRAM could not exceed 3.2GB/s in
+              Ensemble E1, E3, E5 and E7 - it can approach 6.4GB/s in Ensemble E4, E6, and E8).
+           o Faster M55->M55 TCM access
+           o Possibly slightly higher SRAM latency due to 200MHz clock
+           o Higher SPI latency due to clock domain crossing
+           o Higher power when running faster
+
+   •   Access to addresses that belong to clock-gated areas will result in a bus fault, whereas on earlier
+       devices, you just read zeroes.
+   •   The registers for the following are at different addresses. Please refer to the HWRM
+           o ADC
+           o DAC
+           o CMP
+           o LPCMP
+           o BOD / BOR
+
+
+
+
+Application Note                                                                     Preliminary Information
+                                                    4
+AAPN0037
+                                     Ensemble E4, E6, E8 Differences From E1, E3, E5, E7
+
+
+
+Document History
+Version                                         Change Log
+  1.0   initial release to the public should be version 1.0
+
+
+
+
+Application Note                                                      Preliminary Information
+                                                  5
+AAPN0037
+

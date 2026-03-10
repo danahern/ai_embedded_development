@@ -1,0 +1,442 @@
+                           User Guide
+
+   Ensemble E8 DevKit (DK-E8)
+                           Version 1.0
+
+
+
+
+User Guide                  www.alifsemi.com
+AUGD0023 – February 2026
+                                                                                            Ensemble E8 DevKit (DK-E8)
+Table of Contents
+Introduction: ................................................................................................................................................. 3
+Hardware Setup: ........................................................................................................................................... 3
+Connecting Power to the Board.................................................................................................................... 4
+Determining UART Port Assignments ........................................................................................................... 4
+   SETOOLS Port Discovery............................................................................................................................ 4
+   UART Errors............................................................................................................................................ 5
+Software: ....................................................................................................................................................... 5
+   SETOOLS v1.109.000 ................................................................................................................................. 5
+   Install Visual Studio Code and The Alif Project Template ......................................................................... 6
+Key Components ........................................................................................................................................... 8
+Connectors .................................................................................................................................................. 9
+Configuration Jumpers ................................................................................................................................ 11
+Measuring DK-E8 DevKit Power .................................................................................................................. 12
+Generic Header Test Points ........................................................................................................................ 13
+Document History ....................................................................................................................................... 14
+
+
+
+
+ User Guide
+                                                                                2
+ AUGD0023
+                                                                 Ensemble E8 DevKit (DK-E8)
+
+
+             Introduction:
+             The Ensemble E8 DevKit (DK-E8) is a cost-effective, single-board solution that brings
+             out all signals on the device to easily access pins for power and performance profiling,
+             prototyping, and more. The DevKit can develop designs for the E4, E6, or E8 series
+             MCU devices in the Ensemble family, with the superset E8 series device having two
+             Cortex-M55 CPU cores, two Ethos-U55 + one Ethos-U85 neural network processor
+             cores, and two Cortex-A32 MPU cores.
+
+
+             Hardware Setup:
+             Power to the board can come from the PRG USB or MCU USB USB-C connectors, but
+             for initial development, you should use the PRG USB port, so you have access to the
+             Secure Enclave using the SETOOLS over SEUART or an APP UART, based on
+             position of the selector switch SW4.
+
+             Verify that the option jumpers are set in the default positions as shown below.
+
+             CAUTION: Do not move, remove, or install jumpers with power applied to the
+             board.
+
+
+
+
+                                                                                                         JP5 (1-2) –
+                                                                                                        VBATT = Main
+
+
+
+
+   JP7 (3-4) –
+Click_IO = 3.3V
+
+
+
+
+                                           Figure 1 – Configuration Jumpers
+
+                  User Guide
+                                                          3
+                  AUGD0023
+                                                            Ensemble E8 DevKit (DK-E8)
+
+Connecting Power to the Board
+Power to the board is through the USB-C connector labeled PRG USB. It is located on the bottom side of
+the board in the corner (see below). Connect a USB-C cable from your computer to this connector. The
+picture on the right shows this connection from the top of the board.
+
+
+
+
+ When you apply power to the board, a green LED will illuminate next to the E1 device and the UART
+selection switch at SW4.
+
+Determining UART Port Assignments
+The Ensemble E8 DevKit has a USB-to-UART adapter on-board. By default, This allows you to it is
+connected to the SEUART that is used by the SETOOLS applications to query device status and program
+images into the MRAM. It can also be connected to either the UART2 or UART4 user-app serial port on
+the E8 device by switching the position using an alternate switch setting of SW4.
+
+The optional UART port assignments are discussed in a later section.
+
+SETOOLS Port Discovery
+The first time you execute one of the SETOOLS functions, you will be prompted for the required serial
+port. When the ports are presented, just enter the port name and press [ENTER].
+
+This port data is saved in a local configuration file (isp_config_data.cfg). The next time a command is
+invoked and this configuration file is present, it will use the parameters from this file.
+
+
+User Guide
+                                                     4
+AUGD0023
+                                                              Ensemble E8 DevKit (DK-E8)
+To override this setting, simply use the -d option:
+
+
+
+
+This will force a rediscovery of the Serial ports. If there are no other serial port devices plugged into your
+system, the COM port shown will be the DevKit port. If there are other COM ports shown, select the one
+that appears when you plug in the DevKit USB-C power cable.
+
+
+UART Errors
+There is only one SE-UART on the device. When running the SETOOLS, please ensure you have no other
+Tera term or Putty sessions using the same SE-UART. The following shows the output if the SE-UART is
+already being used by another program:
+
+
+
+
+Software:
+You will need to download specific versions of the Alif Security Toolkit (SETOOLS), CMSIS Device Family
+Pack (DFP), and the VS Code template for your Ensemble E8 DevKit.
+
+SETOOLS v1.109.000
+Go to the Alif Software & Tools page at https://alifsemi.com/support/software-tools/ensemble/
+and download the appropriate SETOOLS V1.109.000 archive for your platform to a directory on your
+local machine. This is a version of the SETOOLS that supports the Ensemble E4, E6, and E8 devices in
+addition to other Ensemble or Balletto devices.
+Point the tools to this folder for your development by editing the VS Code settings.json file entry for
+“alif.setools.root”.
+
+User Guide
+                                                      5
+AUGD0023
+                                                           Ensemble E8 DevKit (DK-E8)
+
+Open a terminal window in this SETOOLS directory and run “updateSystemPackage.exe -d”.
+Select the lowest-numbered COM port.
+When the tools are installed, they default to an Ensemble E8 device such as the one used on the DK-E8
+Ensemble DevKit, but if you have used this version of the tools on another board, the selected device
+might be different. If the tool detects the Ensemble E8 device on your board and asks if you want to set
+it as the default. Reply with “y”.
+
+
+
+
+Go to the Segger website and download the latest version of the Segger tools. Debugging designs on the
+E8 DevKit has been tested using SEGGER J-Link GDB server V8.88 and the VS Code setting.json file entry
+for “cortex-debug.JLinkGDBServerPath” should point to this new version. If you have version 8.42 or
+later of the Segger tools installed, running JLink.exe (J-Link Commander) should automatically detect if
+the firmware in the J-Link On-Board E1 device needs to be updated. You should perform this step before
+trying to program a new image into the device to ensure the proper serial port drivers are installed in
+the J-Link On-Board E1 device.
+
+
+Install Visual Studio Code and The Alif Project Template
+
+Begin by going to the Alif VS Code template at alif_vscode-template on the Alif Github site.
+This is a simple CMSIS-Pack-based example to set up and test a VS Code development environment for
+Alif Ensemble kits. For bug reports or questions, please use the ticket system on the alifsemi.com web
+page. Start with the README file, which references a longer Getting Started Guide.
+
+Once you have installed VS Code and the template, and have enabled Alif SE tools and J-link debugging
+support by adding the following entries to VS Code user settings.json (Press F1 and start typing 'User')
+       {
+          "alif.setools.root" : "C:/alif-se-tools/app-release-exec",
+          "cortex-debug.JLinkGDBServerPath": "C:/Program Files/SEGGER/JLink/JLinkGDBServerCL.exe"
+       }
+
+Make sure E8 is selected as the Active Target in the CMSIS Manage Solution menu. To access the CMSIS
+Manage Solution menu, select the CMSIS icon in the left column, then click the gear icon at the top of
+
+
+User Guide
+                                                    6
+AUGD0023
+                                                            Ensemble E8 DevKit (DK-E8)
+the CMSIS: ALIF column. Select “blinky” as the Active Project in the CMSIS Manage Solution menu and
+click on the Build (hammer) icon to build the solution.
+
+Go to the Segger website and download the latest version of the Segger tools. Debugging designs on the
+E8 DevKit has been tested using SEGGER J-Link GDB server V8.40 and the VS Code setting.json file entry
+for “cortex-debug.JLinkGDBServerPath” points to this new version. If you have version 8.42 or later of
+the Segger tools installed, running JLink.exe (J-Link Commander) from a command prompt should
+automatically detect if the firmware in the J-Link On-Board E1 device needs to be updated. You should
+perform this step before trying to program a new image into the device to ensure the proper serial port
+drivers are installed in the J-Link On-Board E1 device.
+
+To program the blinky application on the DK-E8 board, run Program with Security Toolkit (select COM
+port) VSCode Task.
+F1 -> Tasks:Run Task -> Program with Security Toolkit (select COM port)
+
+Select the appropriate COM port (this needs to be done only once. Subsequent times, you can run the
+Program with Security Toolkit VSCode task instead.
+
+With the default switch setting for SW4, the COM port connection will be to the SEUART. If it is desired
+to connect to a user UART, the other switch positions can select UART2 or UART4. The pictures below
+show the alternate UART selections.
+
+
+
+
+            SEUART                               UART2                            UART4
+
+If you need help getting your design environment configured, file a technical support ticket at
+https://alifsemi.com/support/technical-support/
+
+
+
+
+User Guide
+                                                    7
+AUGD0023
+                                                            Ensemble E8 DevKit (DK-E8)
+         Key Components
+
+                             I2S/PDM
+                         Microphone Ports
+
+                          OSPI HyperRAM                                    OSPI Flash
+
+                                                                                            Click Board
+
+                                     ALIF
+ 3.5mm Audio                       JLOB E1                                                    SD Card
+   Jacks (x2)                      BGA194
+
+
+ JLOB RGB LED                                             ALIF E8
+                                                          BGA194
+                                                                                          Camera 1
+Joystick Switch
+                                                                                         Reset Switch
+  SOC “Host”
+     USB
+                                                                                         RGB LEDs
+   Ethernet
+
+                                                                                         IMUs (x2)
+
+  “Power” LED
+                                     I2S/PDM                                              JTAG0
+              User Pot              Microphone                                          Connectors
+                                       Ports
+                                   Figure 2A – Key Components (Top Side)
+
+
+
+
+         User Guide
+                                                    8
+         AUGD0023
+                                                     Ensemble E8 DevKit (DK-E8)
+                                                                              JLOB JTAG
+
+
+ I2S/PDM
+Microphones
+                                                                                   USB-C
+                                                                                  “Debug”
+ Camera 2
+
+
+
+  Coin Cell                                                                        USB-C
+                                                                                  “Device”
+
+
+
+ I2S/PDM
+Microphones
+
+                           Figure 2B – Key Components (Bottom Side)
+
+
+     Connectors
+         Four, 2x20 (GPIO Expansion)
+         Click Board
+         microSD Flash
+         Two, “IAS” MIPI Camera OnSemi Flat Flex
+         One each on top and bottom sides of the board
+         Coin Cell Holder (CR2032 size)
+         MIPI LCD Display Flat Flex (E43RB-FW405-C)
+         Touch Screen Flat Flex
+         3.5mm Audio Jacks
+         USB-C Programming SEUART + UART2 or UART4)
+         USB Type-A (Host)
+         USB-C (Device)
+         Ethernet 10/100 RJ-45 with LEDs
+         Two, E8 JTAG0 Connectors, 2x5 and 2x10 in Parallel
+         E1 JLOB JTAG Connector, 14 pin “Plug-Of-Nails”
+
+
+
+
+      User Guide
+                                              9
+      AUGD0023
+                                                   Ensemble E8 DevKit (DK-E8)
+
+  GPIO Headers                                                            Click Board
+       (4)
+                          ALIF
+                        JLOB E1                                            SD Card
+                        BGA194
+3.5mm Audio Out
+                                                 ALIF E8
+                                                 BGA194
+ 3.5mm Audio In                                                           Camera 1
+
+                                                                          Touch
+                                                                          Screen
+    SOC “Host”
+       USB                                                                   LCD
+
+    Ethernet                                                                JTAG0
+                                                                          Connectors
+     Click I/O
+    Voltage Sel                   Figure 3 – Connectors
+
+                       See Figure 2B for Bottom Side Connectors
+
+
+
+
+          User Guide
+                                           10
+          AUGD0023
+                                                          Ensemble E8 DevKit (DK-E8)
+Configuration Jumpers
+All Configuration Jumpers are male headers, 2.54mm pin spacing.
+
+Note: Except for JP5 & JP7, all jumpers are DNI. A shunt is placed in parallel with the JP. If a mode
+change or current measurement on a specific JP is required, the shunt must be first cut, then a header
+soldered at the desired JP. A 2.54mm shunt can be added once the current measurements are finished.
+
+
+        JP1 – VDD_USB_3V3 Current Measurement
+        JP2 – VDD_MAIN & VDD_BUCK Voltage Selection
+        Pin 1-2 FLEXIO = 1.8V
+        Pin 2-3 FLEXIO = 3.3V
+        JP3 – VDDIO Current Measurement
+        JP4 – FLEXIO Voltage Selection
+        Pin 1-2 FLEXIO = 1.8V
+        Pin 2-3 FLEXIO = 3.3V
+        JP5 – VBATT Voltage Selection
+        Pin 1-2 VBATT = VDD_MAIN
+        Pin 2-3 VBATT = 3.3V / Coin-Cell
+        JP7 – Click Board and a Few Other GPIOs Voltage selection
+        Pins 1-2 Click I/O = 1.8V
+        Pins 3-4 Click I/O = 3.3V
+        Pins 5-6 Click I/O = 5.0V
+
+
+
+
+User Guide
+                                                  11
+AUGD0023
+                                                                Ensemble E8 DevKit (DK-E8)
+
+
+
+
+    JP4 (1-2) –
+      FLEXIO
+
+
+   JP2 (1-2) –
+   VDD_MAIN
+
+
+
+
+  JP1 – VDD_USB
+
+
+
+  JP3 - VDDIO
+
+                                                                                                       JP5 (1-2) – VBATT
+   JP7 (3-4) –                                                                                           = VDD_MAIN
+Click_IO = 3.3V
+
+
+
+
+                                         Figure 3 – Configuration Jumpers
+
+
+
+
+      Measuring DK-E8 DevKit Power
+      In order to measure power on the DK-E8 DevKit, it is necessary to cut jumper traces on the back side of
+      the board and install heading pins in order to insert an ammeter into the various power doman circuits.
+      For details, please refer to the application note “Power Measurements On the Ensemble E8 DevKit (DK-
+      E8)” which is available here: https://alifsemi.com/download/AAPN0042
+
+
+
+
+       User Guide
+                                                        12
+       AUGD0023
+                                                          Ensemble E8 DevKit (DK-E8)
+Generic Header Test Points
+All Header Test Points are male headers, 2.54mm pin spacing. They carry most, but not all of the GPIO
+signals. See schematic for details.
+
+
+
+
+                    J8                 J9                 J10                  J11
+                          2 x 20 GPIO Extension Headers (Bottom Side View)
+
+
+
+
+User Guide
+                                                  13
+AUGD0023
+                                         Ensemble E8 DevKit (DK-E8)
+Document History
+Version                          Change Log
+  1.0   Initial public release
+
+
+
+
+User Guide
+                                  14
+AUGD0023
+

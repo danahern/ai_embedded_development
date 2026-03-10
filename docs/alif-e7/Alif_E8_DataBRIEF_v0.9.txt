@@ -1,0 +1,367 @@
+                                                                     Ensemble E8 Series Fusion Processors
+
+    LOW POWER FUSION PROCESSOR: DUAL CORTEX-A32, DUAL CORTEX-M55, ETHOS-U85 & U55 NPUs,
+    SECURITY, MIPI-DSI/CSI, ISP, 2D GPU, DUAL HEXSPI, ANALOG INTERFACES, 9.75MB SRAM, 5.5MB MRAM
+
+
+Features
+    High-Performance Quad-Core Fusion Processor              l FD-SOI Low Leakage Process
+     l Dual Arm® Cortex®-A32 Cores with Arm Neon™            l 1.3 µA Consumed in STOP Mode with LPRTC,
+
+       SIMD Extension up to 800 MHz, 512KB Shared              LPTIMER, LPCMP, BOR, 4KB Utility SRAM, Wake
+       L2, 32KB L1 Instruction and Data Caches, MMU,           Pins
+       Armv8-A ISA with Arm TrustZone®                       l As Low as 27 µA/MHz Dynamic Consumption for
+
+     l High-Performance (HP) Arm® Cortex®-M55                  High-Efficiency Cortex-M55
+       Core, up to 400 MHz, with Helium™ Vector              l Multiple Power Domains, Dynamic Power
+
+       Processing Extension, Double-Precision FPU,             Gating, Voltage and Clock Scaling, DC-DC
+       1.25MB SRAM 0-wait State Tightly-Coupled                Converter
+       Memory (TCM), 32KB Instruction and Data              On-Chip Application Memory
+       Caches, Armv8.1-M ISA with Arm TrustZone®,            l High Endurance MRAM Non-Volatile Memory
+
+       and 4.37 CoreMark®/MHz Performance                       l 5.5MB, Minimum 100,000 Write Cycles
+
+       Benchmark.                                            l SRAM
+
+     l High-Efficiency (HE) Arm® Cortex®-M55 Core, up           l 9.75MB total SRAM: 8MB Bulk + 1.25MB
+
+       to 160 MHz, with Helium™ Vector Processing                 M55-HP TCM + 0.5MB M55-HE TCM
+       Extension, Double-Precision FPU, 512KB of                l Optional Data Retention of Bulk SRAM and
+
+       SRAM 0-wait State Tightly Coupled Memory,                  M55-HE TCM SRAM Contents
+       32KB Instruction and Data Caches, Armv8.1-M              l 4KB Always-On Utility SRAM
+
+       ISA with Arm TrustZone®, and 4.37                    External Memory Interfaces
+       CoreMark®/MHz Performance Benchmark.                  l 2× 16-bit Hex SPI, each up to 400 MB/s SDR, 800
+
+     l   High-Performance 400-MHz 64-bit and 128-bit            MB/s DDR, with Inline AES Decryption and
+         AXI Bus Fabric Common Across System                    Support for XIP and HyperBus
+                                                             l 1× SD® v4.2, eMMC™ v5.1 Channel with DMA
+    Efficient NPUs for Generative AI/ML Acceleration
+     l 1× Arm Ethos™-U85 Neural Processing Unit             Secure Enclave
+        (NPU) for Generative AI (NPU-HG), 256                l Hardware-based Root-of-Trust (RoT) with
+
+        MAC/cycle up to 400 MHz and 204 GOPS,                  Unique Device ID
+        Supporting Recurrent Neural Networks (RNN),          l Secure Key Generation and Storage, Secure
+
+
+        Convolutional Neural Networks (CNN), and               Certificate Storage, Secure Boot
+                                                             l In-Factory Provisioned Private Keys
+        Transformer Networks, Fed by 128-bit wide
+                                                             l Crypto Accelerators—AES (up to AES-256), ECC
+        High-Bandwidth Local Memory at over 12 GB/s
+     l 1× Arm Ethos-U55 NPU (NPU-HP), 256
+                                                               (up to 384 bits), SHA (up to SHA-256), RSA (up to
+        MAC/cycle up to 400 MHz and 204 GOPS,                  RSA-3072), and NIST compliant TRNG
+                                                             l Secure Debugging with Certificate
+        Supporting RNN and CNN Networks
+     l 1× Arm Ethos-U55 NPU (NPU-HE), 128
+                                                               Authentication
+        MAC/cycle up to 160 MHz and 46 GOPS,                Timing Control and Measurement
+        Supporting RNN and CNN Networks                      l 12× Universal High-Resolution 32-bit Timers
+
+     l On-the-Fly Weight Decompression with                    Capable of Motor and LED Lighting Control
+        Dedicated DMA Controllers                            l 3× Low-Power Universal High-Resolution 32-bit
+
+
+    Extreme-Low Power Technology                               Timers
+                                                             l 4× Watchdog Timers
+     l Autonomous Intelligent Power Management
+                                                             l 4× Low-Power 32-bit Timers
+        (aiPM™)
+
+
+
+Data Brief                                                                   Preliminary Information, Subject to Change
+                                                        1
+v0.9—January 2026
+                                                                      Ensemble E8 Series Fusion Processors
+
+     l   1× Real-Time Counter                                  l Auto White Balance and Auto Exposure
+     l   4× Quadrature Encoder Counters                        l Gamma Correction
+                                                               l Crop, Scale, Binning, Black Level, Gain
+   Serial Communication Interfaces
+    l 1× 10/100 Ethernet with DMA                             JPEG Encoder
+    l 1× USB 2.0 HS/FS Host/Device with DMA                    l Works in Tandem with ISP to Store Compressed
+
+    l 1× SDIO v4.1 Channel with DMA                              Images and Motion JPEG (MJPEG) Video Clips
+    l 1× CAN FD Channel up to 10 Mbps                          l Maximum Performance: 2MP at 200 FPS
+
+    l 1× MIPI® I3C® Channels                                   l Input Formats: YUV400, YUV420, YUV422, RGB
+
+    l 1× Low-Power I3C Channel                                 l Supports JPEG ISO/IEC 10918-1, ITU-T T.81
+
+    l 4× I2C Channels up to 3.4 Mbps Throughput                l Supports MJPEG T.81 Format
+
+    l 2× Low-Power I2C Channels                                l Encoding Color Space: YUV 4:0:0, 4:2:0, 4:2:2
+
+    l 8× UART Channels up to 5 Mbps (4× with RS-485            l Cropping, Rotation, Padding
+
+       Driver Control)                                        Display Interfaces
+    l 1× Low-Power UART Channel
+                                                               l Graphics LCD Controller
+    l 4× SPI Channels up to 50 Mbps Throughput
+                                                               l 1× Display Parallel Interface (DPI), 24-bit RGB
+    l 1× Low-Power SPI Channel
+                                                               l 1× 2-Lane MIPI D-PHY DSI®, 2.5 Gbps each lane
+
+   Analog Interface Capabilities                              Graphics
+    l 3× 12-bit SAR ADC (18 Single-Ended Inputs)
+                                                               l D/AVE 2D Graphics Processing Unit
+    l 1× 24-bit Sigma-Delta ADC (4 Differential Inputs)
+
+      l Programmable Gain Instrumentation
+                                                              Audio Interfaces
+                                                               l 4× I2S Synchronous Stereo Audio Interfaces
+        Amplifier (1× to 128×)
+                                                               l 1× Low-Power I2S Stereo Audio Interface
+     l 2× 12-bit DACs (2 channels)                             l 4× 2-channel Pulse Density Modulation (PDM)
+     l 4× High-Speed Analog Comparators with 2.5-ns              Microphone Inputs (8 Mono Microphones)
+       Response (16 Inputs)                                    l 4× 2-channel Low-Power Pulse Density
+     l 1× Low-Power Analog Comparator (4 Inputs)
+                                                                 Modulation (LPPDM) Microphone Inputs (8
+     l Internal Temperature Sensor
+                                                                 Mono Microphones)
+     l Internal Precision Reference Voltage
+                                                              General Input/Output
+   Camera Interfaces                                           l Up to 136× 1.8-V GPIOs (Shared with
+    l 1× 2-Lane MIPI D-PHY CSI-2®, 2.5 Gbps each
+                                                                 Peripherals)
+      lane                                                     l Up to 8× Selectable 1.8-V to 3.3-V GPIOs (Shared
+    l Option for 2× MIPI D-PHY CSI-2 Interface by
+                                                                 with Peripherals)
+      using the MIPI D-PHY DSI in Slave Mode. Allows
+      Interleaving Two Image Streams from Two                 Clock Generation
+                                                               l LFRC - Internal Low-Frequency RC Oscillator
+      Separate Image Sensors
+    l 1× Camera Parallel Interface (CPI), up to 16 bits
+                                                                  (32.7 kHz, ±4%)
+                                                               l HFRC - Internal High-Frequency RC Oscillator
+    l 1× Low-Power CPI, up to 8 bits
+                                                                  (Up to 76.8 MHz, ±2%)
+   ISP Acceleration Unit                                       l LFXO - External Low-Power Crystal Oscillator or
+
+     l Clocked up to 400 MHz, 64-bit Bus Connection               Quartz Crystal (32.768 kHz)
+     l Maximum Input/Output Resolution: 2MP (1920              l HFXO - External High-Frequency Crystal
+
+       × 1080)                                                    Oscillator or Quartz Crystal (24 MHz to 38.4
+     l Configurable Frame Rate Control: 1 to 60 FPS               MHz)
+     l Input Monochrome Formats: 8-bit, 10-bit                 l One Fractional-N PLL to Generate System Clock,
+
+     l Conversions: Demosaic Bayer to RGB, YUV422 to
+                                                                  Additional Fractional-N PLL to Generate Audio
+       YUV444 to RGB                                              Clock
+     l Output Formats: 8-bit Monochrome, RAW
+
+       8/10/12-bit with Raster Scanning, RGB888
+       Planar, YUV, Y-only
+
+Datasheet                                                                      Preliminary Information, Subject to Change
+                                                          2
+ADTS0013 v0.9—January 2026
+                                                              Ensemble E8 Series Fusion Processors
+
+    System
+     l Global Event Mapping to Configurable Triggers
+
+     l 3× 32-Channel General DMA Controllers
+
+     l CRC Calculation Accelerator with Programmable
+
+        Polynomials
+     l Programmable Low Supply Voltage Detect
+
+        Warning (Brown-Out Detect)
+     l Power-On Reset and Brown Out Reset
+
+     l Real-Time Clock
+
+     l JTAG/SWD Debug Interface
+
+
+    Operating Parameters
+     l 1.75 V to 4.8 V Primary Supply Range
+
+     l 1.08 V to 1.98 V I/O Supply Range (1.8 V I/O)
+
+     l 3.0 V to 4.0 V I/O Supply Range (3.3 V Flex I/O)
+
+     l -40 °C to 75 °C Ambient Temperature Range
+
+     l -40 °C to 105 °C Junction Temperature Range
+
+
+    Packages
+     l WLCSP216, 0.4 mm Pitch
+
+     l FBGA194, 0.5 mm Pitch
+
+
+
+
+                    WLCSP               FBGA
+
+
+
+
+Data Brief                                                           Preliminary Information, Subject to Change
+                                                          3
+v0.9—January 2026
+                                                                       Ensemble E8 Series Fusion Processors
+
+
+
+ Device Overview
+
+
+      The families of fusion processors and microcontrollers (MCUs) from Alif Semiconductor create a scalable and
+      compatible continuum of highly integrated embedded processor devices for use in low-end to high-end
+      intelligent IoT end-point applications. Architected for power efficiency and long battery life, these devices
+      deliver high computation and ML/AI capability, multi-layered security, computer vision, and highly interactive
+      human-machine interface.
+      Individual device selections within a family of devices scale up starting with single-core MCUs, dual-core
+      MCUs, triple- core MCU/MPU fusion processors, and quad- core MCU/MPU fusion processors to match
+      specific applications. Across all devices are common peripherals, common power management schemes, and
+      a common interconnection fabric making it easy to re-use software and hardware over many varied projects.
+      This document covers the second-generation quad-core embedded fusion processors from the Ensemble™
+      family, designated as the E8 series.
+      Power efficiency—In addition to the use of FD-SOI silicon process technology, aiPM provides fine granular
+      control over the processing, memory, and peripheral resources of the device, resulting in extreme power
+      conservation that consumes only what is needed, when its needed, at any given instant based on use case.
+      Computation and ML/AI —Quad- core design with two Arm Cortex-A32 application cores, and two Arm
+      Cortex-M55 Real-Time cores, with one of the Real-Time cores optimized for extreme low power operation.
+      Machine Learning and AI tasks are accelerated by triple Arm Ethos neural processing units, generating as
+      much as 454 GOPS in total. One NPU is the Ethos-U85 that enables RNN, CNN, and TNN transformer-based
+      ML models for generative AI. The other two NPUs are Ethos-U55 for RNN and CNN ML models. E8 devices
+      can operate with an RTOS, an OS such as Linux, or both, while using only the on-chip memory resources.
+      Additional RAM and Flash memory may be accessed externally through two high- speed 16- bit Hex SPI
+      interfaces supporting XIP mode and HyperBus protocol. An in-line AES decryption module in each Hex SPI
+      interface ensures the confidentiality of the data and/or code stored in the external memory devices.
+      Connectivity—E8 devices support many wired interfaces including Ethernet, USB, SDIO, CANFD, I3C, I2C, and
+      more.
+      Security—An isolated Secure Enclave manages the entire life cycle of the end application from manufacture,
+      to deployment, to secure Firmware Over-The-Air updates, and to retirement. A unique Root-of-Trust existing
+      in the enclave enables a trusted on- chip platform for key generation, secure storage, secure boot,
+      cryptographic acceleration, and more. The Secure Enclave also enables certificate-based secure debugging.
+      Computer Vision—Integrated camera interfaces, including one or two MIPI CSI-2 with hardware Image Signal
+      Processing (ISP) and JPEG compression, enable easy connection of low-power image sensors for AI image
+      classification using the Arm Ethos NPUs. Biometric ID, face detection, object classification, barcode reading,
+      and other vision applications can execute while consuming very little energy.
+      Human Machine Interface—Integrated color display interfaces, including MIPI DSI, can drive a wide range of
+      display panels with vivid graphics supported by the on-chip 2D graphics processing unit for attractive user
+      interfaces. Digital audio inputs and outputs are supported by PDM and I2S interfaces. The Arm Ethos NPUs
+      can apply ML inference to audio input streams for key word spotting, contextual-aware speech recognition,
+      failure prediction, and more.
+
+
+
+
+Data Brief                                                                    Preliminary Information, Subject to Change
+                                                        4
+v0.9—January 2026
+                                                                                                                                                                Ensemble E8 Series Fusion Processors
+
+Device Block Diagram
+
+
+
+                                                                                                         E8 Series
+        Applica�on Processor Subsystem             High-Speed              Imaging            Secure                 Debug                High-Performance                                    High-Eﬃciency
+                                                Communica�on and                              Enclave                               Real-Time Processor Subsystem                     Real-Time Processor Subsystem
+                                                                           Camera
+                         GIC                    Memory Expansion                                                                                                          LPSPI LPI2C
+                                                                          MIPI CSI-2
+                                                                                                                                                                              LPI3C           Camera             Always-On
+                         MHU
+                                                                             CPI             Debug
+                                                                                                                                                                            LPUART             LPCPI              LPGPIO
+                         WDT                                                              Authen�ca�on                              NVIC    DMA
+                                                                       Display/Camera                                                                                     NVIC    DMA          Audio             LPUTIMER
+          Cortex-A32         Cortex-A32                                   MIPI-DSI                                                  MHU     WDT        EVTRTR             MHU     WDT      LPI2S LPPDM
+                                                     Ethernet            or 2nd CSI-2       System and                                                                                                            LPTIMER
+           + Neon             + Neon                                                                                                 Cortex-M55        AI/ML                                  EVTRTR
+                                                                                          Firewall Control            JTAG                                                 Cortex-M55                              LPCMP
+      + Crypto Extension + Crypto Extension                                  DPI                                                      + Helium                              + Helium           AI/ML
+           (A32-0)            (A32-1)               SDMMC and                                                         ETM             (M55-HP)                                                                     LPRTC
+                                                                             CDC             Security                                                 Ethos-U55             (M55-HE)
+                                                       SDIO                                                                                                                                  Ethos-U55
+       L1 Instr L1 Data    L1 Instr L1 Data                                                    Unit                   SWD               TCM           (NPU-HP)                TCM                              LFXO       LFRC
+                                                                          Graphics                                                  (SRAM2, SRAM3)                        (SRAM4, SRAM5)
+                                                                                                                                                                                             (NPU-HE)
+        Cache Cache         Cache Cache
+                                                                                                                    CoreSight                                                                   NPU            POR        BOD
+                       Shared                                             D/AVE 2D           CPU and                                Instr Data           NPU              Instr Data
+                                                       USB                                                                                                                                     Cache            U�lity SRAM
+                      L2 Cache                                            (GPU2D)             SERAM                                 Cache Cache         Cache             Cache Cache
+
+
+
+                                                                                           64-bit High-Performance Interconnect Fabric
+
+
+                                          128-bit High-Performance Interconnect Fabric                                                                 Serial                                             System
+                                                                                                                                      Timer/Counter Communica�on             Analog                              IRQRTR
+                                                                                                                                                                                               Reset Control
+                                                                                                                                         UTIMER          I3C                 ADC12
+                                                                      External Memory              High-Speed                                                                                 Power Control      Clock Control
+                                                                          Expansion                                                        QEC              I2C              ADC24
+              AI/ML                                                                                   Bulk                   DMA
+                                              ISP                                                    SRAM0                                                                   DAC12
+             Ethos-U85                                              XIP and/or Data                                      EVTRTR            Audio            SPI
+                                                                    AES         AES                   Bulk                                                                                   Clock Genera�on Conﬁgura�on
+             (NPU-HG)                                                                                                                       I2S            UART               CMP
+                                            JPEG                  Decoder Decoder                    SRAM1                                                                                        HFXO
+               NPU                                                 HEXSPI     HEXSPI               Non-Vola�le
+                                          Encoder                                                                                          PDM            CANFD              TSENS                                    I/O Pin
+              Cache                                                                                                                                                                               HFRC
+                                                                                                      Cache                                                                                                             Mux
+                                                                                                                                                                              VREF                 PLL
+                                                                                                      MRAM                                                 I/O
+                                                                                                  Shared Internal          Data                            GPIO
+                                                                  External     External
+      High-Performance NPU                Imaging                  Flash       PSRAM                 Memory              Transfer                    Shared Peripherals                                  System Control
+
+
+     Color Key: High-Performance Region                                                                                                                                                                                          intro-001
+                                               High-Eﬃciency Region            Always-On Region
+
+
+
+
+Data Brief                                                                                                                                                                  Preliminary Information, Subject to Change
+                                                                                                                5
+v0.9—January 2026
+                                                                                                         Ensemble E8 Series Fusion Processors
+
+
+Ordering Information
+
+                                                             TableOrderable Part Numbers
+
+             Part Number(1)                  MRAM                SRAM                GPIO            Package             Operating Temperature
+AE822FA0E5597BS0                               5.5MB             9.75MB              144             WLCSP216                    -40C to 70C
+AE822FA0E5597LS0                               5.5MB             9.75MB              128             FBGA194                     -40C to 70C
+    1. Ordering designation for shipment packaging:
+       n Add the following suffix to base part number
+          o -T, for Tape and Reel
+          o -Y, for Tray
+       n Example: AE822FA0E5597BS0-T is Tape and Reel
+
+
+
+
+                                                         Part Numbers SRAM Breakdown
+                                                                                     SRAM2 (M55-HP SRAM3 (M55-HP SRAM4 (M55-HE SRAM5 (M55-HE
+             Part Number          Total SRAM (KB)       SRAM0 (KB)      SRAM1 (KB)
+                                                                                       ITCM) (KB)    DTCM) (KB)    ITCM) (KB)    DTCM) (KB)
+AE822FA0E5597BS0                        9984              4096            4096              256        1024              256                 256
+AE822FA0E5597LS0                        9984              4096            4096              256        1024              256                 256
+
+
+
+
+Data Brief                                                                                                      Preliminary Information, Subject to Change
+                                                                             6
+v0.9—January 2026
+

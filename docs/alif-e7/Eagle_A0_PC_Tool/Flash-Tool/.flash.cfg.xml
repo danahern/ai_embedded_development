@@ -1,0 +1,25 @@
+<!-- .flash.cfg.xml -->
+
+<head>
+	<TARGET>
+		<board>Bolt  B4 32MB</board>
+		<flash>issi</flash>
+		<start_address>0xC0000000</start_address>
+		<size>32*1024*1024</size>
+	</TARGET>
+	<TARGET>
+		<board>Eagle Engg 64MB</board>
+		<flash>issi</flash>
+		<start_address>0xC0000000</start_address>
+		<size>64*1024*1024</size>
+	</TARGET>
+	<TARGET>
+		<board>Eagle A0 128MB</board>
+		<flash>issi</flash>
+		<start_address>0xC0000000</start_address>
+		<size>128*1024*1024</size>
+	</TARGET>
+</head>
+
+
+

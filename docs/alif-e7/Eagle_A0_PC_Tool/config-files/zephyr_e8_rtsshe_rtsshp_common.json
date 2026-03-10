@@ -1,0 +1,18 @@
+{
+        "Zephyr-RTSS-HE": {
+        "binary": "zephyr_rtsshe.bin",
+        "version" : "1.0.0",
+        "cpu_id": "M55_HE",
+        "loadAddress": "0x58000000",
+        "flags": ["load", "boot"],
+        "signed": false
+        },
+        "Zephyr-RTSS-HP": {
+        "binary": "zephyr_rtsshp.bin",
+        "version" : "1.0.0",
+        "cpu_id": "M55_HP",
+        "loadAddress": "0x50000000",
+        "flags": ["load", "boot"],
+        "signed": false
+        }
+}
