@@ -1,0 +1,35 @@
+id: k-367de475-4f99-4a2f-867e-37cc6ff7c02e
+title: 'E8 SE boot: port 15 pin mux errors are non-fatal (OSPI pins)'
+body: |-
+  During E8 SE boot, the app-device-config produces "[ERROR] Pin mux failed for [port:15, pin:0-7]" messages. Port 15 corresponds to OSPI pins. These errors are non-fatal for MRAM-only boot — the OSPI controller pins are being configured by the device config but fail because the OSPI IP v2.01 on E8 has different pin requirements.
+
+  These errors do not prevent TF-A from booting or the kernel from running. They can be ignored for MRAM-only boot. To eliminate them, the device config JSON would need to be updated to remove or correct the OSPI pin configuration.
+
+  The SE boot sequence still completes successfully:
+  - ATOC MISC ok, ATOC DEVICE ok, STOC ok, ATOC ok
+  - TFA booted (B flag) on A32_0
+  - All images (DTB, kernel, rootfs) loaded from MRAM
+category: hardware
+severity: informational
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - alif-e8
+  tools: []
+  subsystems:
+  - boot
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- se-boot
+- pin-mux
+- ospi
+- error

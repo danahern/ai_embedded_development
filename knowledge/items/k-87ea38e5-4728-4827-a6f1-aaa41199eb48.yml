@@ -1,0 +1,62 @@
+id: k-87ea38e5-4728-4827-a6f1-aaa41199eb48
+title: E8 JLink MRAM writes silently fail via A32 AXI-AP (cache bypass required)
+body: |-
+  ## Problem
+
+  JLink loadbin writes to MRAM via A32 AXI-AP (AP[2]) silently fail on E8. JLinkExe reports success, but MRAM retains old data. This was discovered when DTB updates weren't taking effect despite successful flash reports.
+
+  ## Root Cause
+
+  A32 AXI-AP writes go through the Cortex-A32's data cache. When the A32 has previously booted and accessed MRAM, cache lines exist for those addresses. JLink writes via AXI-AP interact with the cache rather than writing directly to MRAM. On NSRST, the cache is invalidated (not written back), so MRAM keeps old data.
+
+  First flash after power-up works because cache is clean. Subsequent flashes fail because the A32's cache has dirty/valid lines from the previous boot.
+
+  ## Fix
+
+  Use M55_HE (AHB-AP, AP[0]) instead of A32 (AXI-AP, AP[2]) for MRAM writes. AHB-AP bypasses the A32's cache entirely — it's a different bus master.
+
+  - `jlink_device`: `AE822FA0E5597LS0_M55_HE` (not `_A32_0`)
+  - `jlink_script`: `AlifE8_HE.JLinkScript` (not `AlifE8_A32.JLinkScript`)
+  - Keep `jlink_device_reset` as `_A32_0` (NSRST works from any AP)
+
+  E7 already uses M55_HP (`AE722F80F55D5_HP`) for MRAM writes, which is why E7 never had this issue.
+
+  ## Verification
+
+  After loadbin, read back via M55_HE and verify FDT totalsize field matches expected value:
+  - Read 4 bytes at DTB_ADDR+4, compare with file's big-endian totalsize
+
+  ## Impact
+
+  This bug causes ALL E8 JLink MRAM updates after the first boot to silently fail. Every DTB, kernel, TF-A, and rootfs update appears to succeed but has no effect.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - alif-e8-devkit
+  chips:
+  - alif-e8
+  tools:
+  - jlink
+  - alif-flash
+  subsystems:
+  - mram
+  - jlink-flash
+file_patterns:
+- '**/alif_flash/devices.py'
+- '**/alif_flash/jlink.py'
+- '**/*E8*.JLinkScript'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- alif-e8
+- jlink
+- mram
+- cache
+- axi-ap

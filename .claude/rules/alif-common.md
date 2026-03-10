@@ -61,3 +61,27 @@ See `plans/alif-flash-reset.md` for full test details.
 Use `device` parameter on alif-flash MCP tools to target different boards:
 - `device="alif-e7"` (default) — E7 AppKit/DevKit
 - `device="alif-e8"` — E8 DevKit
+
+## Cortex-A32 Debugging via embedded-probe (NOT Bash JLinkExe)
+
+**NEVER use Bash JLinkExe for Cortex-A32 debug operations.** Use `embedded-probe`.
+
+The embedded-probe `connect()` tool auto-falls-back to JLinkExe when probe-rs rejects the chip.
+Cortex-A32 is not supported by probe-rs — but the JLink fallback handles it transparently.
+
+**Procedure:**
+1. Load embedded-probe: ToolSearch `"select:mcp__embedded-probe__connect"`
+2. Call `list_targets` — confirm "Alif E7 A32" or "Alif E8 A32" appears
+3. Call `connect(target_chip="Cortex-A32", probe_selector="auto", speed_khz=4000)`
+   - probe-rs rejects "Cortex-A32" (expected)
+   - connect() auto-retries via JLinkExe subprocess
+   - Returns a session ID using the JLink backend
+4. Use `read_memory`, `read_registers`, `halt`, `reset` with that session ID
+
+**E7 device names:** `AE722F80F55D5_A32_0`, `AE722F80F55D5_A32_1` (or generic `Cortex-A32`)
+**E8 device names:** `AE822FA0E5597_A32_0`, `AE822FA0E5597_A32_1` (or generic `Cortex-A32`)
+
+**A32 is read-only after SE boot** — MRAM is write-protected. Use for memory reads only.
+
+If you find yourself typing "JLinkExe" in Bash, stop. Load embedded-probe and use connect() instead.
+See `retrospective/embedded-probe-jlink-backend-missed.md` for the incident that produced this rule.

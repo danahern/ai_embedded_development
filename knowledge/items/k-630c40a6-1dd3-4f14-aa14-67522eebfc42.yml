@@ -1,0 +1,49 @@
+id: k-630c40a6-1dd3-4f14-aa14-67522eebfc42
+title: MCP-first violations from wrong capability inference — verify before concluding incapable
+body: |-
+  A recurring class of MCP-first violation: the agent concludes an MCP tool "can't do X" based on a summary or header, and uses Bash CLI instead. The conclusion is often wrong.
+
+  Pattern:
+  1. Agent reads MCP CLAUDE.md header (brief, describes primary path)
+  2. Agent's use case is outside the primary path
+  3. Agent concludes: "Tool can't do this"
+  4. Agent uses Bash equivalent instead — MCP-first violation
+
+  Known instance: embedded-probe CLAUDE.md says "ARM Cortex-M, RISC-V, Xtensa" in the header. Agent concluded it could not debug Cortex-A32. Wrong: the JLink fallback backend handles A32 automatically via connect() auto-retry. The full capability required reading the "JLink Auto-Fallback Backend" section, not just the header.
+
+  Required checks before concluding any MCP tool is incapable:
+  1. Read the CLAUDE.md FULLY (not just the first paragraph)
+  2. Call the capability-discovery tool (list_targets, list_probes, list_apps, etc.)
+  3. Attempt connect()/invoke and read the error — errors are documentation
+  4. Search MEMORY.md and knowledge for the tool + target combination
+
+  This differs from the mechanical deferred-tool-friction violation (where the agent KNOWS the tool can do it but skips loading it). This is the cognitive variant: the agent believes the tool cannot do it. Both produce the same outcome (Bash CLI instead of MCP) but require different fixes.
+
+  Fix for mechanical variant: add ToolSearch step to habits
+  Fix for cognitive variant: require the four-check verification before any workaround
+
+  See: retrospective/embedded-probe-jlink-backend-missed.md, .claude/rules/agent-process.md
+category: operational
+severity: critical
+applies_to:
+  boards: []
+  chips: []
+  tools: []
+  subsystems: []
+file_patterns:
+- claude-mcps/**
+- .claude/rules/**
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- mcp-first
+- agent-process
+- capability-inference
+- embedded-probe
+- jlink

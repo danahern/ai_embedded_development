@@ -1,0 +1,41 @@
+id: k-a6ecf01f-6920-4721-b618-adb2cc3f2481
+title: 'adbd OpenSSL removal: stub auth saves 3MB in rootfs'
+body: |-
+  adbd links against libcrypto.so.3 (OpenSSL) for RSA host key verification. On embedded targets where ADB auth is unnecessary, replacing adb_auth_client.c with a no-op stub and removing -lcrypto from the linker flags eliminates the OpenSSL runtime dependency.
+
+  Result: rootfs dropped from 4.2MB to 1.36MB (cramfs-xip).
+
+  Implementation (Yocto bbappend):
+  - File: `meta-eai/recipes-devtools/android-tools/android-tools_%.bbappend`
+  - Stub: `files/adb_auth_client_stub.c` — adb_auth_verify() returns 1, adb_auth_confirm_key() calls adb_auth_verified(t)
+  - do_configure:prepend replaces auth source and runs `sed -i 's/-lresolv -lcrypto//' ${B}/adbd.mk`
+  - OpenSSL stays in DEPENDS (adb client tool still needs it)
+  - Only android-tools-adbd package is installed on target — Yocto auto-detects no libcrypto NEEDED entry
+
+  Gotcha: Don't use DEPENDS:remove = "openssl" — it removes OpenSSL from ALL recipe targets including the adb client which still needs it.
+  Gotcha: do_patch:append() can cause SyntaxError in Yocto — use do_configure:prepend() instead.
+category: toolchain
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - yocto
+  subsystems: []
+file_patterns:
+- '**/android-tools*bbappend'
+- '**/adb_auth*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- adbd
+- openssl
+- rootfs
+- yocto
+- size-optimization

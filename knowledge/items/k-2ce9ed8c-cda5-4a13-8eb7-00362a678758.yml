@@ -1,0 +1,40 @@
+id: k-2ce9ed8c-cda5-4a13-8eb7-00362a678758
+title: E8 DevKit has 3 USB connectors — ADB requires MCU Device USB-C
+body: |-
+  The Alif E8 DevKit (DK-E8) has three separate USB connectors:
+
+  1. **Debug USB-C** (PRG USB) — SE-UART (FT232R, BG03TXVI) + JTAG/JLOB. Power input. Single FT232R = one serial port only.
+  2. **MCU Device USB-C** — DWC3 gadget controller. Required for USB gadget (ADB, CDC-ECM). Separate from Debug USB.
+  3. **USB Type-A** — USB host mode.
+
+  ADB over USB requires a USB-C cable connected to the MCU Device port, NOT the Debug USB port. Without this cable, no USB gadget device will appear on the host (`ioreg` shows no Alif device, `adb devices` returns empty).
+
+  The Debug USB only provides SE-UART access (57600 baud). There is no second FTDI for Linux UART — kernel console is only accessible via ADB shell or JLink RTT.
+
+  Reference: AUGD0023-Ensemble-E8-DevKit-DK-E8-User-Guide-v1.0, Figure 3 – Connectors.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - alif-e8
+  tools: []
+  subsystems:
+  - usb
+  - uart
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- usb
+- adb
+- dwc3
+- uart
+- connectors

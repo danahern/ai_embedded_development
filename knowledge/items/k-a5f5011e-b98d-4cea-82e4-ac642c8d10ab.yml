@@ -1,0 +1,52 @@
+id: k-a5f5011e-b98d-4cea-82e4-ac642c8d10ab
+title: E8 kernel crash after reserved-memory — HyperRAM/ethosu investigation still open
+body: |-
+  ## Status
+
+  E8 kernel crashes immediately after processing reserved-memory DTS nodes. Last output is the ethosu reserved memory initialization. The crash produces a double fault: data abort → prefetch abort at 0xFFFF000C.
+
+  ## What's been ruled out
+
+  1. **XIP .data decompression failure** — ruled out. log_buf_len reads correctly (0x10000) from SRAM. Earlycon output confirms decompression succeeded.
+  2. **Page table mapping for XIP ROM** — ruled out. head.S maps sections up to `_edata_loc` including section 0xBFC.
+  3. **xipImage truncation** — ruled out. Gzip stream decompresses correctly on host (28KB → 386KB).
+
+  ## What's still suspected
+
+  1. **DTB changes couldn't be tested** — JLink MRAM writes via A32 AXI-AP were silently failing (see separate knowledge item). All DTB modifications this session were ineffective.
+  2. **Reserved memory ethosu nodes** in HyperRAM space (0xa2000000, 0xa3000000) — untested because DTB writes failed.
+  3. **HyperRAM memory node** (64MB at 0xa0000000) — untested for same reason.
+  4. **SRAM-only boot** — previously worked (2026-03-09) but needs re-verification with working flash.
+
+  ## Next Steps
+
+  1. Restart alif-flash MCP (pick up M55_HE fix)
+  2. Flash DTB with HyperRAM disabled + ethosu removed → verify SRAM-only boot still works
+  3. Incrementally add: HyperRAM enabled, then ethosu nodes
+  4. If crash persists with HyperRAM: check SPARSEMEM/HIGHMEM config, firewall permissions
+category: operational
+severity: important
+applies_to:
+  boards:
+  - alif-e8-devkit
+  chips:
+  - alif-e8
+  tools: []
+  subsystems:
+  - kernel
+  - memory
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- alif-e8
+- kernel-crash
+- hyperram
+- reserved-memory
+- debugging

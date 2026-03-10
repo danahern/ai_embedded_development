@@ -1,0 +1,56 @@
+id: k-06235081-3504-4451-babe-b0ee8c2312c2
+title: embedded-probe connect() auto-falls-back to JLinkExe for Cortex-A32 and other non-probe-rs targets
+body: |-
+  The embedded-probe MCP's connect() tool silently falls back to a JLinkExe subprocess backend when probe-rs fails to attach to the target chip. This makes the MCP capable of debugging ANY chip in Segger's device DB — not just Cortex-M, RISC-V, and Xtensa (which is the probe-rs primary path described in the CLAUDE.md header).
+
+  Key behavior:
+  - Call connect(target_chip="Cortex-A32", probe_selector="auto") — probe-rs rejects it, connect() retries via JLinkExe automatically
+  - The target_chip argument is passed directly to JLinkExe as the device name
+  - Returned session ID works with: halt, run, reset, read_memory, write_memory, read_registers, write_register, flash_erase, flash_program
+  - NOT available via JLink backend: RTT, breakpoints, watchpoints, core_dump, stack_trace
+
+  Alif E7/E8 Cortex-A32 chip names for use with connect():
+  - Generic (recommended): "Cortex-A32"
+  - E7 specific: "AE722F80F55D5_A32_0", "AE722F80F55D5_A32_1"
+  - E8 specific: "AE822FA0E5597_A32_0", "AE822FA0E5597_A32_1"
+
+  CRITICAL: A32 MRAM is write-protected after SE boot. Use read_memory/read_registers only.
+  CRITICAL: Always call list_targets before connect — it lists Alif A32 targets with their probe_type ("JLink") and access notes.
+
+  The CLAUDE.md header description of "ARM Cortex-M, RISC-V, and Xtensa" describes only the probe-rs primary path. It does NOT define the full capability boundary. The JLink fallback extends this to all Segger-supported devices. Do NOT use Bash JLinkExe as a workaround for non-Cortex-M targets.
+
+  Source: src/backend/mod.rs (DebugBackend enum), src/backend/jlink.rs (JLinkBackend implementation), src/tools/debugger_tools.rs lines 222-288 (auto-fallback logic in connect()).
+  Retrospective: retrospective/embedded-probe-jlink-backend-missed.md
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - alif_e7_appkit
+  - alif_e8_devkit
+  chips:
+  - AE722F80F55D5
+  - AE822FA0E5597
+  tools:
+  - embedded-probe
+  subsystems: []
+file_patterns:
+- claude-mcps/embedded-probe/**
+- '**/alif-e7/**'
+- '**/alif-e8/**'
+- '**/alif*/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- embedded-probe
+- jlink
+- cortex-a32
+- alif
+- debug
+- mcp-first
+- probe-rs

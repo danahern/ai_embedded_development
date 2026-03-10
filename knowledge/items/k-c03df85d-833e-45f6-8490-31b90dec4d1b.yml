@@ -1,0 +1,55 @@
+id: k-c03df85d-833e-45f6-8490-31b90dec4d1b
+title: XIP deflated .data decompression is verified by return code — earlycon output proves success
+body: |-
+  ## Context
+
+  ARM XIP kernels with CONFIG_XIP_DEFLATED_DATA=y compress the .data section as a gzip blob appended to the XIP ROM image. At boot, `__inflate_kernel_data()` (arch/arm/kernel/head-inflate-data.c) decompresses it to RAM.
+
+  ## Key Facts
+
+  1. The decompression function's return value IS checked in head-common.S (line 91-92):
+     ```asm
+     bl __inflate_kernel_data
+     teq r0, #0
+     bne __error    @ infinite loop, no output
+     ```
+
+  2. If decompression fails, the kernel halts in `__error` with NO earlycon output (earlycon is set up later in start_kernel).
+
+  3. Therefore: **if earlycon output is visible, decompression succeeded**. Don't waste time investigating decompression when you can see kernel boot messages.
+
+  4. The compressed data in the xipImage is typically 10-14x smaller than the decompressed .data. For Alif E7/E8 kernels: ~28KB compressed → ~386KB decompressed. The `_edata_loc` symbol marks the uncompressed extent (used as avail_in upper bound), not the compressed data size.
+
+  5. Both E7 and E8 xipImages have intact gzip streams that decompress correctly on the host. Verify with: `dd if=xipImage bs=1 skip=$((offset)) | python3 -c "import sys,gzip; d=gzip.decompress(sys.stdin.buffer.read()); print(len(d))"`
+
+  ## Boot Sequence
+
+  __create_page_tables → __turn_mmu_on → __mmap_switched:
+    1. __inflate_kernel_data (decompress .data to SRAM)
+    2. memset .bss to zero
+    3. b start_kernel (sets up earlycon, prints messages)
+category: pattern
+severity: important
+applies_to:
+  boards: []
+  chips:
+  - alif-e7
+  - alif-e8
+  tools: []
+  subsystems:
+  - kernel
+  - xip
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- xip
+- kernel-boot
+- decompression
+- debugging

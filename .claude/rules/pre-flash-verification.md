@@ -84,5 +84,19 @@ Then use the appropriate tool (connect, read_memory, reset, etc.). Using Bash JL
 MCP-first policy and bypasses logging. This has occurred multiple times — be explicit about loading
 the deferred tool before any JLink operation.
 
+**If you believe embedded-probe is incapable of the operation** (e.g., "probe-rs doesn't support Cortex-A32"):
+
+You are likely WRONG. Do these checks before resorting to Bash:
+1. Call `list_targets` — it lists known chip names including Cortex-A targets with their backend type
+2. Attempt `connect()` anyway — connect() auto-falls-back to JLinkExe for any chip probe-rs rejects
+3. Read `claude-mcps/embedded-probe/CLAUDE.md` fully, especially the "JLink Auto-Fallback Backend" section
+4. Check `MEMORY.md` for notes on the target chip
+
+The embedded-probe CLAUDE.md header says "Cortex-M, RISC-V, Xtensa" — this describes the probe-rs
+primary path only. The JLink fallback backend covers ANY chip in Segger's device DB, including all
+Cortex-A targets. "Probe-rs doesn't support it" does NOT mean "embedded-probe can't do it."
+
+See `retrospective/embedded-probe-jlink-backend-missed.md`.
+
 ## Rationale
 Each flash cycle costs 5-15 minutes. Flashing wrong/stale artifacts wastes that time and creates confusing debug state. Verification takes seconds. Always verify before committing to a flash. The DTB verification rule was written after the setools-path-confusion incident and violated within 24 hours (dtb-verification-skip incident) — advisory text is not sufficient. Treat these as blocking gates.

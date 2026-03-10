@@ -138,6 +138,26 @@ The `build-toolchain-expert` and `kernel-reviewer` agents exist for a reason. Lo
 The cost of launching a specialized agent: 2-5 minutes.
 The cost of not launching one when you should have: hours. (See the 2026-03-01 incident.)
 
+## Before Concluding Any Tool Is Incapable
+
+If you find yourself about to create a workaround because "Tool X can't do Y":
+
+1. Read Tool X's CLAUDE.md **fully** (not just the header summary)
+2. Call the tool's capability-discovery function (`list_targets`, `list_probes`, `list_apps`, etc.)
+3. Attempt the operation and read the error message carefully — errors are documentation
+4. Check MEMORY.md and knowledge for notes about the tool + target combination
+
+Only after these four steps may you conclude the tool lacks the capability. If you confirm it truly
+cannot, that is a documentation gap — capture it with `knowledge.capture()`. If the conclusion was
+wrong, you saved yourself the detour.
+
+**Known example**: embedded-probe CLAUDE.md says "Cortex-M, RISC-V, Xtensa" but the JLink fallback
+backend handles Cortex-A32 automatically via `connect()` auto-retry. The header was misleading; the
+full capability required reading the JLink Auto-Fallback section. See
+`retrospective/embedded-probe-jlink-backend-missed.md`.
+
+Cost of the four checks: 2 minutes. Cost of skipping them: the detour you were trying to avoid.
+
 ## "We're Close" Is Not a Probability Estimate — It Is Optimism Bias
 
 The phrase "we're close" or "this should be the last issue" is a known cognitive failure mode.

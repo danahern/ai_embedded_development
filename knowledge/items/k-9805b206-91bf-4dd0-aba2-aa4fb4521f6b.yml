@@ -1,0 +1,48 @@
+id: k-9805b206-91bf-4dd0-aba2-aa4fb4521f6b
+title: E8 MRAM-only boot layout and flash config
+body: |-
+  E8 AppKit MRAM-only boot layout (no OSPI XIP, all images in MRAM):
+
+  | Component | Address | Size | Artifact |
+  |-----------|---------|------|----------|
+  | ATOC | 0x80000000 | 8KB | (auto-generated) |
+  | TF-A | 0x80002000 | ~26KB | bl32-e8.bin |
+  | DTB | 0x80010000 | ~32KB | appkit-e8-linux.dtb.bin |
+  | Kernel | 0x80020000 | ~3.7MB | xipImage-e8 |
+  | RootFS | 0x80400000 | ~1.4MB | cramfs-e8.img |
+  | System MRAM | 0x80580000 | — | (reserved) |
+
+  Flash config: `tools/setools/build/config/linux-boot-e8-mram.json`
+  App device config: `tools/setools/build/config/app-device-config-e8.json`
+
+  Key differences from E7:
+  - DTB at 0x80010000 (E7: 0x80200000) — SE REV_B4 minimum still applies
+  - Kernel in MRAM at 0x80020000 (E7: OSPI at 0xC0800000)
+  - RootFS in MRAM at 0x80400000 (E7: OSPI at 0xC0000000)
+  - Total MRAM used: ~5.5MB (leaves ~144KB before system MRAM at 0x80580000)
+  - ISP flash takes ~17 min at 57600 baud (5 KB/s)
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - alif-e8
+  tools: []
+  subsystems:
+  - flash
+  - boot
+file_patterns: []
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- mram
+- flash
+- boot
+- layout

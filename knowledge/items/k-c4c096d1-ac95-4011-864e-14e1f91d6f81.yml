@@ -1,0 +1,50 @@
+id: k-c4c096d1-ac95-4011-864e-14e1f91d6f81
+title: 'E8 TF-A build: SRAM1 at 0x02400000, FLASH_EN=0, OSPI_NO_XIP_SER=1'
+body: |-
+  E8 TF-A build command differences from E7:
+
+  ```
+  ARM_TRUSTED_SRAM_BASE=0x02400000  # E8 SRAM1 contiguous (E7: 0x08000000)
+  PRELOADED_BL33_BASE=0x80020000    # Kernel in MRAM (E7: 0xC0800000 OSPI)
+  ARM_PRELOADED_DTB_BASE=0x80010000 # DTB in MRAM (E7: 0x80200000)
+  FLASH_EN=0                        # E8 OSPI v2.01 flash init not supported
+  OSPI_NO_XIP_SER=1                 # E8 OSPI v2.01 removed XIP_SER register
+  UART=2                            # TF-A debug UART (same as E7)
+  HYPRAM_EN=1                       # Initializes HyperRAM (Macronix 64MB on E8)
+  ```
+
+  Build script: `firmware/linux/alif-e8/build-tfa.sh`
+  Output: `bl32-e8.bin` (26KB, staged to `tools/setools/build/images/`)
+
+  Verification:
+  - `strings bl32-e8.bin | grep "USB clocks enabled"` — MUST be present
+  - `strings bl32-e8.bin | grep "HyperRAM configured"` — MUST be present
+  - Size ~26KB (smaller than E7's 30KB due to FLASH_EN=0)
+
+  PLAT=devkit_e7 is correct (same SoC platform, only flags differ).
+category: toolchain
+severity: important
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - alif-e8
+  tools:
+  - docker
+  subsystems: []
+file_patterns:
+- '**/build-tfa*.sh'
+- '**/bl32-e8*'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-09
+updated: 2026-03-09
+author: claude
+source_session: null
+tags:
+- tfa
+- build
+- sram
+- ospi
