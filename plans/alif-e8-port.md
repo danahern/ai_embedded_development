@@ -49,7 +49,7 @@ Port everything working on Alif E7 AppKit to E8 AppKit: Linux boot, ADB over USB
 - [x] Fix earlycon address in DTS patch (0x4901c000 for UART4, not 0x4901e000)
 - [x] USB-to-OSPI flash prep: build-tfa.sh --usb-init, E8 OSPI usbflash config
 - [ ] Test USB-to-OSPI flasher on E8 (needs MCU Device USB-C cable)
-- [ ] Enable HyperRAM in DTB (TF-A already has HYPRAM_EN=1, verify Macronix init)
+- [x] Enable HyperRAM in DTB — verified 2026-03-10: kernel boots, 64MB HyperRAM readable via JLink M55_HE
 - [x] Knowledge system updated with E8 findings (5 items captured, rules regenerated)
 
 ## Build Artifacts
