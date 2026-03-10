@@ -1,0 +1,67 @@
+id: k-e30b6f62-7321-4b68-b05f-28b1f0a2e7da
+title: 'physmap-core.c fix: skip power-of-2 rounding for map_ram/map_rom probes'
+body: |-
+  ## Problem
+
+  `physmap-core.c` rounds MTD map sizes DOWN to the nearest power of 2 via `BIT(fls64(size) - 1)`. This is correct for NOR flash windows (CFI/JEDEC address decoding requires power-of-2) but WRONG for RAM-backed MTD devices (MRAM, SRAM).
+
+  A 1.5MB (0x180000) MRAM region becomes 1MB (0x100000). cramfs-xip (1.36MB) exceeds the rounded MTD size → `mtd_point()` returns -EINVAL → cramfs falls back to block device reads → Z_DATA_ERROR on uncompressed XIP pages → kernel panic.
+
+  ## Fix (verified working on Alif E8, kernel 6.12.6)
+
+  ```c
+  // drivers/mtd/maps/physmap-core.c, in physmap_flash_probe()
+  info->win_order = fls64(resource_size(res)) - 1;
+  if (info->probe_type &&
+      (!strcmp(info->probe_type, "map_ram") ||
+       !strcmp(info->probe_type, "map_rom")))
+      info->maps[i].size = resource_size(res);
+  else
+      info->maps[i].size = BIT(info->win_order + ...);
+  ```
+
+  ## Verification
+
+  After fix: `cat /proc/mtd` shows `mtd0: 00180000` (1.5MB actual) instead of `00100000` (1MB rounded). cramfs-xip mounts via mtd_point() XIP path. No decompression errors. init runs successfully.
+
+  ## Supersedes
+
+  This fix makes the "KERNEL_MTD_LEN must be power-of-2" workaround unnecessary for map_ram/map_rom devices. Power-of-2 is still required for CFI/JEDEC NOR flash probes.
+
+  ## Applies in Yocto
+
+  Must patch `work-shared/<machine>/kernel-source/` directly — the host `linux_alif` repo is NOT bind-mounted into the container. Use `kernel_rebuild` after patching.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e8
+  - appkit-e7
+  chips:
+  - alif-e7
+  - alif-e8
+  tools: []
+  subsystems:
+  - mtd
+  - cramfs
+  - physmap
+  - kernel
+file_patterns:
+- '**/physmap-core.c'
+- '**/local.conf'
+- '**/*.dts'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- physmap
+- power-of-2
+- mtd
+- cramfs-xip
+- mtd_point
+- map_ram

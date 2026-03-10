@@ -43,8 +43,9 @@ Port everything working on Alif E7 AppKit to E8 AppKit: Linux boot, ADB over USB
 - [x] Kernel rebuild with MTD physmap config fragment (MTD_PHYSMAP_START=0x80400000)
 - [x] Flash all MRAM images (ISP, 17.5 min, build 3b216b34)
 - [x] SE boot verified: ATOC processed, TFA booted on A32_0
-- [ ] Connect USB-C cable to MCU Device port (separate from Debug USB-C)
-- [ ] Verify ADB over USB (`adb devices` shows device)
+- [x] Connect USB-C cable to MCU Device port (separate from Debug USB-C)
+- [x] Verify ADB over USB (`adb devices` shows device) — verified 2026-03-10
+- [x] cramfs-xip rootfs mount working (physmap-core.c fix for map_ram power-of-2 rounding)
 - [x] Fix earlycon address in DTS patch (0x4901c000 for UART4, not 0x4901e000)
 - [x] USB-to-OSPI flash prep: build-tfa.sh --usb-init, E8 OSPI usbflash config
 - [ ] Test USB-to-OSPI flasher on E8 (needs MCU Device USB-C cable)

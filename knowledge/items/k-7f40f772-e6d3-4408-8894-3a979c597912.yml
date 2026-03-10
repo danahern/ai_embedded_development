@@ -1,0 +1,60 @@
+id: k-7f40f772-e6d3-4408-8894-3a979c597912
+title: Yocto kernel source is NOT bind-mounted — patch work-shared directly for kernel changes
+body: |-
+  ## Problem
+
+  Editing `linux_alif/` on the host does NOT affect the kernel built by Yocto. The `linux_alif` repo is NOT bind-mounted into the yocto-build container. The Yocto `linux-alif` recipe fetches kernel source from git and stores it in `work-shared/<machine>/kernel-source/`.
+
+  Editing the host repo and running `kernel_rebuild` produces an identical kernel — the changes are silently ignored.
+
+  ## Fix
+
+  Patch the kernel source directly inside the container:
+
+  ```python
+  # Via mcp__linux-build__run_command
+  python3 -c \"
+  f = '/home/builder/yocto/build-alif-e7/tmp/work-shared/appkit-e8/kernel-source/drivers/mtd/maps/physmap-core.c'
+  with open(f) as fh: src = fh.read()
+  src = src.replace(old_text, new_text, 1)
+  with open(f, 'w') as fh: fh.write(src)
+  \"
+  ```
+
+  Then run `kernel_rebuild` — Yocto detects the source change and recompiles.
+
+  ## Note
+
+  Keep host `linux_alif` changes in sync for version control. The container copy is ephemeral — a `cleansstate` will refetch from git, losing patches. For permanent fixes, add a Yocto patch file in `meta-eai/recipes-kernel/linux/files/`.
+
+  ## Verification
+
+  After rebuild, check that the expected number of tasks re-ran (e.g., 16 out of 914 for a single .c file change). If 0 tasks re-ran, the patch wasn't detected.
+category: operational
+severity: important
+applies_to:
+  boards: []
+  chips: []
+  tools:
+  - linux-build
+  subsystems:
+  - yocto
+  - kernel
+  - build-system
+file_patterns:
+- '**/linux_alif/**'
+- '**/meta-eai/recipes-kernel/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- yocto
+- kernel-rebuild
+- work-shared
+- bind-mount
+- container

@@ -1,0 +1,55 @@
+id: k-b942120a-8375-42d1-96d9-9a45a51a067c
+title: ISP BURN_MRAM to ATOC area (0x80580000) rejected on E8 — use JLink for ATOC, ISP for user images
+body: |-
+  ## Problem
+
+  On the Alif E8 DevKit, ISP `BURN_MRAM` to the system MRAM / ATOC area (0x80580000) returns 0xFF (rejected). This occurs even after entering maintenance mode via `SET_MAINTENANCE` (0x16) — the SE ACKs the maintenance command but the ENQUIRY flag byte[9] remains 0x00, and BURN_MRAM to the ATOC area still fails.
+
+  ## Working Approach: Hybrid ISP + JLink
+
+  ISP BURN_MRAM works fine for user image MRAM addresses (0x80002000, 0x80010000, 0x80020000, 0x80400000). Only the ATOC area is rejected.
+
+  **Workflow:**
+  1. Write user images (TFA, DTB, kernel, rootfs) via ISP — ~17 min at 4.9 KB/s
+  2. Write ATOC via JLink (loadbin to M55_HE core)
+  3. If ATOC was previously written and SE already boots the correct cores, only user images need updating via ISP
+
+  ## ISP Script
+
+  `tools/setools/isp_write_e8.py` — writes 4 user images via ISP at 57600 baud. Serial port: `/dev/cu.usbserial-BG03TXVI`. Skips ATOC (known failure).
+
+  ## Key Detail
+
+  After SE processes ATOC on boot, it clears it. Subsequent boots reuse the existing MRAM contents without re-processing ATOC. So if the ATOC was written once via JLink, you only need ISP for user image updates — no ATOC rewrite needed unless the boot config changes.
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - alif-e8-devkit
+  chips:
+  - alif-e8
+  tools:
+  - alif-flash
+  subsystems:
+  - se-uart
+  - isp
+  - mram
+  - atoc
+file_patterns:
+- '**/setools/**'
+- '**/alif-flash/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-10
+updated: 2026-03-10
+author: claude
+source_session: null
+tags:
+- isp
+- atoc
+- mram
+- e8
+- burn-mram
+- jlink-workaround
