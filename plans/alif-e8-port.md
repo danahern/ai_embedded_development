@@ -50,6 +50,11 @@ Port everything working on Alif E7 AppKit to E8 AppKit: Linux boot, ADB over USB
 - [x] USB-to-OSPI flash prep: build-tfa.sh --usb-init, E8 OSPI usbflash config
 - [ ] Test USB-to-OSPI flasher on E8 (needs MCU Device USB-C cable)
 - [x] Enable HyperRAM in DTB — verified 2026-03-10: kernel boots, 64MB HyperRAM readable via JLink M55_HE
+- [ ] HyperRAM causes init SIGSEGV — kernel boots with 71MB but busybox init crashes (exit 0x0b = signal 11). SRAM-only works. Needs investigation.
+- [x] physmap-core.c fix propagated to Yocto build (already in linux_alif git, kernel_rebuild picks it up)
+- [x] ADB working on E8 with SRAM-only + physmap fix — `eai-alif-e8-001` (verified 2026-03-10)
+- [x] usb-ecm.sh E8 board detection working (grep /proc/device-tree/model for "e8")
+- [x] ISP robust retry script for large MRAM writes (SE pauses every ~234KB, needs 5s timeout + retries)
 - [x] Knowledge system updated with E8 findings (5 items captured, rules regenerated)
 
 ## Build Artifacts

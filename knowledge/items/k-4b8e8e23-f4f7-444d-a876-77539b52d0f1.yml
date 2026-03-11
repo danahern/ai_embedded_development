@@ -1,0 +1,40 @@
+id: k-4b8e8e23-f4f7-444d-a876-77539b52d0f1
+title: physmap-core.c power-of-2 fix must be in Yocto kernel source
+body: |-
+  The physmap-core.c fix (skip power-of-2 rounding for map_ram/map_rom devices) is committed to the linux_alif git repo (commit 22b637f539a9). However, Yocto's work-shared kernel source can become stale — the fix won't appear until `kernel_rebuild` runs `configure -f` which re-extracts from git.
+
+  Without this fix, mtd-ram devices with non-power-of-2 sizes (e.g., 0x180000 = 1.5MB) get rounded up (to 0x200000 = 2MB). This causes mtd_point() to fail, breaking cramfs XIP. Symptom: "cramfs: unable to get direct memory access", then /init fails with error -14 (EFAULT).
+
+  The fix is at drivers/mtd/maps/physmap-core.c lines 522-525: check probe_type for "map_ram"/"map_rom" and use resource_size(res) directly instead of BIT(win_order).
+
+  Do NOT create a separate Yocto patch for this — it's already in the git source. If Yocto builds show the old behavior, run `kernel_rebuild` (not `yocto_build`) to force re-extraction.
+category: toolchain
+severity: critical
+applies_to:
+  boards:
+  - appkit-e8
+  - appkit-e7
+  chips: []
+  tools: []
+  subsystems:
+  - mtd
+  - cramfs
+  - yocto
+file_patterns:
+- '**/physmap-core.c'
+- '**/linux-alif_%.bbappend'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-11
+updated: 2026-03-11
+author: claude
+source_session: null
+tags:
+- physmap
+- cramfs
+- xip
+- mtd
+- yocto
+- kernel

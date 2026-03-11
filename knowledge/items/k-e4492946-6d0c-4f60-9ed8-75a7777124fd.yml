@@ -1,0 +1,37 @@
+id: k-e4492946-6d0c-4f60-9ed8-75a7777124fd
+title: E8 ISP MRAM writes need retry logic for large images
+body: |-
+  ISP BURN_MRAM writes to E8 MRAM stall every ~234KB (1000 chunks × 240 bytes) during large sequential writes (e.g., 3.7MB kernel). The SE stops responding for 15+ minutes, then resumes. Without retry logic, the standard 1-2s timeout causes immediate abort.
+
+  Fix: Use 5s chunk timeout + 3 retries per chunk with progressive wait (5s, 10s between retries). The robust script at `/tmp/isp_write_e8_robust.py` completed a 3.7MB kernel write in ~55 minutes (effective 1.1 KB/s including pauses). Small images (26KB TFA, 32KB DTB) always succeed without retries.
+
+  The original `isp_write_e8.py` with 1s timeout fails consistently at ~18% of the kernel write. This behavior was NOT seen during the initial E8 flash (possible MRAM state dependency — first write to erased MRAM may behave differently).
+category: hardware
+severity: important
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - ensemble-e8
+  tools: []
+  subsystems:
+  - isp
+  - mram
+  - flash
+file_patterns:
+- '**/isp_write*.py'
+- '**/setools/**'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-11
+updated: 2026-03-11
+author: claude
+source_session: null
+tags:
+- isp
+- mram
+- e8
+- flash
+- timeout

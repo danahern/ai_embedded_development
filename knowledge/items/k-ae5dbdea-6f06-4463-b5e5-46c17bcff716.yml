@@ -1,0 +1,42 @@
+id: k-ae5dbdea-6f06-4463-b5e5-46c17bcff716
+title: E8 HyperRAM causes init SIGSEGV — SRAM-only works
+body: |-
+  On AppKit-E8, enabling HyperRAM (64MB Macronix at 0xa0000000) in the DTB causes busybox init to crash with SIGSEGV (exit code 0x0b = signal 11). The kernel boots fine with 71MB total memory (SRAM 7MB + HyperRAM 64MB), DWC3 USB probes, cramfs mounts — but init immediately segfaults.
+
+  With HyperRAM disabled (status = "disabled" in DTB), the same kernel + rootfs works perfectly: init runs, USB gadget activates, ADB connects.
+
+  Key observations:
+  - HighMem zone: 0x08400000-0xa3ffffff (huge non-contiguous range, mostly holes)
+  - CPU1 fails to come online when HyperRAM is enabled
+  - The SIGSEGV may be caused by: (1) init stack/heap allocated in unreliable HyperRAM, (2) HighMem kmap issues with non-contiguous physical layout, or (3) HyperRAM data integrity issues
+
+  This needs investigation with CONFIG_HIGHMEM debug options or by testing with HyperRAM in Normal zone instead of HighMem.
+category: hardware
+severity: critical
+applies_to:
+  boards:
+  - appkit-e8
+  chips:
+  - ensemble-e8
+  tools: []
+  subsystems:
+  - hyperram
+  - memory
+  - init
+file_patterns:
+- '**/appkit-e8.dts'
+- '**/appkit-e8.conf'
+status: unvalidated
+validated_by: []
+deprecated: false
+superseded_by: null
+created: 2026-03-11
+updated: 2026-03-11
+author: claude
+source_session: null
+tags:
+- hyperram
+- e8
+- sigsegv
+- highmem
+- init
